@@ -13,8 +13,3 @@ The initial backend accepts whitespace-only item titles. Do not fix it before a 
 5. Serve the `frontend/` directory with any static server.
 
 Use instructor-approved no-cost hosting for deployment. Do not commit `.env`.
-
-Current Contributors:
-Jacob Mcguire
-Paris Lad
-
