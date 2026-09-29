@@ -13,8 +13,22 @@ if (!process.env.DATABASE_URL) {
 
 const ALLOWED_EMAIL_DOMAIN = (process.env.ALLOWED_EMAIL_DOMAIN || "algomau.ca").toLowerCase();
 const CHALLENGE_TTL_MINUTES = 10;
+const MAX_CHALLENGES_PER_WINDOW = 3;
 const SESSION_TTL_DAYS = 7;
 const SESSION_COOKIE = "session_token";
+
+const BREVO_API_KEY = process.env.BREVO_API_KEY || "";
+const EMAIL_FROM = process.env.EMAIL_FROM || "";
+const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || "Opportunity Registry";
+const EMAIL_ENABLED = Boolean(BREVO_API_KEY && EMAIL_FROM);
+// Defaults on only when email isn't configured, so there is always some way to sign in.
+const TEST_MODE = process.env.SIGN_IN_TEST_MODE
+  ? process.env.SIGN_IN_TEST_MODE === "true"
+  : !EMAIL_ENABLED;
+
+if (!EMAIL_ENABLED && !TEST_MODE) {
+  console.warn("Neither email delivery nor sign-in test mode is enabled: nobody can sign in.");
+}
 
 const app = express();
 app.set("trust proxy", 1);
@@ -47,6 +61,33 @@ function generateChallengeCode() {
 
 function generateSessionToken() {
   return crypto.randomBytes(32).toString("hex");
+}
+
+async function sendSignInEmail(email, code) {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": BREVO_API_KEY,
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: EMAIL_FROM_NAME, email: EMAIL_FROM },
+      to: [{ email }],
+      subject: "Your Opportunity Registry sign-in code",
+      textContent:
+        `Your sign-in code is ${code}. It expires in ${CHALLENGE_TTL_MINUTES} minutes and can only be used once.\n\n` +
+        "If you did not request this, you can ignore this email.",
+      htmlContent:
+        `<p>Your sign-in code is <strong style="font-size:1.25em">${code}</strong>.</p>` +
+        `<p>It expires in ${CHALLENGE_TTL_MINUTES} minutes and can only be used once.</p>` +
+        "<p>If you did not request this, you can ignore this email.</p>",
+    }),
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) {
+    throw new Error(`Brevo responded ${response.status}: ${await response.text()}`);
+  }
 }
 
 function setSessionCookie(req, res, token, expiresAt) {
@@ -111,9 +152,8 @@ app.get("/api/health", async (_request, response) => {
 });
 
 // R1-01/R1-02: request a short-lived, single-use, domain-restricted sign-in challenge.
-// TEST MODE: the code is never emailed. It is only ever readable via
-// GET /api/auth/pending-challenges, which stands in for the recipient's inbox. See
-// project2/README.md for why this is an instructor-approved substitute for real email.
+// The code is emailed via Brevo when configured; in test mode it is also readable at
+// GET /api/auth/pending-challenges (the instructor-approved substitute for email).
 app.post("/api/auth/request-challenge", async (req, res, next) => {
   try {
     const email = normalizeEmail(req.body.email);
@@ -124,6 +164,17 @@ app.post("/api/auth/request-challenge", async (req, res, next) => {
       return res.status(422).json({ error: `Only @${ALLOWED_EMAIL_DOMAIN} addresses can sign in.` });
     }
 
+    const recent = await pool.query(
+      `SELECT count(*)::int AS n FROM sign_in_challenges
+       WHERE email = $1 AND created_at > now() - make_interval(mins => $2)`,
+      [email, CHALLENGE_TTL_MINUTES],
+    );
+    if (recent.rows[0].n >= MAX_CHALLENGES_PER_WINDOW) {
+      return res.status(429).json({
+        error: "Too many sign-in codes requested for this address. Try again in a few minutes.",
+      });
+    }
+
     const code = generateChallengeCode();
     const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MINUTES * 60 * 1000);
     await pool.query(
@@ -131,20 +182,28 @@ app.post("/api/auth/request-challenge", async (req, res, next) => {
       [email, code, expiresAt],
     );
 
-    res.status(201).json({
-      ok: true,
-      expiresAt,
-      testMode: true,
-      hint: "Test mode: no email is sent. Look up the code at /api/auth/pending-challenges.",
-    });
+    let emailSent = false;
+    if (EMAIL_ENABLED) {
+      try {
+        await sendSignInEmail(email, code);
+        emailSent = true;
+      } catch (error) {
+        console.error("Sign-in email failed:", error.message);
+        if (!TEST_MODE) {
+          return res.status(502).json({ error: "Could not send the sign-in email. Try again shortly." });
+        }
+      }
+    }
+
+    res.status(201).json({ ok: true, expiresAt, emailSent, testMode: TEST_MODE });
   } catch (error) {
     next(error);
   }
 });
 
-// Test-mode stand-in for the recipient's email inbox. See release notes: this is the
-// instructor-approved substitute for real email delivery, not a production feature.
+// Test-mode stand-in for the recipient's email inbox, disabled when SIGN_IN_TEST_MODE is off.
 app.get("/api/auth/pending-challenges", async (_request, res, next) => {
+  if (!TEST_MODE) return res.status(404).json({ error: "sign-in test mode is disabled" });
   try {
     const result = await pool.query(
       `SELECT email, code, expires_at AS "expiresAt"
@@ -204,7 +263,11 @@ app.post("/api/auth/verify", async (req, res, next) => {
 app.get("/api/auth/me", async (req, res, next) => {
   try {
     const user = await getSessionUser(req);
-    res.json(user ? { authenticated: true, user: toPublicUser(user) } : { authenticated: false });
+    res.json(
+      user
+        ? { authenticated: true, testMode: TEST_MODE, user: toPublicUser(user) }
+        : { authenticated: false, testMode: TEST_MODE },
+    );
   } catch (error) {
     next(error);
   }

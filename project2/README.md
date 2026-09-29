@@ -18,13 +18,17 @@ the repo root (which stay frozen as the submitted Phase 0 warm-up).
 
 ## Auth approach (R1-01 through R1-07)
 
-Passwordless sign-in is custom-built (not Supabase Auth), with an **instructor-approved
-test mode**: sign-in codes are never emailed. Instead they are readable at
-`GET /api/auth/pending-challenges`, and the frontend's `operator.html` page renders that
-as a stand-in for the recipient's inbox. This was chosen because real email delivery
-from a fresh deployment is explicitly the least reliable part of this release per the
-brief, and the requirement itself (short-lived, single-use, `algomau.ca`-only) is
-unaffected by the transport.
+Passwordless sign-in is custom-built (not Supabase Auth). Codes are delivered two ways:
+
+- **Email via Brevo**, when `BREVO_API_KEY` and `EMAIL_FROM` (a Brevo-verified sender)
+  are set. Uses Brevo's HTTPS API, since free Render services may block outbound SMTP.
+- **Instructor-approved test mode** (`SIGN_IN_TEST_MODE`): unused codes are readable at
+  `GET /api/auth/pending-challenges`, rendered by `operator.html` as a stand-in for the
+  recipient's inbox. Defaults on only when email isn't configured. Needed for evaluators
+  to sign in as fixture accounts, which have no real inboxes.
+
+Either way the requirement is unchanged: short-lived, single-use, `algomau.ca`-only. At
+most 3 codes per address per 10 minutes, to protect inboxes and the Brevo daily quota.
 
 - `ALLOWED_EMAIL_DOMAIN` (default `algomau.ca`) is enforced server-side in
   `project2/backend/server.js`, matched against the domain after the final `@`.
@@ -37,7 +41,7 @@ unaffected by the transport.
   promote/revoke verified-faculty via `POST /api/admin/users/:id/verify-faculty` and
   `.../revoke-faculty` (R1-04).
 
-**Known trade-off**: because the challenge code is world-readable at
+**Known trade-off (test mode only)**: because the challenge code is world-readable at
 `/api/auth/pending-challenges` rather than delivered to a private inbox, anyone who can
 reach the deployed site can sign in as any `@algomau.ca` address for which a challenge is
 currently pending. This is the accepted cost of the test-mode substitution and should be

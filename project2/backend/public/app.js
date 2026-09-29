@@ -27,6 +27,7 @@ async function loadSession() {
   try {
     const r = await fetch(`${API}/api/auth/me`, { credentials: "include" });
     const d = await r.json();
+    $("test-mode-hint").hidden = !d.testMode;
     if (d.authenticated) showSignedIn(d.user);
     else showSignedOut();
   } catch {
@@ -50,7 +51,9 @@ $("request-form").addEventListener("submit", async (e) => {
       return;
     }
     $("verify-form").hidden = false;
-    $("status").textContent = "Code requested. Look it up on the operator console.";
+    $("status").textContent = d.emailSent
+      ? "Check your email for a 6-digit code. It expires in 10 minutes."
+      : "Code created. Look it up on the operator console.";
   } catch {
     $("status").textContent = "Could not reach the backend.";
   }
