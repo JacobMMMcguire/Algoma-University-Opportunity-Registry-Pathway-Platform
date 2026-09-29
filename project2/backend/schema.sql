@@ -62,6 +62,15 @@ CREATE TABLE IF NOT EXISTS projects (
 CREATE INDEX IF NOT EXISTS projects_status_idx ON projects (status);
 CREATE INDEX IF NOT EXISTS projects_faculty_idx ON projects (faculty_user_id);
 
+-- RLS on with no policies: blocks Supabase's auto-generated Data API (anon/authenticated
+-- roles) from reading these tables. The backend connects as the table owner, which RLS
+-- does not apply to, so all access goes through server.js.
+ALTER TABLE users              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sign_in_challenges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sessions           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE faculty_profiles   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE projects           ENABLE ROW LEVEL SECURITY;
+
 -- The first staff/admin account is established out of band (R1-04). Run once, after
 -- that person has signed in at least one time so the users row exists, or insert
 -- directly:
