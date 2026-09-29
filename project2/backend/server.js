@@ -1,9 +1,9 @@
 require("dotenv").config();
 
 const cookieParser = require("cookie-parser");
-const cors = require("cors");
 const crypto = require("crypto");
 const express = require("express");
+const path = require("path");
 const { Pool } = require("pg");
 
 if (!process.env.DATABASE_URL) {
@@ -16,24 +16,11 @@ const CHALLENGE_TTL_MINUTES = 10;
 const SESSION_TTL_DAYS = 7;
 const SESSION_COOKIE = "session_token";
 
-const allowedOrigins = (process.env.FRONTEND_ORIGINS || "http://localhost:8080,http://127.0.0.1:8080")
-  .split(",")
-  .map((value) => value.trim())
-  .filter(Boolean);
-
 const app = express();
 app.set("trust proxy", 1);
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-      callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  }),
-);
 app.use(express.json());
 app.use(cookieParser());
+app.use(express.static(path.join(__dirname, "public")));
 
 const isLocalDatabase = process.env.DATABASE_URL.includes("localhost");
 const pool = new Pool({
@@ -67,7 +54,7 @@ function setSessionCookie(req, res, token, expiresAt) {
   res.cookie(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: isHttps,
-    sameSite: isHttps ? "none" : "lax",
+    sameSite: "lax",
     expires: expiresAt,
     path: "/",
   });

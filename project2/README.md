@@ -8,9 +8,11 @@ requirements (R1-01 through R1-26) for the full spec.
 This code lives on the `r1-development` branch, separate from `backend/`/`frontend/` at
 the repo root (which stay frozen as the submitted Phase 0 warm-up).
 
-- **Deployment**: two dedicated Render services, connected to this repo but watching
-  `r1-development` — a Web Service (`project2/backend`) and a Static Site
-  (`project2/frontend`). The existing Phase 0 Render services are untouched.
+- **Deployment**: one dedicated Render Web Service (root `project2/backend`) watching
+  `r1-development`. Express serves both the API and the frontend (`project2/backend/public`)
+  from the same origin, so the session cookie is first-party — a separate static site
+  would make it a third-party cookie, which Safari/iOS blocks. The existing Phase 0 Render
+  services are untouched.
 - **Database**: a dedicated Supabase project, separate from Phase 0's. Its connection
   string is set as `DATABASE_URL` on the Project 2 Render backend service only.
 
@@ -52,13 +54,11 @@ UPDATE users SET is_staff = true WHERE email = 'admin@algomau.ca';
 
 ## Local development
 
-1. Copy `project2/backend/.env.example` to `.env`, set `DATABASE_URL` to the Project 2
-   Supabase pooler string, and set `FRONTEND_ORIGINS` to include your local static
-   server's origin.
+1. Copy `project2/backend/.env.example` to `.env` and set `DATABASE_URL` to the Project 2
+   Supabase pooler string.
 2. `cd project2/backend && npm install && npm start` (defaults to port 3001).
-3. Set `window.API_BASE_URL` in `project2/frontend/config.js` to `http://127.0.0.1:3001`.
-4. Serve `project2/frontend/` with any static server; open `operator.html` in a second
-   tab to read sign-in codes while testing.
+3. Open http://localhost:3001 — the backend serves the frontend too. Open
+   `/operator.html` in a second tab to read sign-in codes while testing.
 
 ## Status
 
