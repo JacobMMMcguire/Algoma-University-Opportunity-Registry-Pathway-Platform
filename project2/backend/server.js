@@ -1,6 +1,8 @@
 require("dotenv").config();
 
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const crypto = require("crypto");
 const express = require("express");
 const { Pool } = require("pg");
 
@@ -9,15 +11,107 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
+const ALLOWED_EMAIL_DOMAIN = (process.env.ALLOWED_EMAIL_DOMAIN || "algomau.ca").toLowerCase();
+const CHALLENGE_TTL_MINUTES = 10;
+const SESSION_TTL_DAYS = 7;
+const SESSION_COOKIE = "session_token";
+
+const allowedOrigins = (process.env.FRONTEND_ORIGINS || "http://localhost:8080,http://127.0.0.1:8080")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+
 const app = express();
-app.use(cors());
+app.set("trust proxy", 1);
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
+app.use(cookieParser());
 
 const isLocalDatabase = process.env.DATABASE_URL.includes("localhost");
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: isLocalDatabase ? false : { rejectUnauthorized: false },
 });
+
+function normalizeEmail(value) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function emailDomain(email) {
+  const at = email.lastIndexOf("@");
+  return at === -1 ? "" : email.slice(at + 1);
+}
+
+function isWellFormedEmail(email) {
+  return email.length > 0 && email.includes("@") && emailDomain(email).includes(".");
+}
+
+function generateChallengeCode() {
+  return String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
+}
+
+function generateSessionToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function setSessionCookie(req, res, token, expiresAt) {
+  const isHttps = req.secure || req.headers["x-forwarded-proto"] === "https";
+  res.cookie(SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: isHttps ? "none" : "lax",
+    expires: expiresAt,
+    path: "/",
+  });
+}
+
+function toPublicUser(user) {
+  return {
+    email: user.email,
+    isStaff: user.is_staff,
+    isVerifiedFaculty: user.is_verified_faculty,
+  };
+}
+
+async function getSessionUser(req) {
+  const token = req.cookies?.[SESSION_COOKIE];
+  if (!token) return null;
+  const result = await pool.query(
+    `SELECT users.* FROM sessions
+     JOIN users ON users.id = sessions.user_id
+     WHERE sessions.token = $1 AND sessions.expires_at > now()`,
+    [token],
+  );
+  return result.rows[0] || null;
+}
+
+function requireAuth() {
+  return async (req, res, next) => {
+    try {
+      const user = await getSessionUser(req);
+      if (!user) return res.status(401).json({ error: "sign-in required" });
+      req.user = user;
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+
+function requireStaff() {
+  return (req, res, next) => {
+    if (!req.user.is_staff) return res.status(403).json({ error: "staff access required" });
+    next();
+  };
+}
 
 app.get("/api/health", async (_request, response) => {
   try {
@@ -26,6 +120,156 @@ app.get("/api/health", async (_request, response) => {
   } catch (error) {
     console.error("Health check could not reach PostgreSQL:", error.message);
     response.status(503).json({ ok: false, error: "database unavailable" });
+  }
+});
+
+// R1-01/R1-02: request a short-lived, single-use, domain-restricted sign-in challenge.
+// TEST MODE: the code is never emailed. It is only ever readable via
+// GET /api/auth/pending-challenges, which stands in for the recipient's inbox. See
+// project2/README.md for why this is an instructor-approved substitute for real email.
+app.post("/api/auth/request-challenge", async (req, res, next) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    if (!isWellFormedEmail(email)) {
+      return res.status(400).json({ error: "Enter a valid email address." });
+    }
+    if (emailDomain(email) !== ALLOWED_EMAIL_DOMAIN) {
+      return res.status(422).json({ error: `Only @${ALLOWED_EMAIL_DOMAIN} addresses can sign in.` });
+    }
+
+    const code = generateChallengeCode();
+    const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MINUTES * 60 * 1000);
+    await pool.query(
+      "INSERT INTO sign_in_challenges (email, code, expires_at) VALUES ($1, $2, $3)",
+      [email, code, expiresAt],
+    );
+
+    res.status(201).json({
+      ok: true,
+      expiresAt,
+      testMode: true,
+      hint: "Test mode: no email is sent. Look up the code at /api/auth/pending-challenges.",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Test-mode stand-in for the recipient's email inbox. See release notes: this is the
+// instructor-approved substitute for real email delivery, not a production feature.
+app.get("/api/auth/pending-challenges", async (_request, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT email, code, expires_at AS "expiresAt"
+       FROM sign_in_challenges
+       WHERE used_at IS NULL AND expires_at > now()
+       ORDER BY created_at DESC`,
+    );
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/auth/verify", async (req, res, next) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const code = typeof req.body.code === "string" ? req.body.code.trim() : "";
+    if (!email || !code) {
+      return res.status(400).json({ error: "Email and code are required." });
+    }
+
+    const challengeResult = await pool.query(
+      `SELECT id FROM sign_in_challenges
+       WHERE email = $1 AND code = $2 AND used_at IS NULL AND expires_at > now()
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [email, code],
+    );
+    const challenge = challengeResult.rows[0];
+    if (!challenge) {
+      return res.status(400).json({ error: "That code is invalid or has expired." });
+    }
+    await pool.query("UPDATE sign_in_challenges SET used_at = now() WHERE id = $1", [challenge.id]);
+
+    const userResult = await pool.query(
+      `INSERT INTO users (email) VALUES ($1)
+       ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+       RETURNING *`,
+      [email],
+    );
+    const user = userResult.rows[0];
+
+    const token = generateSessionToken();
+    const sessionExpiresAt = new Date(Date.now() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
+    await pool.query(
+      "INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, $3)",
+      [token, user.id, sessionExpiresAt],
+    );
+    setSessionCookie(req, res, token, sessionExpiresAt);
+
+    res.json({ ok: true, user: toPublicUser(user) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/auth/me", async (req, res, next) => {
+  try {
+    const user = await getSessionUser(req);
+    res.json(user ? { authenticated: true, user: toPublicUser(user) } : { authenticated: false });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/auth/logout", async (req, res, next) => {
+  try {
+    const token = req.cookies?.[SESSION_COOKIE];
+    if (token) await pool.query("DELETE FROM sessions WHERE token = $1", [token]);
+    res.clearCookie(SESSION_COOKIE, { path: "/" });
+    res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// R1-04: an authorized staff/admin user can grant or revoke verified-faculty capability.
+// Revocation only flips a flag — it never deletes the user's account.
+app.get("/api/admin/users", requireAuth(), requireStaff(), async (_request, res, next) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, email, is_staff, is_verified_faculty, created_at FROM users ORDER BY created_at DESC",
+    );
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/admin/users/:id/verify-faculty", requireAuth(), requireStaff(), async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "UPDATE users SET is_verified_faculty = true WHERE id = $1 RETURNING id, email, is_staff, is_verified_faculty",
+      [req.params.id],
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: "user not found" });
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/admin/users/:id/revoke-faculty", requireAuth(), requireStaff(), async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "UPDATE users SET is_verified_faculty = false WHERE id = $1 RETURNING id, email, is_staff, is_verified_faculty",
+      [req.params.id],
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: "user not found" });
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
   }
 });
 

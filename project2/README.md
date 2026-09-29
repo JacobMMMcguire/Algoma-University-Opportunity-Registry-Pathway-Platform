@@ -8,35 +8,62 @@ requirements (R1-01 through R1-26) for the full spec.
 This code lives on the `r1-development` branch, separate from `backend/`/`frontend/` at
 the repo root (which stay frozen as the submitted Phase 0 warm-up).
 
-- **Deployment**: needs its own Render services (Web Service for `project2/backend`,
-  Static Site for `project2/frontend`), connected to this repo but watching
-  `r1-development` (or whatever branch replaces it later) — not `master`. The existing
-  Phase 0 Render services stay untouched.
-- **Database**: needs its own Supabase project — do not point this backend at the
-  Phase 0 Supabase project. Set the new project's connection string as `DATABASE_URL`
-  on the new Render backend service only.
+- **Deployment**: two dedicated Render services, connected to this repo but watching
+  `r1-development` — a Web Service (`project2/backend`) and a Static Site
+  (`project2/frontend`). The existing Phase 0 Render services are untouched.
+- **Database**: a dedicated Supabase project, separate from Phase 0's. Its connection
+  string is set as `DATABASE_URL` on the Project 2 Render backend service only.
+
+## Auth approach (R1-01 through R1-07)
+
+Passwordless sign-in is custom-built (not Supabase Auth), with an **instructor-approved
+test mode**: sign-in codes are never emailed. Instead they are readable at
+`GET /api/auth/pending-challenges`, and the frontend's `operator.html` page renders that
+as a stand-in for the recipient's inbox. This was chosen because real email delivery
+from a fresh deployment is explicitly the least reliable part of this release per the
+brief, and the requirement itself (short-lived, single-use, `algomau.ca`-only) is
+unaffected by the transport.
+
+- `ALLOWED_EMAIL_DOMAIN` (default `algomau.ca`) is enforced server-side in
+  `project2/backend/server.js`, matched against the domain after the final `@`.
+- Codes expire after 10 minutes and are single-use (`used_at` is set on verification).
+- Sessions are server-side rows (`sessions` table) behind an httpOnly cookie, not a
+  stateless JWT — so a staff revocation (`is_verified_faculty = false`) takes effect on
+  the very next request rather than waiting for a token to expire.
+- New users always start with `is_staff = false` and `is_verified_faculty = false`
+  regardless of anything the client sends (R1-03). Only an existing staff user can
+  promote/revoke verified-faculty via `POST /api/admin/users/:id/verify-faculty` and
+  `.../revoke-faculty` (R1-04).
+
+**Known trade-off**: because the challenge code is world-readable at
+`/api/auth/pending-challenges` rather than delivered to a private inbox, anyone who can
+reach the deployed site can sign in as any `@algomau.ca` address for which a challenge is
+currently pending. This is the accepted cost of the test-mode substitution and should be
+stated plainly in `release_submission.md`'s known-issues section.
+
+## First staff/admin account
+
+Not self-service by design (R1-03). After someone has signed in at least once (so their
+`users` row exists), promote them directly in Supabase's SQL Editor:
+
+```sql
+UPDATE users SET is_staff = true WHERE email = 'admin@algomau.ca';
+```
 
 ## Local development
 
-1. Create the new Supabase project and run this project's schema against it (not yet
-   written — see "Open decisions" below).
-2. `cd project2/backend && copy .env.example .env` and set `DATABASE_URL`.
-3. `npm install` then `npm start` (defaults to port 3001, so it can run alongside the
-   Phase 0 backend on 3000 if needed).
-4. Set `window.API_BASE_URL` in `project2/frontend/config.js`.
-5. Serve `project2/frontend/` with any static server.
+1. Copy `project2/backend/.env.example` to `.env`, set `DATABASE_URL` to the Project 2
+   Supabase pooler string, and set `FRONTEND_ORIGINS` to include your local static
+   server's origin.
+2. `cd project2/backend && npm install && npm start` (defaults to port 3001).
+3. Set `window.API_BASE_URL` in `project2/frontend/config.js` to `http://127.0.0.1:3001`.
+4. Serve `project2/frontend/` with any static server; open `operator.html` in a second
+   tab to read sign-in codes while testing.
 
 ## Status
 
-Scaffolding only — health-check backend and a placeholder frontend page, enough to
-prove the deploy pipeline once the new Render/Supabase resources exist. No data model,
-auth, or feature routes yet.
-
-## Open decisions
-
-- **Auth approach for R1-01/02/03** (passwordless algomau.ca-only sign-in): custom
-  Express-based challenge surfaced to an authorized operator (test mode) vs. Supabase
-  Auth's built-in magic link/OTP. Affects the schema (a `sign_in_challenges` table vs.
-  none) and the `users` table shape.
-- **New Supabase project**: not yet created.
-- **New Render services**: not yet created.
+- Done: schema (`users`, `sign_in_challenges`, `sessions`, `faculty_profiles`,
+  `projects`), passwordless auth (request/verify/me/logout), staff verify/revoke
+  endpoints, minimal sign-in UI + operator console.
+- Not started: faculty profile CRUD (R1-08–R1-10), project CRUD (R1-11–R1-16), student
+  discovery/filtering (R1-17–R1-22), mobile/accessibility pass (R1-25–R1-26).

@@ -6,11 +6,39 @@
   <title>Opportunity Registry — Project 2</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 34rem; margin: 2rem auto; padding: 0 1rem; }
+    form { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0; }
+    input { flex: 1; min-width: 10rem; padding: .5rem; }
+    button { padding: .5rem 1rem; }
+    #status { min-height: 1.25rem; color: #b00; }
+    [hidden] { display: none; }
   </style>
 </head>
 <body>
   <h1>Opportunity Registry and Pathway Platform</h1>
   <p id="health">Checking backend…</p>
+
+  <section id="signed-out">
+    <h2>Sign in</h2>
+    <p>Use an <code>@algomau.ca</code> address.</p>
+    <form id="request-form">
+      <input id="email" type="email" placeholder="you@algomau.ca" autocomplete="email" required>
+      <button type="submit">Send sign-in code</button>
+    </form>
+    <form id="verify-form" hidden>
+      <input id="code" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" required>
+      <button type="submit">Verify</button>
+    </form>
+    <p><small>Test mode: no real email is sent. Look up the code on the <a href="operator.html">operator console</a>.</small></p>
+  </section>
+
+  <section id="signed-in" hidden>
+    <h2>Signed in</h2>
+    <p id="who"></p>
+    <button id="sign-out">Sign out</button>
+  </section>
+
+  <p id="status"></p>
+
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>

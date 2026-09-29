@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Operator Console — Test Mode</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: .4rem; border-bottom: 1px solid #ddd; }
+    code { font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <h1>Operator Console (test mode)</h1>
+  <p>
+    This stands in for the recipient's email inbox while real email delivery is not
+    configured. It lists sign-in codes that have not yet been used or expired. See the
+    release notes for why this substitute is in place.
+  </p>
+  <button id="refresh">Refresh</button>
+  <p id="status"></p>
+  <table>
+    <thead><tr><th>Email</th><th>Code</th><th>Expires</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <script src="config.js"></script>
+  <script src="operator.js"></script>
+</body>
+</html>
