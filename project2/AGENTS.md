@@ -4,12 +4,17 @@ Opportunity Registry and Pathway Platform, Release 1 (R1-01 to R1-26): students 
 Algoma faculty and projects and contact faculty by email. The course brief and R1
 requirements are the spec; this file is how the codebase works and the rules for changing it.
 
+**Everything for Project 2 is inside `project2/`**: code in `project2/backend/`, docs in
+`project2/`. Files and folders at the repository root other than `.gitignore`, `.github/`,
+`AGENTS.md` and `CLAUDE.md` belong to Phase 0 and must be ignored (see the root `AGENTS.md`).
+Run every command from `project2/backend/`.
+
 ## Hard rules
 
 1. **Branches.** Work on a feature branch off `r1-development` and merge back into it.
    Never push to or merge into `master`: it holds the submitted Phase 0 app, which is still
-   being assessed. Never edit the repo-root `backend/`, `frontend/`, `scripts/` or `tests/`
-   folders (Phase 0) or its Render services / Supabase project.
+   being assessed. Never edit the Phase 0 files at the repository root (listed in the root
+   `AGENTS.md`) or Phase 0's Render services and Supabase project.
 2. **Merging to `r1-development` deploys to production immediately.** Render auto-deploys
    that branch to https://algoma-opportunity-registry-r1-backend.onrender.com. Run
    `npm test` before merging.

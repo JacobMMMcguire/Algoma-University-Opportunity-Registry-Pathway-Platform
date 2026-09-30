@@ -1,3 +1,3 @@
-On the `r1-development` branch, all work is Project 2 in `project2/`. Its guide and rules:
+@AGENTS.md
 
 @project2/AGENTS.md
