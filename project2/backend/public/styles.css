@@ -1,0 +1,72 @@
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #fff;
+}
+
+header { border-bottom: 1px solid #ddd; }
+nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  list-style: none;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  max-width: 48rem;
+}
+nav a[aria-current="page"] { font-weight: 700; }
+
+main { max-width: 48rem; margin: 0 auto; padding: 1rem; }
+h1 { font-size: 1.6rem; line-height: 1.25; }
+
+form { margin: 1rem 0; }
+label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+.field { margin-bottom: 0.75rem; }
+.hint { font-size: 0.9rem; color: #555; margin: 0.25rem 0 0; }
+
+/* 16px text in inputs stops iOS Safari zooming in on focus. */
+input:not([type="radio"]):not([type="checkbox"]), textarea, select {
+  width: 100%;
+  max-width: 24rem;
+  padding: 0.6rem;
+  font: inherit;
+  font-size: 1rem;
+  border: 1px solid #767676;
+  border-radius: 4px;
+}
+
+fieldset { border: 1px solid #ccc; border-radius: 4px; padding: 0.75rem 1rem; margin: 0 0 0.75rem; }
+legend { font-weight: 600; padding: 0 0.25rem; }
+.choice { display: flex; gap: 0.6rem; align-items: flex-start; font-weight: normal; margin: 0.5rem 0; }
+.choice input { margin-top: 0.3rem; width: 1.1rem; height: 1.1rem; flex: none; }
+
+button {
+  min-height: 44px;
+  padding: 0.6rem 1rem;
+  font: inherit;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background: #f3f3f3;
+  color: #1a1a1a;
+  cursor: pointer;
+}
+button.primary { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+button:disabled { opacity: 0.6; cursor: default; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+:focus-visible { outline: 3px solid #b45309; outline-offset: 2px; }
+
+.status { min-height: 1.5rem; }
+.status.error { color: #b00020; font-weight: 600; }
+.note { background: #f5f7ff; border-left: 4px solid #1d4ed8; padding: 0.75rem 1rem; margin: 1rem 0; }
+.note ul { margin: 0.25rem 0 0.5rem; padding-left: 1.25rem; }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd; vertical-align: top; }
+td { overflow-wrap: anywhere; }

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faculty verification — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <h1>Faculty verification</h1>
+    <p id="denied" hidden></p>
+
+    <section id="panel" hidden>
+      <p>
+        Grant verified-faculty status only to people you have confirmed are Algoma faculty.
+        Revoking removes faculty features and hides their profile and projects from the public.
+        It does not delete their account.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <caption class="hint">Everyone who has signed in, newest first.</caption>
+          <thead>
+            <tr><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Action</th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

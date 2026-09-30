@@ -3,43 +3,89 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Opportunity Registry — Project 2</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 34rem; margin: 2rem auto; padding: 0 1rem; }
-    form { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0; }
-    input { flex: 1; min-width: 10rem; padding: .5rem; }
-    button { padding: .5rem 1rem; }
-    #status { min-height: 1.25rem; color: #b00; }
-    [hidden] { display: none; }
-  </style>
+  <title>Opportunity Registry — Algoma University</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Opportunity Registry and Pathway Platform</h1>
-  <p id="health">Checking backend…</p>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <h1>Opportunity Registry and Pathway Platform</h1>
 
-  <section id="signed-out">
-    <h2>Sign in</h2>
-    <p>Use an <code>@algomau.ca</code> address.</p>
-    <form id="request-form">
-      <input id="email" type="email" placeholder="you@algomau.ca" autocomplete="email" required>
-      <button type="submit">Send sign-in code</button>
-    </form>
-    <form id="verify-form" hidden>
-      <input id="code" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" required>
-      <button type="submit">Verify</button>
-    </form>
-    <p id="test-mode-hint" hidden><small>Test mode is on: codes are also listed on the <a href="operator.html">operator console</a>.</small></p>
-  </section>
+    <section id="signed-out" hidden aria-labelledby="sign-in-heading">
+      <h2 id="sign-in-heading">Sign in</h2>
+      <p>No password needed. We'll email a 6-digit code to your Algoma University address.</p>
 
-  <section id="signed-in" hidden>
-    <h2>Signed in</h2>
-    <p id="who"></p>
-    <button id="sign-out">Sign out</button>
-  </section>
+      <form id="request-form" novalidate>
+        <div class="field">
+          <label for="email">Algoma University email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required aria-describedby="email-hint">
+          <p id="email-hint" class="hint">Must end in @algomau.ca</p>
+        </div>
+        <button type="submit" class="primary">Send sign-in code</button>
+      </form>
 
-  <p id="status"></p>
+      <form id="verify-form" hidden novalidate>
+        <div class="field">
+          <label for="code">6-digit code</label>
+          <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required aria-describedby="code-hint">
+          <p id="code-hint" class="hint">Sent to <span id="code-email"></span>. Expires in 10 minutes and works once.</p>
+        </div>
+        <div class="actions">
+          <button type="submit" class="primary">Sign in</button>
+          <button type="button" id="restart">Use a different email</button>
+        </div>
+      </form>
 
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+      <p id="test-mode-hint" class="hint" hidden>
+        Test mode is on: codes are also listed on the <a href="operator.html">operator console</a>.
+      </p>
+    </section>
+
+    <section id="signed-in" hidden aria-labelledby="account-heading">
+      <h2 id="account-heading">Your account</h2>
+      <p>Signed in as <strong id="who"></strong>.</p>
+      <p id="role-note"></p>
+
+      <section id="public-profile" hidden aria-labelledby="public-profile-heading">
+        <h3 id="public-profile-heading">Public profile display</h3>
+        <p id="public-profile-current"></p>
+
+        <div class="note">
+          <p><strong>If you allow public display:</strong></p>
+          <ul>
+            <li>Your faculty profile and your published projects can be seen by anyone, including people who are not signed in.</li>
+          </ul>
+          <p><strong>If you don't:</strong></p>
+          <ul>
+            <li>Your profile and published projects are shown only to people signed in with an Algoma account.</li>
+            <li>You can still use every faculty feature. Declining doesn't limit what you can do.</li>
+          </ul>
+          <p>Drafts are never shown to anyone else either way. You can change this at any time here, and the change takes effect immediately.</p>
+        </div>
+
+        <form id="public-profile-form" novalidate>
+          <fieldset>
+            <legend>Allow public display of your profile and published projects?</legend>
+            <label class="choice">
+              <input type="radio" name="allow" value="true">
+              <span>Yes, anyone can see them</span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="allow" value="false">
+              <span>No, only signed-in Algoma users can see them</span>
+            </label>
+          </fieldset>
+          <button type="submit" class="primary">Save choice</button>
+        </form>
+      </section>
+
+      <button type="button" id="sign-out">Sign out</button>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="index.js"></script>
 </body>
 </html>

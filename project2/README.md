@@ -1,73 +1,41 @@
 # Project 2 — Opportunity Registry and Pathway Platform
 
-Release 1: faculty/project discovery and first contact. See the Release 1 brief and
-requirements (R1-01 through R1-26) for the full spec.
+Release 1: faculty and project discovery with first contact by email.
 
-## Isolation from Phase 0
+- **Live:** https://algoma-opportunity-registry-r1-backend.onrender.com (auto-deploys the
+  `r1-development` branch)
+- **Developers and coding agents:** read [AGENTS.md](AGENTS.md) first, for the rules,
+  code layout, testing, and how to add features.
 
-This code lives on the `r1-development` branch, separate from `backend/`/`frontend/` at
-the repo root (which stay frozen as the submitted Phase 0 warm-up).
+## Infrastructure
 
-- **Deployment**: one dedicated Render Web Service (root `project2/backend`) watching
-  `r1-development`. Express serves both the API and the frontend (`project2/backend/public`)
-  from the same origin, so the session cookie is first-party — a separate static site
-  would make it a third-party cookie, which Safari/iOS blocks. The existing Phase 0 Render
-  services are untouched.
-- **Database**: a dedicated Supabase project, separate from Phase 0's. Its connection
-  string is set as `DATABASE_URL` on the Project 2 Render backend service only.
+Kept completely separate from Phase 0 (which lives on `master` with its own Render services
+and Supabase project, and must not be touched while it is assessed):
 
-## Auth approach (R1-01 through R1-07)
+- **Render:** one Web Service, root directory `project2/backend`, branch `r1-development`,
+  build `npm install`, start `npm start`, health check `/api/health`. It serves the API and
+  the frontend.
+- **Supabase:** a dedicated project. Its Session pooler connection string is `DATABASE_URL`
+  on the Render service. RLS is on for every table with no policies, so only the backend
+  can read the data.
+- **Render environment variables:** `DATABASE_URL`, `BREVO_API_KEY`, `EMAIL_FROM` (a
+  Brevo-verified sender), `SIGN_IN_TEST_MODE=true`. See `backend/.env.example`.
 
-Passwordless sign-in is custom-built (not Supabase Auth). Codes are delivered two ways:
+## Release notes input: identity and consent (R1-01 to R1-07)
 
-- **Email via Brevo**, when `BREVO_API_KEY` and `EMAIL_FROM` (a Brevo-verified sender)
-  are set. Uses Brevo's HTTPS API, since free Render services may block outbound SMTP.
-- **Instructor-approved test mode** (`SIGN_IN_TEST_MODE`): unused codes are readable at
-  `GET /api/auth/pending-challenges`, rendered by `operator.html` as a stand-in for the
-  recipient's inbox. Defaults on only when email isn't configured. Needed for evaluators
-  to sign in as fixture accounts, which have no real inboxes.
+For `release_submission.md`:
 
-Either way the requirement is unchanged: short-lived, single-use, `algomau.ca`-only. At
-most 3 codes per address per 10 minutes, to protect inboxes and the Brevo daily quota.
-
-- `ALLOWED_EMAIL_DOMAIN` (default `algomau.ca`) is enforced server-side in
-  `project2/backend/server.js`, matched against the domain after the final `@`.
-- Codes expire after 10 minutes and are single-use (`used_at` is set on verification).
-- Sessions are server-side rows (`sessions` table) behind an httpOnly cookie, not a
-  stateless JWT — so a staff revocation (`is_verified_faculty = false`) takes effect on
-  the very next request rather than waiting for a token to expire.
-- New users always start with `is_staff = false` and `is_verified_faculty = false`
-  regardless of anything the client sends (R1-03). Only an existing staff user can
-  promote/revoke verified-faculty via `POST /api/admin/users/:id/verify-faculty` and
-  `.../revoke-faculty` (R1-04).
-
-**Known trade-off (test mode only)**: because the challenge code is world-readable at
-`/api/auth/pending-challenges` rather than delivered to a private inbox, anyone who can
-reach the deployed site can sign in as any `@algomau.ca` address for which a challenge is
-currently pending. This is the accepted cost of the test-mode substitution and should be
-stated plainly in `release_submission.md`'s known-issues section.
-
-## First staff/admin account
-
-Not self-service by design (R1-03). After someone has signed in at least once (so their
-`users` row exists), promote them directly in Supabase's SQL Editor:
-
-```sql
-UPDATE users SET is_staff = true WHERE email = 'admin@algomau.ca';
-```
-
-## Local development
-
-1. Copy `project2/backend/.env.example` to `.env` and set `DATABASE_URL` to the Project 2
-   Supabase pooler string.
-2. `cd project2/backend && npm install && npm start` (defaults to port 3001).
-3. Open http://localhost:3001 — the backend serves the frontend too. Open
-   `/operator.html` in a second tab to read sign-in codes while testing.
-
-## Status
-
-- Done: schema (`users`, `sign_in_challenges`, `sessions`, `faculty_profiles`,
-  `projects`), passwordless auth (request/verify/me/logout), staff verify/revoke
-  endpoints, minimal sign-in UI + operator console.
-- Not started: faculty profile CRUD (R1-08–R1-10), project CRUD (R1-11–R1-16), student
-  discovery/filtering (R1-17–R1-22), mobile/accessibility pass (R1-25–R1-26).
+- **Email transport:** sign-in codes are emailed through Brevo from a verified Gmail sender
+  (the team owns no domain, so there is no DKIM or DMARC alignment and codes may land in
+  junk). Test mode is also on: unused codes are listed at `/operator.html` so evaluators
+  can sign in as accounts with no real inbox. Codes are 6 digits, expire in 10 minutes,
+  are single-use, allow 5 wrong guesses, and are only issued to `@algomau.ca` addresses.
+- **First admin:** created out of band by signing in once, then running
+  `UPDATE users SET is_staff = true WHERE email = '...';` in the Supabase SQL Editor.
+  Signing in never grants staff or faculty status.
+- **Staff account for peer testers:** *to do — create one (e.g. a synthetic
+  `@algomau.ca` address used via the operator console) and list it here.*
+- **Known issue (test mode):** while test mode is on, anyone who can open the site can
+  read pending codes on `/operator.html`, and so sign in as any `@algomau.ca` address with
+  a pending code. This is the accepted cost of the test-mode substitute and goes away with
+  `SIGN_IN_TEST_MODE=false`.

@@ -1,7 +1,5 @@
--- Project 2 (Opportunity Registry and Pathway Platform) — Release 1 schema.
--- Run once against the DEDICATED Project 2 Supabase project (not the Phase 0 one):
---   psql "$DATABASE_URL" -f project2/backend/schema.sql
--- or paste the whole file into that project's SQL Editor.
+-- 000: initial Project 2 schema (already applied to the live Supabase project).
+-- Later changes are separate numbered files in this folder; see project2/AGENTS.md.
 
 CREATE TABLE IF NOT EXISTS users (
     id                   SERIAL PRIMARY KEY,

@@ -3,15 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev:local": "node scripts/dev-local.js",
+    "migrate": "node scripts/migrate.js",
+    "test": "node --test \"test/*.test.js\""
   },
   "dependencies": {
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8"
   }
 }
