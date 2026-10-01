@@ -60,7 +60,7 @@ src/config.js           Environment settings (domain, TTLs, email, test mode)
 src/db.js               Postgres pool, in-memory PGlite db, migration runner
 src/auth.js             Session lookup and guards (requireAuth, requireStaff, ...)
 src/visibility.js       The public-visibility rule (R1-10, R1-14)
-src/validation.js       Shared input clean-up (text, research-area lists)
+src/validation.js       Shared input clean-up (text, research-area lists, ids via parseId)
 src/email.js            Brevo sender
 src/routes/auth.js      /api/auth: sign-in codes, sessions (R1-01 to R1-03)
 src/routes/admin.js     /api/admin: grant or revoke faculty (R1-04)
@@ -120,8 +120,8 @@ function createProjectsRouter({ db, auth }) {
 
   router.put("/:id", auth.requireVerifiedFaculty, async (req, res, next) => {
     try {
-      const id = Number(req.params.id);
-      if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid project id." });
+      const id = parseId(req.params.id); // from src/validation.js
+      if (id === null) return res.status(400).json({ error: "Invalid project id." });
       const result = await db.query(
         "UPDATE projects SET title = $1, updated_at = now() WHERE id = $2 AND faculty_user_id = $3 RETURNING *",
         [req.body.title, id, req.user.id],
@@ -199,6 +199,7 @@ use, unchanged so far. Reshape them with migrations if needed, but check the col
   404.
 - `common.js` has `api(path, { method, body })` (same-origin, never throws),
   `getSession()`, `renderNav(session)`, `showStatus(el, msg, { error })`,
+  `showApiError(el, res, fallback)` (adds a link to the fix for known error codes),
   `escapeHtml()` and `PROJECT_STATUS_LABELS`. Add new pages to `NAV_LINKS` there.
 - `styles.css` has `.button-link` for links that sit next to buttons (Edit, View).
 - Accessibility and phone width (R1-25, R1-26): every input has a `<label>`, errors go to a
@@ -251,12 +252,15 @@ use, unchanged so far. Reshape them with migrations if needed, but check the col
     ids and owner fields in the body are ignored.
   - `PUT /api/projects/:id` (verified faculty): replaces the content; never changes status.
   - `POST /api/projects/:id/publish` (`requirePublicProfileChoice`, R1-05): draft or closed
-    to published (R1-13; also how a closed project is reopened).
+    to published (R1-13; also how a closed project is reopened). Also needs the owner to
+    have a faculty profile (409 `faculty_profile_required`), so every public project can
+    name its faculty and link to their profile (R1-21).
   - `POST /api/projects/:id/close` (verified faculty): withdraws it (R1-15). There is
     deliberately no DELETE route, so closing never loses the record.
 - Drafts can be created before the public-profile choice is made; only publishing needs it.
 - `GET /api/projects` (optionally `?facultyId=N`) and `GET /api/projects/:id`: published
-  projects of verified faculty, with `PUBLIC_FACULTY_SQL` for logged-out visitors (R1-14).
+  projects of verified faculty who have a profile, with `PUBLIC_FACULTY_SQL` for logged-out
+  visitors (R1-14).
   Drafts, closed, hidden and missing projects all get the same 404. The owner can also open
   their own draft or closed project by id, to preview it.
 - Responses include `faculty: { id, displayName }` from the owner's profile (`displayName`

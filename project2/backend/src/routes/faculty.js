@@ -1,5 +1,5 @@
 const express = require("express");
-const { cleanAreas, cleanText } = require("../validation");
+const { cleanAreas, cleanText, parseId } = require("../validation");
 const { PUBLIC_FACULTY_SQL, isPubliclyVisibleFaculty } = require("../visibility");
 
 // R1-09: the stored codes are internal. Students only ever see the label and explanation.
@@ -190,8 +190,8 @@ function createFacultyRouter({ db, auth }) {
 
   router.get("/:id", async (req, res, next) => {
     try {
-      const id = Number(req.params.id);
-      if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid faculty id." });
+      const id = parseId(req.params.id);
+      if (id === null) return res.status(400).json({ error: "Invalid faculty id." });
       const viewer = await auth.getSessionUser(req);
       const result = await db.query(
         `SELECT ${PROFILE_COLUMNS} FROM faculty_profiles

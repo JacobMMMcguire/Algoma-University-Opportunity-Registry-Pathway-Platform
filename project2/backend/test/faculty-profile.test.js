@@ -226,6 +226,8 @@ describe("faculty profile", () => {
 
     test("a non-numeric id is rejected", async () => {
       assert.equal((await createClient(t.baseUrl).get("/api/faculty/abc")).status, 400);
+      assert.equal((await createClient(t.baseUrl).get("/api/faculty/99999999999")).status, 400);
+      assert.equal((await createClient(t.baseUrl).get("/api/faculty/1e3")).status, 400);
     });
   });
 

@@ -42,6 +42,7 @@ describe("faculty verification", () => {
   test("staff get clear errors for unknown or malformed ids", async () => {
     assert.equal((await staff.post("/api/admin/users/999999/verify-faculty")).status, 404);
     assert.equal((await staff.post("/api/admin/users/abc/verify-faculty")).status, 400);
+    assert.equal((await staff.post("/api/admin/users/99999999999/verify-faculty")).status, 400);
   });
 
   test("staff can list users with their current roles", async () => {

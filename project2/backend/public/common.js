@@ -64,3 +64,20 @@ function showStatus(element, message, { error = false } = {}) {
   element.textContent = message;
   element.classList.toggle("error", error);
 }
+
+// API errors with a `code` the user can fix themselves get a link to where they fix it.
+const ERROR_FIX_LINKS = {
+  faculty_profile_required: { href: "profile.html", label: "Write your faculty profile" },
+  public_profile_choice_required: { href: "index.html", label: "Choose on the home page" },
+};
+
+function showApiError(element, res, fallback) {
+  showStatus(element, res.data.error || fallback, { error: true });
+  const fix = ERROR_FIX_LINKS[res.data.code];
+  if (fix) {
+    const link = document.createElement("a");
+    link.href = fix.href;
+    link.textContent = fix.label;
+    element.append(" ", link);
+  }
+}

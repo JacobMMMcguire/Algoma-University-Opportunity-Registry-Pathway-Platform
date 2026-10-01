@@ -1,5 +1,5 @@
 const express = require("express");
-const { cleanAreas, cleanText } = require("../validation");
+const { cleanAreas, cleanText, parseId } = require("../validation");
 const { PUBLIC_FACULTY_SQL, isPubliclyVisibleFaculty } = require("../visibility");
 
 const LIMITS = {
@@ -93,11 +93,6 @@ function validateProject(body) {
   };
 }
 
-// Positive integer ids within Postgres INTEGER range; anything else is null.
-function parseId(value) {
-  return /^\d{1,9}$/.test(value) ? Number(value) : null;
-}
-
 // Projects joined to their owner's account (for the visibility rule) and profile (for the name).
 // `source` is `projects` or the name of a CTE holding rows just written.
 function projectQuery(source) {
@@ -110,9 +105,11 @@ function projectQuery(source) {
 
 // R1-12 and R1-14: discovery shows published projects only. Logged-out visitors see those of
 // faculty who allowed public display; signed-in users also see signed-in-only ones. Revoked
-// faculty's projects are hidden from everyone.
+// faculty's projects are hidden from everyone. R1-21: a project is only shown when its owner
+// has a profile to name and link to (publish also requires one).
 function discoverableFilter(viewer) {
-  return `p.status = 'published' AND users.is_verified_faculty ${viewer ? "" : `AND ${PUBLIC_FACULTY_SQL}`}`;
+  return `p.status = 'published' AND users.is_verified_faculty AND faculty_profiles.user_id IS NOT NULL
+          ${viewer ? "" : `AND ${PUBLIC_FACULTY_SQL}`}`;
 }
 
 // R1-11 to R1-16: faculty create, edit, publish and close their own projects; everyone else
@@ -220,10 +217,22 @@ function createProjectsRouter({ db, auth }) {
   }
 
   // R1-13: explicit publish, also used to reopen a closed project. R1-05: needs the
-  // public-profile choice to have been made (either answer).
-  router.post("/:id/publish", auth.requirePublicProfileChoice, (req, res, next) =>
-    setStatus(req, res, next, "published"),
-  );
+  // public-profile choice to have been made (either answer). R1-21: needs a faculty profile,
+  // so students can see who leads the project and open their profile.
+  router.post("/:id/publish", auth.requirePublicProfileChoice, async (req, res, next) => {
+    try {
+      const profile = await db.query("SELECT 1 FROM faculty_profiles WHERE user_id = $1", [req.user.id]);
+      if (profile.rows.length === 0) {
+        return res.status(409).json({
+          error: "Write your faculty profile before publishing, so students can see who leads this project.",
+          code: "faculty_profile_required",
+        });
+      }
+      await setStatus(req, res, next, "published");
+    } catch (error) {
+      next(error);
+    }
+  });
 
   // R1-15: withdraw from discovery. Nothing is deleted, so the record and its history stay.
   router.post("/:id/close", auth.requireVerifiedFaculty, (req, res, next) => setStatus(req, res, next, "closed"));

@@ -84,7 +84,7 @@ async function changeStatus(action, button) {
   }
   const res = await api(`/api/projects/${encodeURIComponent(project.id)}/${action}`, { method: "POST" });
   if (!res.ok) {
-    showStatus(statusEl, res.data.error || "Could not update the project.", { error: true });
+    showApiError(statusEl, res, "Could not update the project.");
     button.focus();
     return;
   }

@@ -58,7 +58,8 @@ For `release_submission.md`:
   target term, and an optional background or prerequisite note.
 - Saving always creates a **draft** that only its owner can see. A project becomes visible
   only when the owner presses **Publish**, which needs the public-display choice to have
-  been made first (R1-05); either answer works.
+  been made first (R1-05; either answer works) and a saved faculty profile, so every
+  visible project names its faculty member and links to their profile.
 - Published projects follow the owner's public-display choice: public faculty's projects
   are visible to everyone, the rest only to signed-in users. `/projects.html` lists them,
   `/projects.html?id=N` shows one, and each faculty profile lists that person's projects.

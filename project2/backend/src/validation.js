@@ -26,4 +26,9 @@ function cleanAreas(value, { max, maxLength }) {
   return { areas };
 }
 
-module.exports = { cleanText, cleanAreas };
+// Positive integer ids within Postgres INTEGER range; anything else is null.
+function parseId(value) {
+  return /^\d{1,9}$/.test(value) ? Number(value) : null;
+}
+
+module.exports = { cleanText, cleanAreas, parseId };

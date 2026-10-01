@@ -21,8 +21,17 @@ describe("faculty projects", () => {
   });
   after(() => t.close());
 
-  async function faculty(publicProfile = true) {
-    return signIn(t, uniqueEmail("prof"), { faculty: true, publicProfile });
+  // Faculty get a minimal profile by default, since publishing requires one (R1-21).
+  async function faculty(publicProfile = true, { withProfile = true } = {}) {
+    const signedIn = await signIn(t, uniqueEmail("prof"), { faculty: true, publicProfile });
+    if (withProfile) {
+      await t.db.query(
+        `INSERT INTO faculty_profiles (user_id, display_name, description, research_areas, inquiry_preference)
+         VALUES ($1, 'Dr. Test Faculty', 'Research.', '{Ecology}', 'open')`,
+        [signedIn.user.id],
+      );
+    }
+    return signedIn;
   }
 
   async function student() {
@@ -220,6 +229,38 @@ describe("faculty projects", () => {
       assert.equal(blocked.status, 409);
       assert.equal(blocked.data.code, "public_profile_choice_required");
       assert.equal((await storedProject(project.id)).status, "draft");
+    });
+
+    test("R1-21: publishing needs a faculty profile, so the project can name and link its faculty", async () => {
+      const { client } = await faculty(true, { withProfile: false });
+      const project = await createDraft(client);
+      const blocked = await client.post(`/api/projects/${project.id}/publish`);
+      assert.equal(blocked.status, 409);
+      assert.equal(blocked.data.code, "faculty_profile_required");
+      assert.equal((await storedProject(project.id)).status, "draft");
+
+      const saved = await client.put("/api/faculty/me/profile", {
+        displayName: "Dr. Now Has Profile",
+        description: "Research.",
+        researchAreas: ["Ecology"],
+        inquiryPreference: "open",
+      });
+      assert.equal(saved.status, 200);
+      const published = await client.post(`/api/projects/${project.id}/publish`);
+      assert.equal(published.status, 200);
+      assert.equal(published.data.project.faculty.displayName, "Dr. Now Has Profile");
+    });
+
+    test("R1-21: a published project whose owner has no profile is hidden from everyone else", async () => {
+      // Covers projects published before profiles were required.
+      const { client, user } = await faculty(true);
+      const project = await createPublished(client);
+      await t.db.query("DELETE FROM faculty_profiles WHERE user_id = $1", [user.id]);
+      for (const c of [await student(), createClient(t.baseUrl)]) {
+        assert.equal((await c.get(`/api/projects/${project.id}`)).status, 404);
+        assert.ok(!listed(await c.get("/api/projects"), project.id));
+      }
+      assert.equal((await client.get(`/api/projects/${project.id}`)).status, 200);
     });
 
     test("R1-06: faculty who decline public display can still publish", async () => {

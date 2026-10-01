@@ -70,7 +70,7 @@ $("project-list").addEventListener("click", async (event) => {
   const res = await api(`/api/projects/${encodeURIComponent(id)}/${action}`, { method: "POST" });
   if (!res.ok) {
     button.disabled = false;
-    showStatus(statusEl, res.data.error || "Could not update the project.", { error: true });
+    showApiError(statusEl, res, "Could not update the project.");
     button.focus();
     return;
   }

@@ -1,5 +1,6 @@
 const express = require("express");
 const { toPublicUser } = require("../auth");
+const { parseId } = require("../validation");
 
 // R1-04: staff grant or revoke verified-faculty capability. Revoking only clears the flag; the
 // account, profile and projects stay (hidden from the public by the visibility rule).
@@ -17,8 +18,8 @@ function createAdminRouter({ db, auth }) {
 
   async function setVerifiedFaculty(req, res, next, value) {
     try {
-      const id = Number(req.params.id);
-      if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid user id." });
+      const id = parseId(req.params.id);
+      if (id === null) return res.status(400).json({ error: "Invalid user id." });
       const result = await db.query(
         "UPDATE users SET is_verified_faculty = $1 WHERE id = $2 RETURNING *",
         [value, id],
