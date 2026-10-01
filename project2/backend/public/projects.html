@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projects — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <section id="list-view" hidden aria-labelledby="list-heading">
+      <h1 id="list-heading">Projects</h1>
+      <p id="list-note" class="hint"></p>
+      <ul id="project-list" class="cards"></ul>
+    </section>
+
+    <article id="project-view" hidden aria-labelledby="project-title">
+      <p><a href="projects.html">All projects</a></p>
+      <p id="owner-note" class="note" hidden></p>
+      <h1 id="project-title" tabindex="-1"></h1>
+      <p id="project-faculty" hidden>Faculty: <a href="#"></a></p>
+      <p id="project-audience" class="hint" hidden>
+        This project is visible only to people signed in with an Algoma account.
+      </p>
+
+      <dl class="facts">
+        <div><dt>Target term</dt><dd id="project-term"></dd></div>
+        <div id="level-row" hidden><dt>Student level</dt><dd id="project-level"></dd></div>
+      </dl>
+
+      <h2>About the project</h2>
+      <p id="project-description" class="prewrap"></p>
+
+      <h2>Research and project areas</h2>
+      <ul id="project-areas" class="tags"></ul>
+
+      <section id="prereq-section" hidden aria-labelledby="prereq-heading">
+        <h2 id="prereq-heading">Desired background</h2>
+        <p id="project-prereq" class="prewrap"></p>
+      </section>
+    </article>
+
+    <section id="not-found" hidden>
+      <h1>Project not found</h1>
+      <p id="not-found-text"></p>
+      <p><a href="projects.html">See all projects</a></p>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="projects.js"></script>
+</body>
+</html>

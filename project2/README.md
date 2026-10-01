@@ -50,3 +50,23 @@ For `release_submission.md`:
 - `/faculty.html` lists profiles and `/faculty.html?id=N` shows one. Logged-out visitors see
   only faculty who allowed public display; a direct link to any other profile shows "not
   found". Signed-in users also see signed-in-only profiles, labelled as such.
+
+## Release notes input: faculty projects (R1-11 to R1-16)
+
+- Verified faculty manage projects at `/my-projects.html` and create or edit one at
+  `/project-edit.html`: title, short description, research areas, optional student level,
+  target term, and an optional background or prerequisite note.
+- Saving always creates a **draft** that only its owner can see. A project becomes visible
+  only when the owner presses **Publish**, which needs the public-display choice to have
+  been made first (R1-05); either answer works.
+- Published projects follow the owner's public-display choice: public faculty's projects
+  are visible to everyone, the rest only to signed-in users. `/projects.html` lists them,
+  `/projects.html?id=N` shows one, and each faculty profile lists that person's projects.
+  Drafts, closed projects and hidden projects all show "not found" to other users.
+- **Close** withdraws a project from students; nothing is deleted, and the owner can edit
+  and reopen it later. Projects of faculty whose verification is revoked disappear for
+  everyone and come back if they are re-verified.
+- Ownership is enforced in the database query for every write: editing, publishing or
+  closing another faculty member's project by changing the id, URL or request body gets
+  "not found" and changes nothing.
+- No database migration was needed: the `projects` table from `000` already had every column.

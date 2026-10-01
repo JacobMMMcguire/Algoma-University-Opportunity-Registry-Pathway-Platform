@@ -1,4 +1,5 @@
 const express = require("express");
+const { cleanAreas, cleanText } = require("../validation");
 const { PUBLIC_FACULTY_SQL, isPubliclyVisibleFaculty } = require("../visibility");
 
 // R1-09: the stored codes are internal. Students only ever see the label and explanation.
@@ -53,10 +54,6 @@ function toOwnProfile(row) {
   return { ...toFacultyProfile(row), inquiryPreferenceCode: row.inquiry_preference };
 }
 
-function cleanText(value) {
-  return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : null;
-}
-
 // Returns { profile } with normalized fields, or { error } describing the first problem.
 function validateProfile(body) {
   const displayName = cleanText(body.displayName);
@@ -71,27 +68,11 @@ function validateProfile(body) {
     return { error: `Description must be ${LIMITS.description} characters or fewer.`, field: "description" };
   }
 
-  if (!Array.isArray(body.researchAreas)) {
-    return { error: "Enter at least one research or project area.", field: "researchAreas" };
-  }
-  const researchAreas = [];
-  const seen = new Set();
-  for (const raw of body.researchAreas) {
-    const area = cleanText(raw);
-    if (area === null) return { error: "Research areas must be text.", field: "researchAreas" };
-    if (!area || seen.has(area.toLowerCase())) continue;
-    if (area.length > LIMITS.researchArea) {
-      return { error: `Each research area must be ${LIMITS.researchArea} characters or fewer.`, field: "researchAreas" };
-    }
-    seen.add(area.toLowerCase());
-    researchAreas.push(area);
-  }
-  if (researchAreas.length === 0) {
-    return { error: "Enter at least one research or project area.", field: "researchAreas" };
-  }
-  if (researchAreas.length > LIMITS.researchAreas) {
-    return { error: `List at most ${LIMITS.researchAreas} research areas.`, field: "researchAreas" };
-  }
+  const { areas: researchAreas, error: areasError } = cleanAreas(body.researchAreas, {
+    max: LIMITS.researchAreas,
+    maxLength: LIMITS.researchArea,
+  });
+  if (areasError) return { error: areasError, field: "researchAreas" };
 
   const inquiryPreference = body.inquiryPreference;
   if (!INQUIRY_PREFERENCES.some((o) => o.value === inquiryPreference)) {

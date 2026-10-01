@@ -44,7 +44,7 @@ Run every command from `project2/backend/`.
 |---|---|---|
 | Identity, roles, consent | R1-01 to R1-07 | Jacob, done (see below) |
 | Faculty profile | R1-08 to R1-10 | Done (see "Faculty profiles" below) |
-| Faculty-created projects | R1-11 to R1-16 | Teammates |
+| Faculty-created projects | R1-11 to R1-16 | Done (see "Faculty projects" below) |
 | Discovery, production usability | R1-17 to R1-26 | Whole team, later |
 
 Unassigned, but needed for submission: loading `r1_fixture.json` through a seed/setup
@@ -60,11 +60,13 @@ src/config.js           Environment settings (domain, TTLs, email, test mode)
 src/db.js               Postgres pool, in-memory PGlite db, migration runner
 src/auth.js             Session lookup and guards (requireAuth, requireStaff, ...)
 src/visibility.js       The public-visibility rule (R1-10, R1-14)
+src/validation.js       Shared input clean-up (text, research-area lists)
 src/email.js            Brevo sender
 src/routes/auth.js      /api/auth: sign-in codes, sessions (R1-01 to R1-03)
 src/routes/admin.js     /api/admin: grant or revoke faculty (R1-04)
 src/routes/account.js   /api/account: public-profile choice (R1-05 to R1-07)
 src/routes/faculty.js   /api/faculty: faculty profiles (R1-08 to R1-10)
+src/routes/projects.js  /api/projects: faculty-created projects (R1-11 to R1-16)
 migrations/NNN_*.sql    Schema history, applied in order
 public/                 Frontend, served by Express from the same origin as the API
 test/                   node:test suites and helpers (in-memory Postgres)
@@ -107,16 +109,16 @@ Guards (each is a complete middleware list; use one per route):
 apply at once. `toPublicUser(row)` from `src/auth.js` is the camelCase shape sent to the
 browser.
 
-Example:
+Example (a trimmed version of the real `src/routes/projects.js`, which also validates every
+field):
 
 ```js
-// src/routes/projects.js
 const express = require("express");
 
 function createProjectsRouter({ db, auth }) {
   const router = express.Router();
 
-  router.patch("/:id", auth.requireVerifiedFaculty, async (req, res, next) => {
+  router.put("/:id", auth.requireVerifiedFaculty, async (req, res, next) => {
     try {
       const id = Number(req.params.id);
       if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid project id." });
@@ -183,8 +185,8 @@ the file into the Project 2 Supabase SQL Editor (or `npm run migrate` with `DATA
 **before** merging the code that needs it. Check what's applied with
 `SELECT * FROM schema_migrations`.
 
-The `faculty_profiles` and `projects` tables in 000 are a first draft owned by the profile
-and project work. Reshape them freely with migrations, but check the columns against
+The `faculty_profiles` and `projects` tables in 000 are what the profile and project features
+use, unchanged so far. Reshape them with migrations if needed, but check the columns against
 `r1_fixture.json` first so seeding stays simple. The public-profile choice lives on `users`
 (`public_profile_choice`), not on `faculty_profiles`.
 
@@ -196,8 +198,9 @@ and project work. Reshape them freely with migrations, but check the columns aga
   work with no server routing (R1-24); the page fetches the record and shows "not found" on
   404.
 - `common.js` has `api(path, { method, body })` (same-origin, never throws),
-  `getSession()`, `renderNav(session)`, `showStatus(el, msg, { error })` and
-  `escapeHtml()`. Add new pages to `NAV_LINKS` there.
+  `getSession()`, `renderNav(session)`, `showStatus(el, msg, { error })`,
+  `escapeHtml()` and `PROJECT_STATUS_LABELS`. Add new pages to `NAV_LINKS` there.
+- `styles.css` has `.button-link` for links that sit next to buttons (Edit, View).
 - Accessibility and phone width (R1-25, R1-26): every input has a `<label>`, errors go to a
   `role="status"` element and focus returns to the field, everything works by keyboard, and
   nothing scrolls sideways at 390px wide.
@@ -234,3 +237,34 @@ and project work. Reshape them freely with migrations, but check the columns aga
 - Pages: `profile.html` (faculty edit their own) and `faculty.html` (list, or one profile
   with `?id=`). The list is a plain alphabetical one; search and filters belong to discovery
   (R1-17 onwards). Profiles don't show an email address yet: contact is later work.
+
+## Faculty projects (R1-11 to R1-16, done)
+
+- Stored in `projects` (from 000, no migration needed): `title`, `description`,
+  `research_areas`, optional `student_level`, `target_term`, optional `prerequisites`,
+  `status` (`draft`, `published`, `closed`), owned by `faculty_user_id`.
+- Owner routes, all with ownership in the SQL (`WHERE id = $1 AND faculty_user_id = $2`) and
+  a 404 for anyone else's project (R1-16):
+  - `GET /api/projects/mine` (verified faculty): own projects in every status, plus the form
+    limits and student-level suggestions.
+  - `POST /api/projects` (verified faculty): always creates a `draft` (R1-11, R1-12). Status,
+    ids and owner fields in the body are ignored.
+  - `PUT /api/projects/:id` (verified faculty): replaces the content; never changes status.
+  - `POST /api/projects/:id/publish` (`requirePublicProfileChoice`, R1-05): draft or closed
+    to published (R1-13; also how a closed project is reopened).
+  - `POST /api/projects/:id/close` (verified faculty): withdraws it (R1-15). There is
+    deliberately no DELETE route, so closing never loses the record.
+- Drafts can be created before the public-profile choice is made; only publishing needs it.
+- `GET /api/projects` (optionally `?facultyId=N`) and `GET /api/projects/:id`: published
+  projects of verified faculty, with `PUBLIC_FACULTY_SQL` for logged-out visitors (R1-14).
+  Drafts, closed, hidden and missing projects all get the same 404. The owner can also open
+  their own draft or closed project by id, to preview it.
+- Responses include `faculty: { id, displayName }` from the owner's profile (`displayName`
+  is `null` if they haven't written one) and never an email address.
+- Limits: title 150 chars, description 1000, 1 to 10 areas of 60 chars (same rules as
+  profiles, via `src/validation.js`), student level 60, target term 60, background note 1000.
+  Student level and target term are free text; the form suggests common levels.
+- Pages: `my-projects.html` (owner's list with Publish, Close, Reopen), `project-edit.html`
+  (create, or edit with `?id=`), `projects.html` (list, or one project with `?id=`), and a
+  "Projects" list on each `faculty.html?id=` profile. The list is plain alphabetical; search
+  and filters belong to discovery (R1-17 onwards).
