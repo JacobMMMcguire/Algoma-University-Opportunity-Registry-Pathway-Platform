@@ -51,6 +51,23 @@ function renderProfile(profile) {
   $("profile-view").hidden = false;
 }
 
+// Their published projects, filtered by the same visibility rule as the projects page.
+async function renderProjects(facultyId) {
+  const res = await api(`/api/projects?facultyId=${encodeURIComponent(facultyId)}`);
+  if (!res.ok || res.data.projects.length === 0) return;
+  $("profile-projects").replaceChildren(
+    ...res.data.projects.map((project) => {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = `projects.html?id=${encodeURIComponent(project.id)}`;
+      a.textContent = project.title;
+      li.append(a, document.createTextNode(` (${project.targetTerm})`));
+      return li;
+    }),
+  );
+  $("projects-section").hidden = false;
+}
+
 function renderNotFound(session) {
   $("not-found-text").textContent = session.authenticated
     ? "This faculty profile doesn't exist or is no longer available."
@@ -74,4 +91,5 @@ function renderNotFound(session) {
   if (res.status === 404 || res.status === 400) return renderNotFound(session);
   if (!res.ok) return showStatus(statusEl, res.data.error || "Could not load this profile.", { error: true });
   renderProfile(res.data.profile);
+  await renderProjects(res.data.profile.id);
 })();

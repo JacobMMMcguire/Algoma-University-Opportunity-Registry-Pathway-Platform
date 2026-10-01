@@ -80,3 +80,22 @@ textarea { max-width: 36rem; }
 .tags { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .tags li { background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 999px; padding: 0.15rem 0.75rem; }
 #profile-links a { overflow-wrap: anywhere; }
+
+/* A link that looks like a button, for navigation actions next to real buttons. */
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.6rem 1rem;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background: #f3f3f3;
+  color: #1a1a1a;
+  text-decoration: none;
+}
+.button-link:hover { text-decoration: underline; }
+.facts { margin: 1rem 0; }
+.facts div { display: flex; flex-wrap: wrap; gap: 0 0.5rem; }
+.facts dt { font-weight: 600; }
+.facts dt::after { content: ":"; }
+.facts dd { margin: 0; overflow-wrap: anywhere; }

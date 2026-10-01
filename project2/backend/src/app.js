@@ -6,6 +6,7 @@ const { createAccountRouter } = require("./routes/account");
 const { createAdminRouter } = require("./routes/admin");
 const { createAuthRouter } = require("./routes/auth");
 const { createFacultyRouter } = require("./routes/faculty");
+const { createProjectsRouter } = require("./routes/projects");
 
 // `db` needs query(text, params) returning { rows }. `sendSignInEmail` is optional.
 function createApp({ db, config, sendSignInEmail = null }) {
@@ -32,7 +33,8 @@ function createApp({ db, config, sendSignInEmail = null }) {
   app.use("/api/admin", createAdminRouter(deps));
   app.use("/api/account", createAccountRouter(deps));
   app.use("/api/faculty", createFacultyRouter(deps));
-  // Mount new feature routers here, e.g. app.use("/api/projects", createProjectsRouter(deps));
+  app.use("/api/projects", createProjectsRouter(deps));
+  // Mount new feature routers here, e.g. app.use("/api/things", createThingsRouter(deps));
 
   app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 

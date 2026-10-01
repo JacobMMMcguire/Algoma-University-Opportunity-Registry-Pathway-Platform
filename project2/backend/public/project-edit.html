@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit project — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <p><a href="my-projects.html">Your projects</a></p>
+    <h1 id="heading">New project</h1>
+    <p id="denied" hidden></p>
+
+    <section id="panel" hidden>
+      <div id="state" class="note" hidden>
+        <p>Status: <strong id="state-label"></strong></p>
+        <p id="state-hint" class="hint"></p>
+        <div class="actions">
+          <a id="view-link" class="button-link" href="#">View as students see it</a>
+          <button type="button" id="publish">Publish</button>
+          <button type="button" id="close">Close</button>
+        </div>
+      </div>
+      <p id="new-hint" class="note">This is saved as a draft that only you can see. You can publish it afterwards.</p>
+
+      <form id="project-form" novalidate>
+        <div class="field">
+          <label for="title">Project title</label>
+          <input id="title" name="title" required maxlength="150">
+        </div>
+
+        <div class="field">
+          <label for="description">Short description</label>
+          <textarea id="description" name="description" rows="5" required maxlength="1000"
+            aria-describedby="description-hint"></textarea>
+          <p id="description-hint" class="hint">What students would work on and learn. Up to 1000 characters.</p>
+        </div>
+
+        <div class="field">
+          <label for="researchAreas">Research or project areas</label>
+          <textarea id="researchAreas" name="researchAreas" rows="3" required
+            aria-describedby="researchAreas-hint"></textarea>
+          <p id="researchAreas-hint" class="hint">One per line, at least one and up to 10. For example: Water quality.</p>
+        </div>
+
+        <div class="field">
+          <label for="studentLevel">Intended student level (optional)</label>
+          <input id="studentLevel" name="studentLevel" maxlength="60" list="studentLevel-options"
+            aria-describedby="studentLevel-hint">
+          <datalist id="studentLevel-options"></datalist>
+          <p id="studentLevel-hint" class="hint">Pick a suggestion or type your own, e.g. Third- or fourth-year undergraduate.</p>
+        </div>
+
+        <div class="field">
+          <label for="targetTerm">Target academic term</label>
+          <input id="targetTerm" name="targetTerm" required maxlength="60" aria-describedby="targetTerm-hint">
+          <p id="targetTerm-hint" class="hint">For example: Winter 2027.</p>
+        </div>
+
+        <div class="field">
+          <label for="prerequisites">Desired background or prerequisites (optional)</label>
+          <textarea id="prerequisites" name="prerequisites" rows="3" maxlength="1000"
+            aria-describedby="prerequisites-hint"></textarea>
+          <p id="prerequisites-hint" class="hint">Courses, skills or experience that would help. Up to 1000 characters.</p>
+        </div>
+
+        <button type="submit" class="primary" id="save">Save draft</button>
+      </form>
+    </section>
+
+    <section id="not-found" hidden>
+      <p>This project doesn't exist or isn't yours. <a href="my-projects.html">See your projects</a>.</p>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="project-edit.js"></script>
+</body>
+</html>

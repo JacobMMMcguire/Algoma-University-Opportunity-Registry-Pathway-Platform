@@ -30,7 +30,9 @@ async function getSession() {
 const NAV_LINKS = [
   { href: "index.html", label: "Home" },
   { href: "faculty.html", label: "Faculty" },
+  { href: "projects.html", label: "Projects" },
   { href: "profile.html", label: "Your faculty profile", show: (s) => s.user?.isVerifiedFaculty },
+  { href: "my-projects.html", label: "Your projects", show: (s) => s.user?.isVerifiedFaculty },
   { href: "admin.html", label: "Staff: faculty verification", show: (s) => s.user?.isStaff },
   { href: "operator.html", label: "Operator console (test mode)", show: (s) => s.testMode },
 ];
@@ -49,6 +51,13 @@ function renderNav(session) {
       .join("") +
     "</ul>";
 }
+
+// Plain-language project status, for the owner's pages.
+const PROJECT_STATUS_LABELS = {
+  draft: "Draft: only you can see it",
+  published: "Published",
+  closed: "Closed: withdrawn from students",
+};
 
 // Shows a message in a role="status" element; errors are styled and announced the same way.
 function showStatus(element, message, { error = false } = {}) {

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your projects — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <h1>Your projects</h1>
+    <p id="denied" hidden></p>
+
+    <section id="panel" hidden>
+      <div class="note">
+        <p>New projects are saved as drafts that only you can see. Students see a project only after you publish it, and closing it withdraws it again without deleting anything.</p>
+        <p id="visibility-note"></p>
+      </div>
+      <p><a href="project-edit.html" class="button-link">Create a new project</a></p>
+      <ul id="project-list" class="cards"></ul>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="my-projects.js"></script>
+</body>
+</html>
