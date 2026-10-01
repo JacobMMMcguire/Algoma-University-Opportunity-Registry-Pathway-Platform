@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your faculty profile — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <h1>Your faculty profile</h1>
+    <p id="denied" hidden></p>
+
+    <section id="panel" hidden>
+      <p id="visibility-note" class="note"></p>
+      <p id="view-link" hidden><a href="#">View your profile as students see it</a></p>
+
+      <form id="profile-form" novalidate>
+        <div class="field">
+          <label for="displayName">Display name</label>
+          <input id="displayName" name="displayName" required maxlength="100" autocomplete="name"
+            aria-describedby="displayName-hint">
+          <p id="displayName-hint" class="hint">How students will see your name, e.g. Dr. Jane Smith.</p>
+        </div>
+
+        <div class="field">
+          <label for="description">Short research or profile description</label>
+          <textarea id="description" name="description" rows="5" required maxlength="1000"
+            aria-describedby="description-hint"></textarea>
+          <p id="description-hint" class="hint">A few sentences about your research and the kind of students you work with. Up to 1000 characters.</p>
+        </div>
+
+        <div class="field">
+          <label for="researchAreas">Research or project areas</label>
+          <textarea id="researchAreas" name="researchAreas" rows="4" required
+            aria-describedby="researchAreas-hint"></textarea>
+          <p id="researchAreas-hint" class="hint">One per line, at least one and up to 10. For example: Water quality.</p>
+        </div>
+
+        <fieldset id="inquiryPreference">
+          <legend>Are you accepting student inquiries?</legend>
+          <div id="inquiry-options"></div>
+        </fieldset>
+
+        <div class="field">
+          <label for="externalLinks">External links (optional)</label>
+          <textarea id="externalLinks" name="externalLinks" rows="3" inputmode="url"
+            aria-describedby="externalLinks-hint"></textarea>
+          <p id="externalLinks-hint" class="hint">One web address per line, starting with https://, up to 5. For example your lab or faculty page.</p>
+        </div>
+
+        <button type="submit" class="primary">Save profile</button>
+      </form>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="profile.js"></script>
+</body>
+</html>

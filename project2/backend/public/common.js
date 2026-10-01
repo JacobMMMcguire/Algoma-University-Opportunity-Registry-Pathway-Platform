@@ -29,6 +29,8 @@ async function getSession() {
 // Add links for new pages here. `show` decides visibility from the session.
 const NAV_LINKS = [
   { href: "index.html", label: "Home" },
+  { href: "faculty.html", label: "Faculty" },
+  { href: "profile.html", label: "Your faculty profile", show: (s) => s.user?.isVerifiedFaculty },
   { href: "admin.html", label: "Staff: faculty verification", show: (s) => s.user?.isStaff },
   { href: "operator.html", label: "Operator console (test mode)", show: (s) => s.testMode },
 ];

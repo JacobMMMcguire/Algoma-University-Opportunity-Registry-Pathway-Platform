@@ -18,11 +18,13 @@ function showSignedIn(user) {
   if (user.isStaff) {
     roleNote.innerHTML = 'You have staff access. <a href="admin.html">Manage faculty verification</a>.';
   } else if (user.isVerifiedFaculty) {
-    roleNote.textContent = "Your account is verified as faculty.";
+    roleNote.innerHTML = 'Your account is verified as faculty. <a href="profile.html">Edit your faculty profile</a>.';
   } else {
     roleNote.textContent = "Faculty member? Ask Centre staff to verify your account to get faculty features.";
   }
-  if (user.isStaff && user.isVerifiedFaculty) roleNote.append(" Your account is also verified as faculty.");
+  if (user.isStaff && user.isVerifiedFaculty) {
+    roleNote.insertAdjacentHTML("beforeend", ' Your account is also verified as faculty. <a href="profile.html">Edit your faculty profile</a>.');
+  }
 
   $("public-profile").hidden = !user.isVerifiedFaculty;
   if (user.isVerifiedFaculty) renderPublicProfileChoice(user);
