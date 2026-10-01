@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faculty — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <section id="list-view" hidden aria-labelledby="list-heading">
+      <h1 id="list-heading">Faculty</h1>
+      <p id="list-note" class="hint"></p>
+      <ul id="faculty-list" class="cards"></ul>
+    </section>
+
+    <article id="profile-view" hidden aria-labelledby="profile-name">
+      <p><a href="faculty.html">All faculty</a></p>
+      <h1 id="profile-name" tabindex="-1"></h1>
+      <p id="profile-audience" class="hint" hidden>
+        This profile is visible only to people signed in with an Algoma account.
+      </p>
+
+      <h2>Student inquiries</h2>
+      <p><strong id="inquiry-label"></strong><br><span id="inquiry-explanation"></span></p>
+
+      <h2>About</h2>
+      <p id="profile-description" class="prewrap"></p>
+
+      <h2>Research and project areas</h2>
+      <ul id="profile-areas" class="tags"></ul>
+
+      <section id="links-section" hidden aria-labelledby="links-heading">
+        <h2 id="links-heading">Links</h2>
+        <ul id="profile-links"></ul>
+      </section>
+    </article>
+
+    <section id="not-found" hidden>
+      <h1>Profile not found</h1>
+      <p id="not-found-text"></p>
+      <p><a href="faculty.html">See all faculty</a></p>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="faculty.js"></script>
+</body>
+</html>

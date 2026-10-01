@@ -39,3 +39,14 @@ For `release_submission.md`:
   read pending codes on `/operator.html`, and so sign in as any `@algomau.ca` address with
   a pending code. This is the accepted cost of the test-mode substitute and goes away with
   `SIGN_IN_TEST_MODE=false`.
+
+## Release notes input: faculty profiles (R1-08 to R1-10)
+
+- Verified faculty edit their profile at `/profile.html`: display name, short description,
+  research areas, inquiry preference, optional links. Saving needs the public-display
+  choice to have been made first (R1-05); either answer works.
+- Students see the inquiry preference as plain text, for example "Inquiries about listed
+  projects only" with a one-line explanation, never the stored code.
+- `/faculty.html` lists profiles and `/faculty.html?id=N` shows one. Logged-out visitors see
+  only faculty who allowed public display; a direct link to any other profile shows "not
+  found". Signed-in users also see signed-in-only profiles, labelled as such.

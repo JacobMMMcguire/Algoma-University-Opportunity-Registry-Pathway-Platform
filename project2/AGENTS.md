@@ -43,7 +43,8 @@ Run every command from `project2/backend/`.
 | Area | Requirements | Owner |
 |---|---|---|
 | Identity, roles, consent | R1-01 to R1-07 | Jacob, done (see below) |
-| Faculty profile, faculty-created projects | R1-08 to R1-16 | Teammates |
+| Faculty profile | R1-08 to R1-10 | Done (see "Faculty profiles" below) |
+| Faculty-created projects | R1-11 to R1-16 | Teammates |
 | Discovery, production usability | R1-17 to R1-26 | Whole team, later |
 
 Unassigned, but needed for submission: loading `r1_fixture.json` through a seed/setup
@@ -63,6 +64,7 @@ src/email.js            Brevo sender
 src/routes/auth.js      /api/auth: sign-in codes, sessions (R1-01 to R1-03)
 src/routes/admin.js     /api/admin: grant or revoke faculty (R1-04)
 src/routes/account.js   /api/account: public-profile choice (R1-05 to R1-07)
+src/routes/faculty.js   /api/faculty: faculty profiles (R1-08 to R1-10)
 migrations/NNN_*.sql    Schema history, applied in order
 public/                 Frontend, served by Express from the same origin as the API
 test/                   node:test suites and helpers (in-memory Postgres)
@@ -213,3 +215,22 @@ and project work. Reshape them freely with migrations, but check the columns aga
   SQL Editor: `UPDATE users SET is_staff = true WHERE email = '...';`
 - Staff grant or revoke faculty at `/admin.html`. Faculty choose public display on the home
   page.
+
+## Faculty profiles (R1-08 to R1-10, done)
+
+- One profile per faculty member, keyed by `faculty_profiles.user_id`, so a profile's id is
+  its owner's user id (`faculty.html?id=12` is user 12). No migration was needed: the columns
+  in 000 already fit.
+- `GET /api/faculty/me/profile` (verified faculty): own profile or `null`, plus the inquiry
+  options for the form. `PUT /api/faculty/me/profile` (`requirePublicProfileChoice`): creates
+  or replaces it. There is deliberately no route that writes a profile by id (R1-16).
+- `GET /api/faculty` and `GET /api/faculty/:id`: everyone, filtered by the visibility rule;
+  hidden and missing profiles get the same 404. Revoked faculty are hidden from everyone.
+- Inquiry preference codes (`open`, `projects_only`, `not_accepting`) never leave the server
+  in student-facing responses; `INQUIRY_PREFERENCES` in `src/routes/faculty.js` holds the
+  label and explanation students see. Only the owner's response adds `inquiryPreferenceCode`.
+- Limits: name 100 chars, description 1000, 1 to 10 areas of 60 chars (de-duplicated,
+  case-insensitive), 0 to 5 external links that must be `http(s)` URLs.
+- Pages: `profile.html` (faculty edit their own) and `faculty.html` (list, or one profile
+  with `?id=`). The list is a plain alphabetical one; search and filters belong to discovery
+  (R1-17 onwards). Profiles don't show an email address yet: contact is later work.
