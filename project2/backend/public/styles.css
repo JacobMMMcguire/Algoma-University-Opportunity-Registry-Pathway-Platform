@@ -99,3 +99,43 @@ textarea { max-width: 36rem; }
 .facts dt { font-weight: 600; }
 .facts dt::after { content: ":"; }
 .facts dd { margin: 0; overflow-wrap: anywhere; }
+
+/* Filters (R1-20): one column on phones, a grid on wider screens. */
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 0 1rem;
+  align-items: start;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+}
+.filters .field { margin-bottom: 0.75rem; }
+.filters input, .filters select { max-width: none; }
+.filters .actions, .filters .filters-note { grid-column: 1 / -1; margin: 0 0 0.5rem; }
+select {
+  width: 100%;
+  max-width: 24rem;
+  padding: 0.6rem;
+  font: inherit;
+  font-size: 1rem;
+  border: 1px solid #767676;
+  border-radius: 4px;
+  background: #fff;
+}
+.result-count { font-weight: 600; }
+.result-count:focus { outline: none; }
+.result-count:focus-visible { outline: 3px solid #b45309; }
+.tags li a { color: inherit; }
+
+/* Research-area picker: one collapsible group per discipline. */
+.area-group { border: 1px solid #ddd; border-radius: 4px; margin: 0.4rem 0; }
+.area-group summary { cursor: pointer; padding: 0.6rem 0.75rem; min-height: 44px; font-weight: 600; }
+.area-options { padding: 0 0.75rem 0.5rem; }
+.inline-fields { display: flex; flex-wrap: wrap; gap: 0 1rem; }
+.inline-fields .field { flex: 1 1 10rem; }
+
+/* Contact panel (R1-22). */
+.contact { border-top: 1px solid #ddd; margin-top: 1.5rem; padding-top: 0.5rem; }
+.contact textarea { max-width: 100%; }
+.button-link.primary { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }

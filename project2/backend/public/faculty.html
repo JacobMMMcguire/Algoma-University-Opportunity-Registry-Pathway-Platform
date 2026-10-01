@@ -12,6 +12,28 @@
     <section id="list-view" hidden aria-labelledby="list-heading">
       <h1 id="list-heading">Faculty</h1>
       <p id="list-note" class="hint"></p>
+
+      <form id="filters" class="filters" action="faculty.html" method="get" role="search" aria-label="Filter faculty">
+        <div class="field">
+          <label for="filter-q">Search</label>
+          <input id="filter-q" name="q" type="search" maxlength="100" aria-describedby="filter-q-hint">
+          <p id="filter-q-hint" class="hint">Names, research descriptions and areas.</p>
+        </div>
+        <div class="field">
+          <label for="filter-area">Research area</label>
+          <select id="filter-area" name="area"></select>
+        </div>
+        <div class="field">
+          <label for="filter-inquiry">Student inquiries</label>
+          <select id="filter-inquiry" name="inquiry"></select>
+        </div>
+        <div class="actions">
+          <button type="submit" class="primary">Apply filters</button>
+          <a class="button-link" href="faculty.html">Clear filters</a>
+        </div>
+      </form>
+
+      <p id="result-count" class="result-count"></p>
       <ul id="faculty-list" class="cards"></ul>
     </section>
 
@@ -24,6 +46,8 @@
 
       <h2>Student inquiries</h2>
       <p><strong id="inquiry-label"></strong><br><span id="inquiry-explanation"></span></p>
+      <p id="contact-via-projects" class="note" hidden>To contact them, open one of their projects below and use its Contact button.</p>
+      <section id="contact-section" hidden></section>
 
       <h2>About</h2>
       <p id="profile-description" class="prewrap"></p>
@@ -52,6 +76,8 @@
   </main>
 
   <script src="common.js"></script>
+  <script src="form-pickers.js"></script>
+  <script src="contact.js"></script>
   <script src="faculty.js"></script>
 </body>
 </html>

@@ -1,0 +1,74 @@
+{
+  "project": "Project 2 - Opportunity Registry and Pathway Platform",
+  "release": "R1",
+  "base_url": "https://algoma-opportunity-registry-r1-backend.onrender.com",
+
+  "faculty_directory_endpoint": "/api/faculty",
+  "faculty_detail_endpoint": "/api/faculty/{id}",
+  "faculty_page_route": "/faculty.html?id={id}",
+  "faculty_directory_results_path": "faculty",
+
+  "project_directory_endpoint": "/api/projects",
+  "project_detail_endpoint": "/api/projects/{id}",
+  "project_page_route": "/projects.html?id={id}",
+  "project_directory_results_path": "projects",
+
+  "query_parameters": {
+    "projects": {
+      "text": "q",
+      "research_area": "area",
+      "student_level": "level",
+      "term": "term",
+      "faculty": "facultyId"
+    },
+    "faculty": {
+      "text": "q",
+      "research_area": "area",
+      "inquiry_preference": "inquiry"
+    }
+  },
+  "query_parameter_values": {
+    "area": "One research area name exactly as listed, case-insensitive, e.g. Artificial Intelligence. The fixture's five areas are all valid.",
+    "level": "undergraduate | graduate (projects marked 'Undergraduate or Graduate' match both)",
+    "term": "A term as stored, e.g. Winter 2027 (case-insensitive)",
+    "facultyId": "A faculty member's id (same id as /api/faculty/{id})",
+    "inquiry": "open | projects_only | not_accepting",
+    "q": "Free text, case-insensitive substring; % and _ are matched literally"
+  },
+  "filter_semantics": "All given parameters must match (AND). An area matches if it is any one of the record's areas. Unknown values return HTTP 400 with an error message. Each directory response also includes a 'filters' object listing the available choices with counts, computed from what the viewer may see.",
+
+  "id_field": "id",
+  "research_areas_field": "researchAreas",
+  "project_faculty_field": "faculty",
+  "project_faculty_id_field": "faculty.id",
+  "faculty_inquiry_preference_field": "inquiryPreference.label",
+  "contact_field": "contact.email",
+
+  "public_surfaces": [
+    "GET /api/faculty and /faculty.html: verified faculty who allowed public display",
+    "GET /api/faculty/{id} and /faculty.html?id={id}: the same faculty only",
+    "GET /api/projects and /projects.html: published projects of those faculty",
+    "GET /api/projects/{id} and /projects.html?id={id}: the same projects only"
+  ],
+  "authenticated_only_surfaces": [
+    "The same four surfaces, signed in, additionally include verified faculty who declined public display and their published projects",
+    "/profile.html, /my-projects.html, /project-edit.html: verified faculty only",
+    "/admin.html and /api/admin/*: staff only"
+  ],
+  "hidden_response": "Records the viewer may not see (drafts, closed or withdrawn projects, signed-in-only records when logged out, unverified or revoked faculty) return HTTP 404, identical to a missing record.",
+
+  "authentication": {
+    "method": "Passwordless 6-digit code, restricted to @algomau.ca; session is an httpOnly cookie",
+    "request_code": "POST /api/auth/request-challenge {\"email\": \"...\"}",
+    "read_code_in_test_mode": "GET /api/auth/pending-challenges (also /operator.html)",
+    "verify_code": "POST /api/auth/verify {\"email\": \"...\", \"code\": \"...\"}"
+  },
+  "test_accounts": {
+    "staff": "fixture-test-staff@algomau.ca",
+    "student": "fixture-test-student@algomau.ca",
+    "verified_faculty_public": "fixture-f-alex@algomau.ca",
+    "verified_faculty_signed_in_only": "fixture-f-mei@algomau.ca",
+    "unverified_faculty": "fixture-u-pending@algomau.ca"
+  },
+  "fixture_loading": "npm run seed:fixture (from project2/backend), or npm run seed:fixture:sql pasted into the Supabase SQL Editor. Fixture accounts are fixture-<fixture_id lowercased>@algomau.ca."
+}

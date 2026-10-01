@@ -3,13 +3,14 @@
 // faculty member's project.
 const assert = require("node:assert/strict");
 const { after, before, describe, test } = require("node:test");
+const { RESEARCH_AREAS } = require("../src/catalog");
 const { createClient, signIn, startTestApp, uniqueEmail } = require("./helpers");
 
 const VALID = {
   title: "Mapping invasive species in the St. Marys River",
   description: "Field sampling and lab identification of invasive plants along the river.",
-  researchAreas: ["Ecology", "Field work"],
-  studentLevel: "Third- or fourth-year undergraduate",
+  researchAreas: ["Ecology", "Environmental Science"],
+  studentLevel: "Undergraduate",
   targetTerm: "Winter 2027",
   prerequisites: "BIOL 1006 or equivalent. Comfortable working outdoors.",
 };
@@ -76,7 +77,7 @@ describe("faculty projects", () => {
 
       const mine = (await client.get("/api/projects/mine")).data;
       assert.deepEqual(mine.projects.map((p) => p.id), [project.id]);
-      assert.ok(mine.limits && mine.studentLevelSuggestions.length > 0);
+      assert.ok(mine.limits);
     });
 
     test("student level and the background note are optional", async () => {
@@ -103,12 +104,16 @@ describe("faculty projects", () => {
         { ...VALID, researchAreas: [] },
         { ...VALID, researchAreas: [" "] },
         { ...VALID, researchAreas: "Ecology" },
-        { ...VALID, researchAreas: Array.from({ length: 11 }, (_, i) => `Area ${i}`) },
+        { ...VALID, researchAreas: RESEARCH_AREAS.slice(0, 11) },
         { ...VALID, researchAreas: ["x".repeat(61)] },
         { ...VALID, targetTerm: "" },
         { ...VALID, targetTerm: "x".repeat(61) },
         { ...VALID, studentLevel: 3 },
         { ...VALID, studentLevel: "x".repeat(61) },
+        { ...VALID, studentLevel: "Third-year undergraduate" },
+        { ...VALID, researchAreas: ["Water quality"] },
+        { ...VALID, targetTerm: "Winter" },
+        { ...VALID, targetTerm: "Autumn 2027" },
         { ...VALID, prerequisites: ["a"] },
         { ...VALID, prerequisites: "x".repeat(1001) },
       ];
@@ -125,11 +130,11 @@ describe("faculty projects", () => {
       const { client } = await faculty();
       const project = await createDraft(client, {
         title: "  Lake   sampling ",
-        researchAreas: ["Ecology", " ecology", "", "Water   quality"],
+        researchAreas: ["Ecology", " ecology", "", "environmental   science"],
         targetTerm: " Fall  2027 ",
       });
       assert.equal(project.title, "Lake sampling");
-      assert.deepEqual(project.researchAreas, ["Ecology", "Water quality"]);
+      assert.deepEqual(project.researchAreas, ["Ecology", "Environmental Science"]);
       assert.equal(project.targetTerm, "Fall 2027");
     });
 
@@ -352,7 +357,7 @@ describe("faculty projects", () => {
       assert.equal((await viewer.get(`/api/projects/${project.id}`)).status, 200);
     });
 
-    test("projects show the owner's profile name but no account details", async () => {
+    test("projects show the owner's profile name; the email appears only as the R1-22 contact", async () => {
       const { client, user } = await faculty(true);
       await client.put("/api/faculty/me/profile", {
         displayName: "Dr. Named Owner",
@@ -361,10 +366,17 @@ describe("faculty projects", () => {
         inquiryPreference: "open",
       });
       const project = await createPublished(client);
-      const { project: seen } = (await createClient(t.baseUrl).get(`/api/projects/${project.id}`)).data;
-      assert.deepEqual(seen.faculty, { id: user.id, displayName: "Dr. Named Owner" });
-      assert.ok(!JSON.stringify(seen).includes(user.email));
+      const anon = createClient(t.baseUrl);
+      const inList = (await anon.get("/api/projects")).data.projects.find((p) => p.id === project.id);
+      assert.deepEqual(inList.faculty, { id: user.id, displayName: "Dr. Named Owner" });
+      assert.ok(!JSON.stringify(inList).includes(user.email));
+
+      const { project: seen } = (await anon.get(`/api/projects/${project.id}`)).data;
+      assert.equal(seen.faculty.displayName, "Dr. Named Owner");
       assert.ok(!("email" in seen.faculty));
+      const { contact, ...rest } = seen;
+      assert.deepEqual(contact, { email: user.email });
+      assert.ok(!JSON.stringify(rest).includes(user.email));
     });
 
     test("the list can be narrowed to one faculty member", async () => {
@@ -387,7 +399,7 @@ describe("faculty projects", () => {
       const changes = {
         title: "Revised title",
         description: "Revised description.",
-        researchAreas: ["Limnology"],
+        researchAreas: ["Environmental Science"],
         studentLevel: "Graduate",
         targetTerm: "Fall 2027",
         prerequisites: null,

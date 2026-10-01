@@ -32,7 +32,6 @@ function renderInquiryOptions(options, selected) {
 function fillForm(profile) {
   $("displayName").value = profile.displayName;
   $("description").value = profile.description;
-  $("researchAreas").value = profile.researchAreas.join("\n");
   $("externalLinks").value = profile.externalLinks.join("\n");
   const link = $("view-link");
   link.querySelector("a").href = `faculty.html?id=${encodeURIComponent(profile.id)}`;
@@ -59,6 +58,8 @@ function focusField(field) {
   if (field === "inquiryPreference") {
     (document.querySelector('input[name="inquiryPreference"]:checked') ||
       document.querySelector('input[name="inquiryPreference"]'))?.focus();
+  } else if (field === "researchAreas") {
+    focusAreaPicker($("researchAreas-picker"));
   } else if (field && $(field)) {
     $(field).focus();
   }
@@ -70,7 +71,7 @@ $("profile-form").addEventListener("submit", async (event) => {
   const body = {
     displayName: $("displayName").value,
     description: $("description").value,
-    researchAreas: lines($("researchAreas").value),
+    researchAreas: readAreaPicker($("researchAreas-picker")),
     inquiryPreference: selected ? selected.value : null,
     externalLinks: lines($("externalLinks").value),
   };
@@ -99,14 +100,18 @@ $("profile-form").addEventListener("submit", async (event) => {
     return;
   }
 
-  const res = await api("/api/faculty/me/profile");
-  if (!res.ok) {
-    showStatus(statusEl, res.data.error || "Could not load your profile.", { error: true });
+  const [res, options] = await Promise.all([api("/api/faculty/me/profile"), api("/api/options")]);
+  if (!res.ok || !options.ok) {
+    showStatus(statusEl, res.data.error || options.data.error || "Could not load your profile.", { error: true });
     return;
   }
-  const { profile, inquiryOptions } = res.data;
+  const { profile, inquiryOptions, limits } = res.data;
   renderVisibilityNote(session.user);
   renderInquiryOptions(inquiryOptions, profile?.inquiryPreferenceCode);
+  renderAreaPicker($("researchAreas-picker"), options.data.researchAreaGroups, profile?.researchAreas || [], {
+    max: limits.researchAreas,
+    countEl: $("researchAreas-count"),
+  });
   if (profile) fillForm(profile);
   $("panel").hidden = false;
 })();

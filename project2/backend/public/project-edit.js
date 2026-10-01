@@ -3,10 +3,7 @@ const statusEl = $("status");
 
 let project = null; // the saved version, or null for a new project
 let unsaved = false;
-
-function lines(value) {
-  return value.split("\n").map((line) => line.trim()).filter(Boolean);
-}
+let options = null; // fixed lists from /api/options
 
 const STATE_HINTS = {
   draft: "Students can't see this project until you publish it.",
@@ -14,12 +11,12 @@ const STATE_HINTS = {
   closed: "Students can no longer see this project. You can publish it again at any time.",
 };
 
+// Research areas aren't refilled here: the checkboxes already show what was saved.
 function fillForm(p) {
   $("title").value = p.title;
   $("description").value = p.description;
-  $("researchAreas").value = p.researchAreas.join("\n");
-  $("studentLevel").value = p.studentLevel || "";
-  $("targetTerm").value = p.targetTerm;
+  fillSelect($("studentLevel"), options.studentLevels, p.studentLevel || "", "Not specified");
+  renderTermPicker($("targetTerm"), $("targetTerm-year"), { seasons: options.termSeasons, years: options.termYears }, p.targetTerm);
   $("prerequisites").value = p.prerequisites || "";
 }
 
@@ -40,7 +37,8 @@ function renderState() {
 }
 
 function focusField(field) {
-  if (field && $(field)) $(field).focus();
+  if (field === "researchAreas") focusAreaPicker($("researchAreas-picker"));
+  else if (field && $(field)) $(field).focus();
 }
 
 $("project-form").addEventListener("input", () => {
@@ -52,9 +50,9 @@ $("project-form").addEventListener("submit", async (event) => {
   const body = {
     title: $("title").value,
     description: $("description").value,
-    researchAreas: lines($("researchAreas").value),
+    researchAreas: readAreaPicker($("researchAreas-picker")),
     studentLevel: $("studentLevel").value,
-    targetTerm: $("targetTerm").value,
+    targetTerm: readTerm($("targetTerm"), $("targetTerm-year")),
     prerequisites: $("prerequisites").value,
   };
   const res = project
@@ -113,18 +111,12 @@ $("close").addEventListener("click", (event) => changeStatus("close", event.curr
     return;
   }
 
-  const res = await api("/api/projects/mine");
-  if (!res.ok) {
-    showStatus(statusEl, res.data.error || "Could not load your projects.", { error: true });
+  const [res, optionsRes] = await Promise.all([api("/api/projects/mine"), api("/api/options")]);
+  if (!res.ok || !optionsRes.ok) {
+    showStatus(statusEl, res.data.error || optionsRes.data.error || "Could not load your projects.", { error: true });
     return;
   }
-  $("studentLevel-options").replaceChildren(
-    ...res.data.studentLevelSuggestions.map((level) => {
-      const option = document.createElement("option");
-      option.value = level;
-      return option;
-    }),
-  );
+  options = optionsRes.data;
 
   const id = new URLSearchParams(location.search).get("id");
   if (id !== null) {
@@ -135,7 +127,14 @@ $("close").addEventListener("click", (event) => changeStatus("close", event.curr
       return;
     }
     fillForm(project);
+  } else {
+    fillSelect($("studentLevel"), options.studentLevels, "", "Not specified");
+    renderTermPicker($("targetTerm"), $("targetTerm-year"), { seasons: options.termSeasons, years: options.termYears }, "");
   }
+  renderAreaPicker($("researchAreas-picker"), options.researchAreaGroups, project?.researchAreas || [], {
+    max: res.data.limits.researchAreas,
+    countEl: $("researchAreas-count"),
+  });
   renderState();
   $("panel").hidden = false;
 })();

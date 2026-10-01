@@ -1,0 +1,11 @@
+{
+  "reviewer_team": "team-XX",
+  "target_team": "team-YY",
+  "release": "R1",
+  "target_version": "R1-submission@<sha>",
+  "scenarios": [],
+  "findings": [],
+  "exploratory_summary": "",
+  "strongest_pass_evidence": "",
+  "readiness": "ready|ready-with-issues|not-ready"
+}

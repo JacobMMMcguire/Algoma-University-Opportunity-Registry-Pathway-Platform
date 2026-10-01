@@ -45,6 +45,14 @@ function createAuthRouter({ db, config, auth, sendSignInEmail }) {
         });
       }
 
+      // Fixture accounts (npm run seed:fixture) have no inbox: never email them, which would only
+      // bounce. They sign in through the test-mode operator console.
+      const fixture = await db.query("SELECT 1 FROM users WHERE email = $1 AND fixture_id IS NOT NULL", [email]);
+      const isFixtureAccount = fixture.rows.length > 0;
+      if (isFixtureAccount && !config.testMode) {
+        return res.status(403).json({ error: "This is a test account. It can only sign in while test mode is on." });
+      }
+
       const code = generateChallengeCode();
       const expiresAt = new Date(Date.now() + config.challengeTtlMinutes * 60 * 1000);
       await db.query(
@@ -53,7 +61,7 @@ function createAuthRouter({ db, config, auth, sendSignInEmail }) {
       );
 
       let emailSent = false;
-      if (sendSignInEmail) {
+      if (sendSignInEmail && !isFixtureAccount) {
         try {
           await sendSignInEmail(email, code);
           emailSent = true;

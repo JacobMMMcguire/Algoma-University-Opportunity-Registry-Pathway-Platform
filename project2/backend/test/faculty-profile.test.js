@@ -2,12 +2,13 @@
 // inquiry preference is shown in plain language, and visibility follows the public choice.
 const assert = require("node:assert/strict");
 const { after, before, describe, test } = require("node:test");
+const { RESEARCH_AREAS } = require("../src/catalog");
 const { createClient, signIn, startTestApp, uniqueEmail } = require("./helpers");
 
 const VALID = {
   displayName: "Dr. Ada Example",
   description: "I study fresh-water ecology in the Great Lakes basin.",
-  researchAreas: ["Ecology", "Water quality"],
+  researchAreas: ["Ecology", "Freshwater and Great Lakes Science"],
   inquiryPreference: "open",
   externalLinks: ["https://example.org/lab"],
 };
@@ -43,7 +44,7 @@ describe("faculty profile", () => {
       const updated = await client.put("/api/faculty/me/profile", {
         ...VALID,
         displayName: "Dr. Ada Updated",
-        researchAreas: ["Limnology"],
+        researchAreas: ["Environmental Science"],
         inquiryPreference: "projects_only",
         externalLinks: [],
       });
@@ -51,7 +52,7 @@ describe("faculty profile", () => {
 
       const mine = (await client.get("/api/faculty/me/profile")).data.profile;
       assert.equal(mine.displayName, "Dr. Ada Updated");
-      assert.deepEqual(mine.researchAreas, ["Limnology"]);
+      assert.deepEqual(mine.researchAreas, ["Environmental Science"]);
       assert.equal(mine.inquiryPreferenceCode, "projects_only");
       assert.deepEqual(mine.externalLinks, []);
       const count = await t.db.query("SELECT count(*)::int AS n FROM faculty_profiles WHERE user_id = $1", [user.id]);
@@ -76,7 +77,8 @@ describe("faculty profile", () => {
         { ...VALID, researchAreas: [] },
         { ...VALID, researchAreas: ["  "] },
         { ...VALID, researchAreas: "Ecology" },
-        { ...VALID, researchAreas: Array.from({ length: 11 }, (_, i) => `Area ${i}`) },
+        { ...VALID, researchAreas: RESEARCH_AREAS.slice(0, 11) },
+        { ...VALID, researchAreas: ["Water quality"] },
         { ...VALID, inquiryPreference: "maybe" },
         { ...VALID, inquiryPreference: undefined },
         { ...VALID, externalLinks: ["not a url"] },
@@ -96,10 +98,10 @@ describe("faculty profile", () => {
       const saved = await client.put("/api/faculty/me/profile", {
         ...VALID,
         displayName: "  Dr.   Ada  ",
-        researchAreas: ["Ecology", " ecology ", "", "Water   quality"],
+        researchAreas: ["Ecology", " ecology ", "", "freshwater and   great lakes science"],
       });
       assert.equal(saved.data.profile.displayName, "Dr. Ada");
-      assert.deepEqual(saved.data.profile.researchAreas, ["Ecology", "Water quality"]);
+      assert.deepEqual(saved.data.profile.researchAreas, ["Ecology", "Freshwater and Great Lakes Science"]);
     });
 
     test("only verified faculty can create a profile", async () => {
@@ -215,13 +217,17 @@ describe("faculty profile", () => {
       assert.equal((await student.get(`/api/faculty/${user.id}`)).status, 404);
     });
 
-    test("profiles don't expose account details", async () => {
+    test("profiles expose no account details; the email appears only as the R1-22 contact", async () => {
       const { client, user } = await faculty(true);
       await client.put("/api/faculty/me/profile", VALID);
-      const { profile } = (await createClient(t.baseUrl).get(`/api/faculty/${user.id}`)).data;
-      const text = JSON.stringify(profile);
-      assert.ok(!text.includes(user.email));
+      const anon = createClient(t.baseUrl);
+      const listedProfile = (await anon.get("/api/faculty")).data.faculty.find((p) => p.id === user.id);
+      assert.ok(!JSON.stringify(listedProfile).includes(user.email));
+      const { profile } = (await anon.get(`/api/faculty/${user.id}`)).data;
       assert.ok(!("email" in profile) && !("isStaff" in profile));
+      const { contact, ...rest } = profile;
+      assert.deepEqual(contact, { email: user.email });
+      assert.ok(!JSON.stringify(rest).includes(user.email));
     });
 
     test("a non-numeric id is rejected", async () => {

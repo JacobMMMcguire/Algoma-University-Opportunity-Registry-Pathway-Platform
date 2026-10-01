@@ -1,39 +1,16 @@
 const express = require("express");
-const { cleanAreas, cleanText, parseId } = require("../validation");
+const { INQUIRY_PREFERENCES, RESEARCH_AREA_GROUPS, canonicalArea, describeInquiryPreference } = require("../catalog");
+const { cleanAreas, cleanText, likePattern, parseId } = require("../validation");
 const { PUBLIC_FACULTY_SQL, isPubliclyVisibleFaculty } = require("../visibility");
-
-// R1-09: the stored codes are internal. Students only ever see the label and explanation.
-const INQUIRY_PREFERENCES = [
-  {
-    value: "open",
-    label: "Open to general student inquiries",
-    explanation: "Students are welcome to email about this faculty member's research, including ideas that aren't listed as projects.",
-  },
-  {
-    value: "projects_only",
-    label: "Inquiries about listed projects only",
-    explanation: "Please get in touch only about the projects listed for this faculty member.",
-  },
-  {
-    value: "not_accepting",
-    label: "Not currently accepting new inquiries",
-    explanation: "This faculty member isn't taking new student inquiries right now.",
-  },
-];
 
 const LIMITS = {
   displayName: 100,
   description: 1000,
   researchAreas: 10,
-  researchArea: 60,
   externalLinks: 5,
   externalLink: 300,
+  search: 100,
 };
-
-function describeInquiryPreference(code) {
-  const option = INQUIRY_PREFERENCES.find((o) => o.value === code) || INQUIRY_PREFERENCES.at(-1);
-  return { label: option.label, explanation: option.explanation };
-}
 
 // What students and visitors see: no internal codes, no email or account details.
 function toFacultyProfile(row) {
@@ -54,6 +31,71 @@ function toOwnProfile(row) {
   return { ...toFacultyProfile(row), inquiryPreferenceCode: row.inquiry_preference };
 }
 
+// The profile page adds the university email for the Contact action (R1-22), but only when the
+// faculty member is open to general inquiries; "listed projects only" faculty are contacted
+// from their project pages, and "not accepting" faculty not at all. Only viewers who may see
+// the profile ever reach this.
+function toFacultyDetail(row) {
+  return {
+    ...toFacultyProfile(row),
+    contact: row.inquiry_preference === "open" ? { email: row.email } : null,
+    contactViaProjects: row.inquiry_preference === "projects_only",
+  };
+}
+
+// R1-20 filters: ?area=, ?inquiry= (open|projects_only|not_accepting) and ?q= (text search).
+// All given filters must match; an area matches if it is any one of the profile's areas.
+function parseFilters(query) {
+  const filters = {};
+  if (query.area !== undefined && query.area !== "") {
+    filters.area = canonicalArea(query.area);
+    if (!filters.area) return { error: "Unknown research area." };
+  }
+  if (query.inquiry !== undefined && query.inquiry !== "") {
+    filters.inquiry = INQUIRY_PREFERENCES.find((o) => o.value === query.inquiry)?.value;
+    if (!filters.inquiry) return { error: "Unknown inquiry preference." };
+  }
+  if (query.q !== undefined) {
+    const q = cleanText(query.q);
+    if (q === null || q.length > LIMITS.search) return { error: `Search text must be ${LIMITS.search} characters or fewer.` };
+    if (q) filters.q = q;
+  }
+  return { filters };
+}
+
+function filterSql(filters, params) {
+  const add = (value) => {
+    params.push(value);
+    return `$${params.length}`;
+  };
+  const clauses = [];
+  if (filters.area) clauses.push(`${add(filters.area)} = ANY(faculty_profiles.research_areas)`);
+  if (filters.inquiry) clauses.push(`faculty_profiles.inquiry_preference = ${add(filters.inquiry)}`);
+  if (filters.q) {
+    const pattern = add(likePattern(filters.q));
+    clauses.push(`(faculty_profiles.display_name ILIKE ${pattern} OR faculty_profiles.description ILIKE ${pattern}
+      OR array_to_string(faculty_profiles.research_areas, ' ') ILIKE ${pattern})`);
+  }
+  return clauses.map((clause) => `AND ${clause}`).join("\n");
+}
+
+// Filter choices with counts, from the profiles this viewer can see before filtering.
+function facetsFor(rows) {
+  const areaCounts = new Map();
+  for (const area of rows.flatMap((row) => row.research_areas)) areaCounts.set(area, (areaCounts.get(area) || 0) + 1);
+  return {
+    areas: RESEARCH_AREA_GROUPS.map((g) => ({
+      group: g.group,
+      areas: g.areas.filter((area) => areaCounts.has(area)).map((area) => ({ value: area, count: areaCounts.get(area) })),
+    })).filter((g) => g.areas.length > 0),
+    inquiry: INQUIRY_PREFERENCES.map((o) => ({
+      value: o.value,
+      label: o.label,
+      count: rows.filter((row) => row.inquiry_preference === o.value).length,
+    })).filter((o) => o.count > 0),
+  };
+}
+
 // Returns { profile } with normalized fields, or { error } describing the first problem.
 function validateProfile(body) {
   const displayName = cleanText(body.displayName);
@@ -68,10 +110,7 @@ function validateProfile(body) {
     return { error: `Description must be ${LIMITS.description} characters or fewer.`, field: "description" };
   }
 
-  const { areas: researchAreas, error: areasError } = cleanAreas(body.researchAreas, {
-    max: LIMITS.researchAreas,
-    maxLength: LIMITS.researchArea,
-  });
+  const { areas: researchAreas, error: areasError } = cleanAreas(body.researchAreas, { max: LIMITS.researchAreas });
   if (areasError) return { error: areasError, field: "researchAreas" };
 
   const inquiryPreference = body.inquiryPreference;
@@ -108,7 +147,7 @@ function validateProfile(body) {
   return { profile: { displayName, description, researchAreas, inquiryPreference, externalLinks } };
 }
 
-const PROFILE_COLUMNS = `faculty_profiles.*, users.is_verified_faculty, users.public_profile_choice`;
+const PROFILE_COLUMNS = `faculty_profiles.*, users.is_verified_faculty, users.public_profile_choice, users.email`;
 
 // R1-08 to R1-10: faculty maintain their own profile; everyone else reads it subject to the
 // visibility rule.
@@ -173,16 +212,25 @@ function createFacultyRouter({ db, auth }) {
     return `users.is_verified_faculty ${viewer ? "" : `AND ${PUBLIC_FACULTY_SQL}`}`;
   }
 
+  // R1-17, R1-18, R1-20: every visible profile, with or without projects, narrowed by filters.
+  // `filters` lists the choices for each filter with counts.
   router.get("/", async (req, res, next) => {
     try {
+      const { filters, error } = parseFilters(req.query);
+      if (error) return res.status(400).json({ error });
       const viewer = await auth.getSessionUser(req);
+      const base = `SELECT ${PROFILE_COLUMNS} FROM faculty_profiles
+                    JOIN users ON users.id = faculty_profiles.user_id
+                    WHERE ${visibilityFilter(viewer)}`;
+      const visible = await db.query(base);
+      const params = [];
       const result = await db.query(
-        `SELECT ${PROFILE_COLUMNS} FROM faculty_profiles
-         JOIN users ON users.id = faculty_profiles.user_id
-         WHERE ${visibilityFilter(viewer)}
+        `${base}
+         ${filterSql(filters, params)}
          ORDER BY lower(faculty_profiles.display_name), faculty_profiles.user_id`,
+        params,
       );
-      res.json({ faculty: result.rows.map(toFacultyProfile) });
+      res.json({ faculty: result.rows.map(toFacultyProfile), filters: facetsFor(visible.rows) });
     } catch (error) {
       next(error);
     }
@@ -201,7 +249,7 @@ function createFacultyRouter({ db, auth }) {
       );
       // Same 404 whether the profile is missing or just not visible to this viewer.
       if (!result.rows[0]) return res.status(404).json({ error: "Faculty profile not found." });
-      res.json({ profile: toFacultyProfile(result.rows[0]) });
+      res.json({ profile: toFacultyDetail(result.rows[0]) });
     } catch (error) {
       next(error);
     }
@@ -210,4 +258,4 @@ function createFacultyRouter({ db, auth }) {
   return router;
 }
 
-module.exports = { createFacultyRouter, INQUIRY_PREFERENCES };
+module.exports = { createFacultyRouter };

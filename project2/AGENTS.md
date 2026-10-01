@@ -45,11 +45,8 @@ Run every command from `project2/backend/`.
 | Identity, roles, consent | R1-01 to R1-07 | Jacob, done (see below) |
 | Faculty profile | R1-08 to R1-10 | Done (see "Faculty profiles" below) |
 | Faculty-created projects | R1-11 to R1-16 | Done (see "Faculty projects" below) |
-| Discovery, production usability | R1-17 to R1-26 | Whole team, later |
-
-Unassigned, but needed for submission: loading `r1_fixture.json` through a seed/setup
-mechanism (the brief requires it; normal users must not see fixture controls),
-`release_submission.md`, and `evaluation_adapter.json`.
+| Discovery, contact, production usability | R1-17 to R1-26 | Jacob, done (see "Discovery" below) |
+| Fixture loading, submission files | Brief, "Submission evidence" | Jacob, done (`release_submission.md`, `evaluation_adapter.json`) |
 
 ## Layout (`project2/backend/`)
 
@@ -60,18 +57,22 @@ src/config.js           Environment settings (domain, TTLs, email, test mode)
 src/db.js               Postgres pool, in-memory PGlite db, migration runner
 src/auth.js             Session lookup and guards (requireAuth, requireStaff, ...)
 src/visibility.js       The public-visibility rule (R1-10, R1-14)
-src/validation.js       Shared input clean-up (text, research-area lists, ids via parseId)
+src/catalog.js          Fixed lists: research areas, student levels, terms, inquiry wording
+src/validation.js       Shared input clean-up (text, research areas, ids, search patterns)
+src/fixture.js          Turns ../r1_fixture.json into idempotent seed SQL
 src/email.js            Brevo sender
 src/routes/auth.js      /api/auth: sign-in codes, sessions (R1-01 to R1-03)
 src/routes/admin.js     /api/admin: grant or revoke faculty (R1-04)
 src/routes/account.js   /api/account: public-profile choice (R1-05 to R1-07)
-src/routes/faculty.js   /api/faculty: faculty profiles (R1-08 to R1-10)
-src/routes/projects.js  /api/projects: faculty-created projects (R1-11 to R1-16)
+src/routes/faculty.js   /api/faculty: profiles, faculty discovery (R1-08 to R1-10, R1-17, R1-18)
+src/routes/projects.js  /api/projects: projects, project discovery (R1-11 to R1-16, R1-19 to R1-21)
+src/routes/options.js   /api/options: the fixed lists for the forms
 migrations/NNN_*.sql    Schema history, applied in order
 public/                 Frontend, served by Express from the same origin as the API
 test/                   node:test suites and helpers (in-memory Postgres)
-scripts/dev-local.js    Run the app locally with an in-memory database
+scripts/dev-local.js    Run the app locally on an in-memory database with the fixture loaded
 scripts/migrate.js      Apply pending migrations to DATABASE_URL
+scripts/seed-fixture.js Load the R1 fixture into DATABASE_URL, or print it as SQL
 ```
 
 The frontend is served by the backend, not a separate static site, so the session cookie is
@@ -83,10 +84,12 @@ From `project2/backend/` (Node 22+):
 
 - `npm install`
 - `npm test`: every suite, against a fresh in-memory Postgres (PGlite). No credentials.
-- `npm run dev:local`: the full app at http://localhost:3001 on an in-memory database that
-  resets on restart. `staff@algomau.ca` is pre-made staff; sign in with any `@algomau.ca`
-  address and read its code at `/operator.html`.
+- `npm run dev:local`: the full app at http://localhost:3001 on an in-memory database with
+  the R1 fixture loaded; it resets on restart. Sign in as any `@algomau.ca` address or a
+  fixture account (see "Fixture" below) and read the code at `/operator.html`.
 - `npm start`: production mode, needs `DATABASE_URL` in `.env` (see `.env.example`).
+- `npm run seed:fixture` (needs `DATABASE_URL`) or `npm run seed:fixture:sql` (prints SQL to
+  paste into the Supabase SQL Editor): load or reset the R1 fixture.
 
 ## Using auth in feature code
 
@@ -166,6 +169,11 @@ project must get 404, not the record.
   and returns `{ client, user }`. Roles are set directly in the database.
 - `createClient(baseUrl)`: a signed-out client. Clients keep their own cookie like a browser.
 - `uniqueEmail(prefix)`: a fresh `@algomau.ca` address per call.
+- `loadFixtureInto(t)`: loads the R1 fixture; returns `projectId("P-101")` and
+  `facultyId("F-ALEX")` lookups.
+
+Signing the same address in more than 3 times per test file hits the real rate limit; reuse
+the session instead (see `test/discovery.test.js`).
 
 For R1-16, sign in two faculty and assert that B gets 404 (and no change in the database)
 when editing A's profile or project by id, body or URL.
@@ -185,10 +193,10 @@ the file into the Project 2 Supabase SQL Editor (or `npm run migrate` with `DATA
 **before** merging the code that needs it. Check what's applied with
 `SELECT * FROM schema_migrations`.
 
-The `faculty_profiles` and `projects` tables in 000 are what the profile and project features
-use, unchanged so far. Reshape them with migrations if needed, but check the columns against
-`r1_fixture.json` first so seeding stays simple. The public-profile choice lives on `users`
-(`public_profile_choice`), not on `faculty_profiles`.
+Applied so far: `000` (initial), `001` (public-profile choice on `users`, guess limit),
+`002` (`fixture_id` on `users` and `projects`; student levels fixed to three values with a
+CHECK constraint). The public-profile choice lives on `users` (`public_profile_choice`), not
+on `faculty_profiles`.
 
 ## Frontend conventions
 
@@ -201,6 +209,9 @@ use, unchanged so far. Reshape them with migrations if needed, but check the col
   `getSession()`, `renderNav(session)`, `showStatus(el, msg, { error })`,
   `showApiError(el, res, fallback)` (adds a link to the fix for known error codes),
   `escapeHtml()` and `PROJECT_STATUS_LABELS`. Add new pages to `NAV_LINKS` there.
+- `form-pickers.js` has the fixed-list inputs (`renderAreaPicker`, `renderTermPicker`,
+  `fillSelect`, `fillGroupedSelect`) and the filter-form helpers (`submitFiltersAsUrl`,
+  `showResultCount`). `contact.js` has `renderContactPanel` (R1-22).
 - `styles.css` has `.button-link` for links that sit next to buttons (Edit, View).
 - Accessibility and phone width (R1-25, R1-26): every input has a `<label>`, errors go to a
   `role="status"` element and focus returns to the field, everything works by keyboard, and
@@ -230,14 +241,13 @@ use, unchanged so far. Reshape them with migrations if needed, but check the col
   or replaces it. There is deliberately no route that writes a profile by id (R1-16).
 - `GET /api/faculty` and `GET /api/faculty/:id`: everyone, filtered by the visibility rule;
   hidden and missing profiles get the same 404. Revoked faculty are hidden from everyone.
-- Inquiry preference codes (`open`, `projects_only`, `not_accepting`) never leave the server
-  in student-facing responses; `INQUIRY_PREFERENCES` in `src/routes/faculty.js` holds the
-  label and explanation students see. Only the owner's response adds `inquiryPreferenceCode`.
-- Limits: name 100 chars, description 1000, 1 to 10 areas of 60 chars (de-duplicated,
-  case-insensitive), 0 to 5 external links that must be `http(s)` URLs.
-- Pages: `profile.html` (faculty edit their own) and `faculty.html` (list, or one profile
-  with `?id=`). The list is a plain alphabetical one; search and filters belong to discovery
-  (R1-17 onwards). Profiles don't show an email address yet: contact is later work.
+- Inquiry preference codes (`open`, `projects_only`, `not_accepting`) are never shown to
+  students; `INQUIRY_PREFERENCES` in `src/catalog.js` holds the label and explanation they
+  see. Only the owner's response adds `inquiryPreferenceCode`.
+- Limits: name 100 chars, description 1000, 1 to 10 areas from the fixed list in
+  `src/catalog.js`, 0 to 5 external links that must be `http(s)` URLs.
+- Pages: `profile.html` (faculty edit their own) and `faculty.html` (filterable list, or one
+  profile with `?id=`).
 
 ## Faculty projects (R1-11 to R1-16, done)
 
@@ -247,7 +257,7 @@ use, unchanged so far. Reshape them with migrations if needed, but check the col
 - Owner routes, all with ownership in the SQL (`WHERE id = $1 AND faculty_user_id = $2`) and
   a 404 for anyone else's project (R1-16):
   - `GET /api/projects/mine` (verified faculty): own projects in every status, plus the form
-    limits and student-level suggestions.
+    limits.
   - `POST /api/projects` (verified faculty): always creates a `draft` (R1-11, R1-12). Status,
     ids and owner fields in the body are ignored.
   - `PUT /api/projects/:id` (verified faculty): replaces the content; never changes status.
@@ -264,11 +274,53 @@ use, unchanged so far. Reshape them with migrations if needed, but check the col
   Drafts, closed, hidden and missing projects all get the same 404. The owner can also open
   their own draft or closed project by id, to preview it.
 - Responses include `faculty: { id, displayName }` from the owner's profile (`displayName`
-  is `null` if they haven't written one) and never an email address.
-- Limits: title 150 chars, description 1000, 1 to 10 areas of 60 chars (same rules as
-  profiles, via `src/validation.js`), student level 60, target term 60, background note 1000.
-  Student level and target term are free text; the form suggests common levels.
+  is `null` only for an owner previewing before writing a profile). Lists never include an
+  email address; see "Contact" below for the detail page.
+- Limits: title 150 chars, description 1000, 1 to 10 areas from the fixed list, background
+  note 1000. Student level is one of `Undergraduate`, `Graduate`, `Undergraduate or Graduate`
+  or unset (a database CHECK enforces it). Target term is `<Winter|Spring|Summer|Fall> <year>`.
 - Pages: `my-projects.html` (owner's list with Publish, Close, Reopen), `project-edit.html`
-  (create, or edit with `?id=`), `projects.html` (list, or one project with `?id=`), and a
-  "Projects" list on each `faculty.html?id=` profile. The list is plain alphabetical; search
-  and filters belong to discovery (R1-17 onwards).
+  (create, or edit with `?id=`), `projects.html` (filterable list, or one project with
+  `?id=`), and a "Projects" list on each `faculty.html?id=` profile.
+
+## Discovery (R1-17 to R1-26, done)
+
+- **Filters (R1-20)**, applied on the server from the query string; every given filter must
+  match (AND), and an area matches if it is any one of the record's areas:
+  - `GET /api/projects`: `area`, `level` (`undergraduate` or `graduate`; "Undergraduate or
+    Graduate" projects match both), `term`, `facultyId`, `q` (title, description, background
+    note, areas and faculty name).
+  - `GET /api/faculty`: `area`, `inquiry` (`open`, `projects_only`, `not_accepting`), `q`
+    (name, description, areas).
+  - Unknown values are a 400; search text is matched literally (`%` and `_` are escaped).
+  - Both lists also return `filters`: the choices for each filter with counts, computed from
+    what the viewer can see before filtering, so options never reveal hidden records.
+  - The pages keep filters in the URL (`projects.html?area=Cybersecurity&term=Winter+2027`),
+    so filtered results survive refreshes and links (R1-24).
+- **Contact (R1-22)**: the detail endpoints add `contact: { email }` only where the faculty
+  member invites it: on the profile if they're open to general inquiries; on a published
+  project unless they're not accepting inquiries. `contactViaProjects` on a profile means
+  "use a project's Contact". The page (`public/contact.js`) drafts an editable subject and
+  message and hands them to the student's own Gmail (Algoma is Google Workspace) or mail
+  app, with copy buttons as a fallback. The site never sends the message and doesn't print
+  the address.
+- **Phone width and keyboard (R1-25, R1-26)**: every main-journey page was checked in
+  headless Chrome at 390px for horizontal overflow and with axe-core (WCAG 2.1 A/AA plus
+  best practice): no overflow, no violations. Filter results move focus to the result
+  count; Contact opens by keyboard and focuses the subject.
+
+## Fixture (`project2/r1_fixture.json`)
+
+- `npm run seed:fixture` / `seed:fixture:sql` loads it. Reruns reset the fixture records to
+  the fixture's values (matched by `fixture_id`) and leave everything else alone. It is run
+  by hand, never on server start: the free Render server restarts after sleeping, and
+  reseeding then would silently undo evaluators' edits.
+- The fixture's own wording is translated: inquiry `general` / `listed-projects-only` become
+  `open` / `projects_only`; status `withdrawn` becomes `closed`. Values outside the fixed
+  lists make the seed fail loudly rather than load bad data.
+- Accounts get synthetic addresses, `fixture-<id>@algomau.ca` (e.g.
+  `fixture-f-alex@algomau.ca`), plus `fixture-test-staff@` and `fixture-test-student@`.
+  Fixture accounts are never emailed (they have no inbox); they sign in through test mode,
+  and are refused when test mode is off.
+- `test/fixture.test.js` checks the app against the fixture's own `expected_public` and
+  `expected_authenticated` flags.

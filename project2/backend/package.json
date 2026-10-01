@@ -9,6 +9,8 @@
     "start": "node server.js",
     "dev:local": "node scripts/dev-local.js",
     "migrate": "node scripts/migrate.js",
+    "seed:fixture": "node scripts/seed-fixture.js",
+    "seed:fixture:sql": "node scripts/seed-fixture.js --sql",
     "test": "node --test \"test/*.test.js\""
   },
   "dependencies": {

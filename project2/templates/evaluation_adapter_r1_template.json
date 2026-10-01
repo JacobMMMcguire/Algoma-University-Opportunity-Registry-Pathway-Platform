@@ -1,0 +1,18 @@
+{
+  "directory_endpoint": "/replace-with-your-directory-api",
+  "student_detail_endpoint": "/replace-with-your-student-api/{id}",
+  "project_detail_endpoint": "/replace-with-your-project-api/{id}",
+  "student_page_route": "/replace-with-your-student-page/{id}",
+  "project_page_route": "/replace-with-your-project-page/{id}",
+  "query_parameters": {
+    "text": "replace",
+    "skill": "replace",
+    "availability": "replace",
+    "status": "replace"
+  },
+  "directory_results_path": "",
+  "id_field": "id",
+  "skills_field": "skills",
+  "contributors_field": "contributors",
+  "optional_broken_project_id": "P07"
+}

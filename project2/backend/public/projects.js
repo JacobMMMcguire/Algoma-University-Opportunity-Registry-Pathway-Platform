@@ -1,23 +1,67 @@
 const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
+const FILTER_KEYS = ["q", "area", "level", "term", "facultyId"];
 
-function renderList(projects, session) {
+// Keeps a filter that's in the URL selectable even if it has no results right now (an old link).
+function withSelected(options, selected, label) {
+  if (!selected || options.some((o) => String(o.value) === selected)) return options;
+  return [...options, { value: selected, label: `${label(selected)} (0)` }];
+}
+
+// R1-19, R1-20: the project list, with filters taken from (and kept in) the URL.
+function renderList(data, session, query) {
+  const { projects, filters } = data;
   $("list-note").textContent = session.authenticated
     ? "Showing every published project, including those visible only to signed-in users."
     : "Showing published projects from faculty who have chosen to share them publicly. Sign in to see more.";
-  $("project-list").innerHTML = projects.length
-    ? projects
-        .map((p) => {
-          const details = [p.faculty.displayName, p.targetTerm, p.studentLevel].filter(Boolean);
-          return `<li class="card">
-            <h2><a href="projects.html?id=${encodeURIComponent(p.id)}">${escapeHtml(p.title)}</a></h2>
-            <p>${escapeHtml(details.join(" · "))}</p>
-            <p class="hint">${escapeHtml(p.researchAreas.join(" · "))}</p>
-          </li>`;
-        })
-        .join("")
-    : "<li>No projects to show yet.</li>";
+
+  $("filter-q").value = query.get("q") || "";
+  fillGroupedSelect($("filter-area"), filters.areas, query.get("area") || "", "Any research area");
+  const levelNames = { undergraduate: "Undergraduate students", graduate: "Graduate students" };
+  fillSelect(
+    $("filter-level"),
+    withSelected(
+      filters.levels.map((l) => ({ value: l.value, label: `${l.label} (${l.count})` })),
+      query.get("level"),
+      (v) => levelNames[v] || v,
+    ),
+    query.get("level") || "",
+    "Any student level",
+  );
+  fillSelect(
+    $("filter-term"),
+    withSelected(
+      filters.terms.map((t) => ({ value: t.value, label: `${t.value} (${t.count})` })),
+      query.get("term"),
+      (v) => v,
+    ),
+    query.get("term") || "",
+    "Any term",
+  );
+  fillSelect(
+    $("filter-faculty"),
+    withSelected(
+      filters.faculty.map((f) => ({ value: String(f.id), label: `${f.displayName} (${f.count})` })),
+      query.get("facultyId"),
+      () => "Selected faculty member",
+    ),
+    query.get("facultyId") || "",
+    "Any faculty member",
+  );
+
+  $("project-list").innerHTML = projects
+    .map((p) => {
+      const details = [p.faculty.displayName, p.targetTerm, p.studentLevel].filter(Boolean);
+      return `<li class="card">
+        <h2><a href="projects.html?id=${encodeURIComponent(p.id)}">${escapeHtml(p.title)}</a></h2>
+        <p>${escapeHtml(details.join(" · "))}</p>
+        <p class="hint">${escapeHtml(p.researchAreas.join(" · "))}</p>
+      </li>`;
+    })
+    .join("");
   $("list-view").hidden = false;
+  const filtered = FILTER_KEYS.some((key) => query.get(key));
+  showResultCount($("result-count"), projects.length, { noun: "project", plural: "projects", filtered });
 }
 
 function renderProject(project, session) {
@@ -43,6 +87,7 @@ function renderProject(project, session) {
     note.hidden = false;
   }
 
+  // R1-21: the project names its faculty member and links to their profile.
   if (project.faculty.displayName) {
     const link = $("project-faculty").querySelector("a");
     link.href = `faculty.html?id=${encodeURIComponent(project.faculty.id)}`;
@@ -54,15 +99,39 @@ function renderProject(project, session) {
   $("project-level").textContent = project.studentLevel || "";
   $("level-row").hidden = !project.studentLevel;
   $("project-description").textContent = project.description;
+  $("about-section").hidden = !project.description;
   $("project-areas").replaceChildren(
     ...project.researchAreas.map((area) => {
       const li = document.createElement("li");
-      li.textContent = area;
+      const a = document.createElement("a");
+      a.href = `projects.html?area=${encodeURIComponent(area)}`;
+      a.textContent = area;
+      a.title = `Projects in ${area}`;
+      li.append(a);
       return li;
     }),
   );
   $("project-prereq").textContent = project.prerequisites || "";
   $("prereq-section").hidden = !project.prerequisites;
+
+  // R1-22: Contact, unless the faculty member isn't accepting inquiries.
+  if (project.contact) {
+    renderContactPanel($("contact-section"), {
+      email: project.contact.email,
+      facultyName: project.faculty.displayName,
+      subject: `Student inquiry: ${project.title} (${project.targetTerm})`,
+      body:
+        `Dear ${project.faculty.displayName},\n\n` +
+        `I'm a student at Algoma University and I'm interested in your project "${project.title}" for ${project.targetTerm}.\n\n` +
+        "[A sentence or two about you: your program, your year, and why this project interests you.]\n\n" +
+        "Would you be open to talking about whether I could get involved?\n\n" +
+        "Thank you,\n[Your name]",
+      session,
+    });
+  } else if (project.status === "published" && !isOwner && project.faculty.inquiryPreference) {
+    $("no-contact-text").textContent = project.faculty.inquiryPreference.explanation;
+    $("no-contact").hidden = false;
+  }
   $("project-view").hidden = false;
 }
 
@@ -73,15 +142,27 @@ function renderNotFound(session) {
   $("not-found").hidden = false;
 }
 
+submitFiltersAsUrl($("filters"), "projects.html");
+
 (async () => {
   const session = await getSession();
   renderNav(session);
-  const id = new URLSearchParams(location.search).get("id");
+  const query = new URLSearchParams(location.search);
+  const id = query.get("id");
 
   if (id === null) {
-    const res = await api("/api/projects");
+    const params = new URLSearchParams();
+    for (const key of FILTER_KEYS) if (query.get(key)) params.set(key, query.get(key));
+    const res = await api(`/api/projects${params.size ? `?${params}` : ""}`);
+    if (res.status === 400) {
+      showStatus(statusEl, res.data.error, { error: true });
+      const clear = document.createElement("a");
+      clear.href = "projects.html";
+      clear.textContent = "Clear the filters";
+      return statusEl.append(" ", clear);
+    }
     if (!res.ok) return showStatus(statusEl, res.data.error || "Could not load projects.", { error: true });
-    renderList(res.data.projects, session);
+    renderList(res.data, session, query);
     return;
   }
 

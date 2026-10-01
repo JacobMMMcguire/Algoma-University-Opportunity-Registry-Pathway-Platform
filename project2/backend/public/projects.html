@@ -12,6 +12,37 @@
     <section id="list-view" hidden aria-labelledby="list-heading">
       <h1 id="list-heading">Projects</h1>
       <p id="list-note" class="hint"></p>
+
+      <form id="filters" class="filters" action="projects.html" method="get" role="search" aria-label="Filter projects">
+        <div class="field">
+          <label for="filter-q">Search</label>
+          <input id="filter-q" name="q" type="search" maxlength="100" aria-describedby="filter-q-hint">
+          <p id="filter-q-hint" class="hint">Titles, descriptions, areas and faculty names.</p>
+        </div>
+        <div class="field">
+          <label for="filter-area">Research area</label>
+          <select id="filter-area" name="area"></select>
+        </div>
+        <div class="field">
+          <label for="filter-level">Open to</label>
+          <select id="filter-level" name="level"></select>
+        </div>
+        <div class="field">
+          <label for="filter-term">Target term</label>
+          <select id="filter-term" name="term"></select>
+        </div>
+        <div class="field">
+          <label for="filter-faculty">Faculty member</label>
+          <select id="filter-faculty" name="facultyId"></select>
+        </div>
+        <p class="hint filters-note">Projects must match every filter you choose.</p>
+        <div class="actions">
+          <button type="submit" class="primary">Apply filters</button>
+          <a class="button-link" href="projects.html">Clear filters</a>
+        </div>
+      </form>
+
+      <p id="result-count" class="result-count"></p>
       <ul id="project-list" class="cards"></ul>
     </section>
 
@@ -29,8 +60,10 @@
         <div id="level-row" hidden><dt>Student level</dt><dd id="project-level"></dd></div>
       </dl>
 
-      <h2>About the project</h2>
-      <p id="project-description" class="prewrap"></p>
+      <section id="about-section" hidden aria-labelledby="about-heading">
+        <h2 id="about-heading">About the project</h2>
+        <p id="project-description" class="prewrap"></p>
+      </section>
 
       <h2>Research and project areas</h2>
       <ul id="project-areas" class="tags"></ul>
@@ -38,6 +71,12 @@
       <section id="prereq-section" hidden aria-labelledby="prereq-heading">
         <h2 id="prereq-heading">Desired background</h2>
         <p id="project-prereq" class="prewrap"></p>
+      </section>
+
+      <section id="contact-section" hidden></section>
+      <section id="no-contact" class="note" hidden aria-labelledby="no-contact-heading">
+        <h2 id="no-contact-heading">Contact</h2>
+        <p id="no-contact-text"></p>
       </section>
     </article>
 
@@ -51,6 +90,8 @@
   </main>
 
   <script src="common.js"></script>
+  <script src="form-pickers.js"></script>
+  <script src="contact.js"></script>
   <script src="projects.js"></script>
 </body>
 </html>

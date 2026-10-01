@@ -38,26 +38,32 @@
           <p id="description-hint" class="hint">What students would work on and learn. Up to 1000 characters.</p>
         </div>
 
-        <div class="field">
-          <label for="researchAreas">Research or project areas</label>
-          <textarea id="researchAreas" name="researchAreas" rows="3" required
-            aria-describedby="researchAreas-hint"></textarea>
-          <p id="researchAreas-hint" class="hint">One per line, at least one and up to 10. For example: Water quality.</p>
-        </div>
+        <fieldset aria-describedby="researchAreas-hint">
+          <legend>Research or project areas</legend>
+          <p id="researchAreas-hint" class="hint">Choose at least one. Open a group to see its areas.
+            <span id="researchAreas-count"></span></p>
+          <div id="researchAreas-picker"></div>
+        </fieldset>
 
         <div class="field">
           <label for="studentLevel">Intended student level (optional)</label>
-          <input id="studentLevel" name="studentLevel" maxlength="60" list="studentLevel-options"
-            aria-describedby="studentLevel-hint">
-          <datalist id="studentLevel-options"></datalist>
-          <p id="studentLevel-hint" class="hint">Pick a suggestion or type your own, e.g. Third- or fourth-year undergraduate.</p>
+          <select id="studentLevel" name="studentLevel" aria-describedby="studentLevel-hint"></select>
+          <p id="studentLevel-hint" class="hint">Leave as "Not specified" if level doesn't matter for this project.</p>
         </div>
 
-        <div class="field">
-          <label for="targetTerm">Target academic term</label>
-          <input id="targetTerm" name="targetTerm" required maxlength="60" aria-describedby="targetTerm-hint">
-          <p id="targetTerm-hint" class="hint">For example: Winter 2027.</p>
-        </div>
+        <fieldset>
+          <legend>Target academic term</legend>
+          <div class="inline-fields">
+            <div class="field">
+              <label for="targetTerm">Season</label>
+              <select id="targetTerm" name="targetTermSeason"></select>
+            </div>
+            <div class="field">
+              <label for="targetTerm-year">Year</label>
+              <select id="targetTerm-year" name="targetTermYear"></select>
+            </div>
+          </div>
+        </fieldset>
 
         <div class="field">
           <label for="prerequisites">Desired background or prerequisites (optional)</label>
@@ -78,6 +84,7 @@
   </main>
 
   <script src="common.js"></script>
+  <script src="form-pickers.js"></script>
   <script src="project-edit.js"></script>
 </body>
 </html>

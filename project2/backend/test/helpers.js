@@ -64,7 +64,12 @@ async function signIn(testApp, email, roles = {}) {
   const client = createClient(testApp.baseUrl);
   const requested = await client.post("/api/auth/request-challenge", { email });
   if (requested.status !== 201) throw new Error(`request-challenge failed: ${JSON.stringify(requested.data)}`);
-  const { code } = testApp.sentEmails.filter((sent) => sent.email === email.toLowerCase()).at(-1);
+  // Read from the database rather than sentEmails: fixture accounts are never emailed.
+  const challenge = await testApp.db.query(
+    "SELECT code FROM sign_in_challenges WHERE email = $1 AND used_at IS NULL ORDER BY created_at DESC, id DESC LIMIT 1",
+    [email.toLowerCase()],
+  );
+  const { code } = challenge.rows[0];
   const verified = await client.post("/api/auth/verify", { email, code });
   if (verified.status !== 200) throw new Error(`verify failed: ${JSON.stringify(verified.data)}`);
 
@@ -85,4 +90,16 @@ function uniqueEmail(prefix = "user") {
   return `${prefix}${counter}.${process.pid}@algomau.ca`;
 }
 
-module.exports = { startTestApp, createClient, signIn, uniqueEmail };
+// Loads the R1 fixture into a test app's database; returns { projectId, facultyId } lookups by
+// fixture id, e.g. projectId("P-101").
+async function loadFixtureInto(testApp) {
+  const { buildFixtureSql, loadFixture } = require("../src/fixture");
+  await testApp.db.exec(buildFixtureSql(loadFixture()));
+  const projects = await testApp.db.query("SELECT id, fixture_id FROM projects WHERE fixture_id IS NOT NULL");
+  const users = await testApp.db.query("SELECT id, fixture_id FROM users WHERE fixture_id IS NOT NULL");
+  const projectIds = new Map(projects.rows.map((row) => [row.fixture_id, row.id]));
+  const userIds = new Map(users.rows.map((row) => [row.fixture_id, row.id]));
+  return { projectId: (fixtureId) => projectIds.get(fixtureId), facultyId: (fixtureId) => userIds.get(fixtureId) };
+}
+
+module.exports = { startTestApp, createClient, signIn, uniqueEmail, loadFixtureInto };

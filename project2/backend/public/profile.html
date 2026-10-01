@@ -31,12 +31,12 @@
           <p id="description-hint" class="hint">A few sentences about your research and the kind of students you work with. Up to 1000 characters.</p>
         </div>
 
-        <div class="field">
-          <label for="researchAreas">Research or project areas</label>
-          <textarea id="researchAreas" name="researchAreas" rows="4" required
-            aria-describedby="researchAreas-hint"></textarea>
-          <p id="researchAreas-hint" class="hint">One per line, at least one and up to 10. For example: Water quality.</p>
-        </div>
+        <fieldset aria-describedby="researchAreas-hint">
+          <legend>Research or project areas</legend>
+          <p id="researchAreas-hint" class="hint">Choose at least one. Open a group to see its areas.
+            <span id="researchAreas-count"></span></p>
+          <div id="researchAreas-picker"></div>
+        </fieldset>
 
         <fieldset id="inquiryPreference">
           <legend>Are you accepting student inquiries?</legend>
@@ -58,6 +58,7 @@
   </main>
 
   <script src="common.js"></script>
+  <script src="form-pickers.js"></script>
   <script src="profile.js"></script>
 </body>
 </html>
