@@ -5,7 +5,7 @@ Team: Jacob McGuire, Sineru Mahamillage, Paris Lad
 Deployment: https://algoma-opportunity-registry-r1-backend.onrender.com
 Repository: https://github.com/JacobMMMcguire/Algoma-University-Opportunity-Registry-Pathway-Platform
 Release tag: R1-submission (on branch `r1-development`)
-Commit: <!-- TODO at freeze: full SHA of the commit the R1-submission tag points to -->
+Commit: e8bc7e26ac814e50dbc31bc8e76852e4dbe2720d
 Adapter: project2/evaluation_adapter.json
 Known issues:
 - **Test mode is on.** Unused sign-in codes are listed at `/operator.html` so testers can use
