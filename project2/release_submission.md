@@ -1,7 +1,7 @@
 # Release Submission
 
 Release: R1
-Team: team-XX <!-- TODO before submitting: the team number -->
+Team: Jacob McGuire, Sineru Mahamillage, Paris Lad
 Deployment: https://algoma-opportunity-registry-r1-backend.onrender.com
 Repository: https://github.com/JacobMMMcguire/Algoma-University-Opportunity-Registry-Pathway-Platform
 Release tag: R1-submission (on branch `r1-development`)
