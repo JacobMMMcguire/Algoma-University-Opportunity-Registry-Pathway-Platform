@@ -66,8 +66,8 @@ code by email as well as on the operator console.
     inquiries", `listed-projects-only` becomes "Inquiries about listed projects only", and
     status `withdrawn` becomes Closed.
   - Each fixture account's address is `fixture-<fixture_id>@algomau.ca`.
-- **Public versus signed-in behaviour, checked from a logged-out session:**
-  <!-- TODO: confirm after seeding the live site -->
+- **Public versus signed-in behaviour, checked from a logged-out session** on the live
+  deployment on 2026-10-01, after seeding (all of the following passed):
   - Logged out, `/projects.html` lists exactly P-101, P-103, P-104 and P-107, the fixture's
     `expected_public` projects. `/faculty.html` lists Alex Morgan, Priya Shah and Jordan
     Lee.
