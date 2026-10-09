@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const { createApp } = require("./src/app");
-const { loadConfig } = require("./src/config");
+const { MIN_OPERATOR_SECRET_LENGTH, loadConfig } = require("./src/config");
 const { createPool } = require("./src/db");
 const { createBrevoSender } = require("./src/email");
 
@@ -13,6 +13,11 @@ if (!process.env.DATABASE_URL) {
 const config = loadConfig();
 if (!config.emailEnabled && !config.testMode) {
   console.warn("Neither email delivery nor sign-in test mode is enabled: nobody can sign in.");
+}
+if (config.testMode && !config.operatorSecret) {
+  console.warn(
+    `OPERATOR_SECRET is unset or shorter than ${MIN_OPERATOR_SECRET_LENGTH} characters: only signed-in staff can read test-account codes.`,
+  );
 }
 
 const app = createApp({

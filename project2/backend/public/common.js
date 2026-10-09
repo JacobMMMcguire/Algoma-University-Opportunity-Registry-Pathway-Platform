@@ -5,11 +5,11 @@ function escapeHtml(value) {
 }
 
 // Calls the API on this same origin. Never throws: network failures come back as status 0.
-async function api(path, { method = "GET", body } = {}) {
+async function api(path, { method = "GET", body, headers = {} } = {}) {
   try {
     const res = await fetch(path, {
       method,
-      headers: body === undefined ? {} : { "Content-Type": "application/json" },
+      headers: body === undefined ? headers : { "Content-Type": "application/json", ...headers },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));

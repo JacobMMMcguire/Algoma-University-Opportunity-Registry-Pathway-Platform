@@ -86,3 +86,15 @@ code by email as well as on the operator console.
 - **Automated tests:** 105 `node:test` tests in `project2/backend/test`, run against an
   in-memory Postgres with `npm test`. They cover R1-01 to R1-24, including cross-user edits
   (R1-16), filters (R1-20), contact (R1-22) and persistence across sessions (R1-23).
+
+## Post-freeze changes
+
+Everything above describes the frozen release (`R1-submission` → `e8bc7e2`), which is unchanged.
+
+- **2026-10-09: operator console now requires authorisation.** This responds to the
+  instructor's Critical finding of 2026-10-07 on R1-01 and R1-03. The test-mode code console
+  (`/operator.html`, `GET /api/auth/pending-challenges`) now needs a signed-in staff session
+  or the private operator access code, and lists codes for the fixture test accounts only.
+  Real users' codes are never shown and arrive by email. Peer testers get the operator access
+  code through the course's private channel. The sign-in steps in "Test notes" are otherwise
+  the same. The fix's commit and its redeployed version are linked in the instructor's issue.

@@ -1,3 +1,5 @@
+const MIN_OPERATOR_SECRET_LENGTH = 24;
+
 function loadConfig(env = process.env) {
   const brevoApiKey = env.BREVO_API_KEY || "";
   const emailFrom = env.EMAIL_FROM || "";
@@ -15,7 +17,10 @@ function loadConfig(env = process.env) {
     emailEnabled,
     // Defaults on only when email isn't configured, so there is always some way to sign in.
     testMode: env.SIGN_IN_TEST_MODE ? env.SIGN_IN_TEST_MODE === "true" : !emailEnabled,
+    // Lets an authorised operator read test-account codes without a staff session. Too short
+    // to resist guessing means disabled.
+    operatorSecret: (env.OPERATOR_SECRET || "").length >= MIN_OPERATOR_SECRET_LENGTH ? env.OPERATOR_SECRET : "",
   };
 }
 
-module.exports = { loadConfig };
+module.exports = { loadConfig, MIN_OPERATOR_SECRET_LENGTH };

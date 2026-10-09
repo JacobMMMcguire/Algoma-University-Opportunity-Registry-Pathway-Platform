@@ -11,17 +11,32 @@
   <main>
     <h1>Operator console (test mode)</h1>
     <p>
-      Test mode lists unused sign-in codes here so testers can sign in as accounts that have no
-      real inbox. It stands in for email and is not a production feature.
+      For authorised testers only. Lists unused sign-in codes for the synthetic test accounts,
+      which have no real inbox. Real users get their codes by email; their codes are never shown
+      here.
     </p>
-    <button type="button" id="refresh">Refresh</button>
+
+    <form id="access-form" hidden novalidate>
+      <div class="field">
+        <label for="operator-secret">Operator access code</label>
+        <input id="operator-secret" type="password" autocomplete="off" required aria-describedby="operator-secret-hint">
+        <p id="operator-secret-hint" class="hint">Provided privately to authorised testers. Signed-in staff don't need it.</p>
+      </div>
+      <button type="submit" class="primary">Show test-account codes</button>
+    </form>
+
+    <section id="codes" hidden aria-labelledby="codes-heading">
+      <h2 id="codes-heading">Unused test-account codes</h2>
+      <button type="button" id="refresh">Refresh</button>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Email</th><th scope="col">Code</th><th scope="col">Expires</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
     <p id="status" class="status" role="status" aria-live="polite"></p>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th scope="col">Email</th><th scope="col">Code</th><th scope="col">Expires</th></tr></thead>
-        <tbody id="rows"></tbody>
-      </table>
-    </div>
   </main>
 
   <script src="common.js"></script>

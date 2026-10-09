@@ -85,8 +85,9 @@ From `project2/backend/` (Node 22+):
 - `npm install`
 - `npm test`: every suite, against a fresh in-memory Postgres (PGlite). No credentials.
 - `npm run dev:local`: the full app at http://localhost:3001 on an in-memory database with
-  the R1 fixture loaded; it resets on restart. Sign in as any `@algomau.ca` address or a
-  fixture account (see "Fixture" below) and read the code at `/operator.html`.
+  the R1 fixture loaded; it resets on restart. There's no email locally, so sign in as a
+  fixture account (see "Fixture" below) and read its code at `/operator.html` with the
+  local-only operator secret the script prints.
 - `npm start`: production mode, needs `DATABASE_URL` in `.env` (see `.env.example`).
 - `npm run seed:fixture` (needs `DATABASE_URL`) or `npm run seed:fixture:sql` (prints SQL to
   paste into the Supabase SQL Editor): load or reset the R1 fixture.
@@ -223,8 +224,16 @@ on `faculty_profiles`.
   after 5 wrong guesses, at most 3 requested per address per 10 minutes. Only
   `@algomau.ca`, matched exactly after the final `@` (`ALLOWED_EMAIL_DOMAIN`).
 - Delivery: emailed via Brevo's HTTPS API when `BREVO_API_KEY` and `EMAIL_FROM` are set.
-  With `SIGN_IN_TEST_MODE=true`, unused codes are also listed at `/operator.html` so
-  testers can use accounts with no inbox (the brief's approved test mode).
+  Real users can only get a code by email. If email isn't configured or a send fails, they
+  get a clear error and the unreadable code is retired.
+- Test mode (`SIGN_IN_TEST_MODE=true`, the brief's approved substitute): unused codes for
+  **fixture test accounts only** are readable at `GET /api/auth/pending-challenges`
+  (`/operator.html`) by an **authorised operator**: a signed-in staff member, or a request
+  with the `X-Operator-Secret` header matching `OPERATOR_SECRET`. The secret is at least 24
+  characters, compared in constant time, and shared with testers only privately. Anyone
+  else gets 401/403. Real users' codes are never listed to anyone. This fixed an
+  instructor-reported Critical finding (2026-10-07) where any visitor could read every
+  pending code; regression tests are in `test/operator-console.test.js`.
 - Sessions: random token in an httpOnly, SameSite=Lax cookie, stored in `sessions`, 7 days.
 - New accounts are never staff or faculty. The first staff account was set in the Supabase
   SQL Editor: `UPDATE users SET is_staff = true WHERE email = '...';`
@@ -321,6 +330,6 @@ on `faculty_profiles`.
 - Accounts get synthetic addresses, `fixture-<id>@algomau.ca` (e.g.
   `fixture-f-alex@algomau.ca`), plus `fixture-test-staff@` and `fixture-test-student@`.
   Fixture accounts are never emailed (they have no inbox); they sign in through test mode,
-  and are refused when test mode is off.
+  with an authorised operator reading the code, and are refused when test mode is off.
 - `test/fixture.test.js` checks the app against the fixture's own `expected_public` and
   `expected_authenticated` flags.

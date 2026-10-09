@@ -21,7 +21,9 @@ and Supabase project, and must not be touched while it is assessed):
   on the Render service. RLS is on for every table with no policies, so only the backend
   can read the data.
 - **Render environment variables:** `DATABASE_URL`, `BREVO_API_KEY`, `EMAIL_FROM` (a
-  Brevo-verified sender), `SIGN_IN_TEST_MODE=true`. See `backend/.env.example`.
+  Brevo-verified sender), `SIGN_IN_TEST_MODE=true`, `OPERATOR_SECRET` (private, at least 24
+  characters; shared with authorised testers only through a private channel). See
+  `backend/.env.example`.
 
 ## Release notes input: identity and consent (R1-01 to R1-07)
 
@@ -29,18 +31,20 @@ For `release_submission.md`:
 
 - **Email transport:** sign-in codes are emailed through Brevo from a verified Gmail sender
   (the team owns no domain, so there is no DKIM or DMARC alignment and codes may land in
-  junk). Test mode is also on: unused codes are listed at `/operator.html` so evaluators
-  can sign in as accounts with no real inbox. Codes are 6 digits, expire in 10 minutes,
+  junk). Test mode is also on: unused codes for the fixture test accounts are shown at
+  `/operator.html` to authorised operators, so evaluators can sign in as accounts with no
+  real inbox. Codes are 6 digits, expire in 10 minutes,
   are single-use, allow 5 wrong guesses, and are only issued to `@algomau.ca` addresses.
 - **First admin:** created out of band by signing in once, then running
   `UPDATE users SET is_staff = true WHERE email = '...';` in the Supabase SQL Editor.
   Signing in never grants staff or faculty status.
 - **Staff account for peer testers:** `fixture-test-staff@algomau.ca`, created by the
   fixture seed and signed in through the operator console (see `release_submission.md`).
-- **Known issue (test mode):** while test mode is on, anyone who can open the site can
-  read pending codes on `/operator.html`, and so sign in as any `@algomau.ca` address with
-  a pending code. This is the accepted cost of the test-mode substitute and goes away with
-  `SIGN_IN_TEST_MODE=false`.
+- **Fixed after the R1 freeze (instructor finding, 2026-10-07):** in the frozen release, anyone
+  who could open the site could read pending codes on `/operator.html` and sign in as any
+  `@algomau.ca` address with a pending code. The console now requires an authorised operator
+  (signed-in staff, or the private `OPERATOR_SECRET`), and lists codes for the fixture test
+  accounts only. Real users' codes are never shown; they arrive by email.
 
 ## Release notes input: faculty profiles (R1-08 to R1-10)
 

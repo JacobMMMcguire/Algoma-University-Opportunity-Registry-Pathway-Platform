@@ -20,6 +20,15 @@ function generateChallengeCode() {
   return String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
 }
 
+// Constant-time comparison: hashing first makes both sides the same length.
+function secretsMatch(given, expected) {
+  if (typeof given !== "string" || !given || !expected) return false;
+  const hash = (value) => crypto.createHash("sha256").update(value).digest();
+  return crypto.timingSafeEqual(hash(given), hash(expected));
+}
+
+const OPERATOR_SECRET_HEADER = "x-operator-secret";
+
 // R1-01 through R1-03: passwordless sign-in with short-lived, single-use, domain-restricted codes.
 function createAuthRouter({ db, config, auth, sendSignInEmail }) {
   const router = express.Router();
@@ -46,48 +55,60 @@ function createAuthRouter({ db, config, auth, sendSignInEmail }) {
       }
 
       // Fixture accounts (npm run seed:fixture) have no inbox: never email them, which would only
-      // bounce. They sign in through the test-mode operator console.
+      // bounce. They sign in through the test-mode operator console. Everyone else can only get
+      // a code by email, since the console never shows real users' codes.
       const fixture = await db.query("SELECT 1 FROM users WHERE email = $1 AND fixture_id IS NOT NULL", [email]);
       const isFixtureAccount = fixture.rows.length > 0;
       if (isFixtureAccount && !config.testMode) {
         return res.status(403).json({ error: "This is a test account. It can only sign in while test mode is on." });
       }
+      if (!isFixtureAccount && !sendSignInEmail) {
+        return res.status(503).json({ error: "Sign-in by email isn't available right now. Please try again later." });
+      }
 
       const code = generateChallengeCode();
       const expiresAt = new Date(Date.now() + config.challengeTtlMinutes * 60 * 1000);
-      await db.query(
-        "INSERT INTO sign_in_challenges (email, code, expires_at) VALUES ($1, $2, $3)",
+      const inserted = await db.query(
+        "INSERT INTO sign_in_challenges (email, code, expires_at) VALUES ($1, $2, $3) RETURNING id",
         [email, code, expiresAt],
       );
 
-      let emailSent = false;
-      if (sendSignInEmail && !isFixtureAccount) {
+      if (!isFixtureAccount) {
         try {
           await sendSignInEmail(email, code);
-          emailSent = true;
         } catch (error) {
           console.error("Sign-in email failed:", error.message);
-          if (!config.testMode) {
-            return res.status(502).json({ error: "Could not send the sign-in email. Try again shortly." });
-          }
+          // Nobody can read this code, so retire it rather than leave it pending.
+          await db.query("UPDATE sign_in_challenges SET used_at = now() WHERE id = $1", [inserted.rows[0].id]);
+          return res.status(502).json({ error: "Could not send the sign-in email. Try again shortly." });
         }
       }
 
-      res.status(201).json({ ok: true, expiresAt, emailSent, testMode: config.testMode });
+      res.status(201).json({ ok: true, expiresAt, emailSent: !isFixtureAccount, testMode: config.testMode });
     } catch (error) {
       next(error);
     }
   });
 
-  // Test-mode stand-in for the recipient's inbox (the brief's instructor-approved substitute).
-  router.get("/pending-challenges", async (_req, res, next) => {
+  // R1-01 test mode: the challenge is surfaced to an *authorised* operator instead of an inbox.
+  // Authorised means a signed-in staff member, or a request carrying the private operator secret
+  // (shared with testers out of band). Only fixture test accounts' codes are ever listed: real
+  // users get their code by email and nobody else can read it.
+  router.get("/pending-challenges", async (req, res, next) => {
     if (!config.testMode) return res.status(404).json({ error: "Sign-in test mode is disabled." });
     try {
+      const viaSecret = secretsMatch(req.get(OPERATOR_SECRET_HEADER), config.operatorSecret);
+      if (!viaSecret) {
+        const user = await auth.getSessionUser(req);
+        if (!user) return res.status(401).json({ error: "Operator access required." });
+        if (!user.is_staff) return res.status(403).json({ error: "Operator access required." });
+      }
       const result = await db.query(
-        `SELECT email, code, expires_at AS "expiresAt"
-         FROM sign_in_challenges
-         WHERE used_at IS NULL AND expires_at > now() AND failed_attempts < $1
-         ORDER BY created_at DESC`,
+        `SELECT c.email, c.code, c.expires_at AS "expiresAt"
+         FROM sign_in_challenges c
+         JOIN users u ON u.email = c.email AND u.fixture_id IS NOT NULL
+         WHERE c.used_at IS NULL AND c.expires_at > now() AND c.failed_attempts < $1
+         ORDER BY c.created_at DESC`,
         [config.maxFailedAttemptsPerChallenge],
       );
       res.json(result.rows);

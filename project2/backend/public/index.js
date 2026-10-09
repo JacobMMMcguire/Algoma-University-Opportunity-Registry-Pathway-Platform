@@ -77,7 +77,7 @@ $("request-form").addEventListener("submit", async (event) => {
     statusEl,
     res.data.emailSent
       ? "Check your email for a 6-digit code. It can take a minute to arrive; check junk mail too."
-      : "Code created. Look it up on the operator console.",
+      : "This is a test account: an authorised tester can read its code on the operator console.",
   );
 });
 

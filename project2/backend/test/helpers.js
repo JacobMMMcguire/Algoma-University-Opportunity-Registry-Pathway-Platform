@@ -2,20 +2,29 @@ const { createApp } = require("../src/app");
 const { loadConfig } = require("../src/config");
 const { createLocalDb } = require("../src/db");
 
+const TEST_OPERATOR_SECRET = "test-operator-secret-0123456789";
+
 // Starts the real app on a random port against a fresh in-memory Postgres with all migrations
 // applied. Emails are captured in `sentEmails` instead of being sent. `extend({ app, db })`
-// can add test-only routes before the server starts (use paths outside /api).
-async function startTestApp({ config: configOverrides = {}, extend } = {}) {
+// can add test-only routes before the server starts (use paths outside /api). `email: "fail"`
+// makes every send throw; `email: "none"` runs with email unconfigured.
+async function startTestApp({ config: configOverrides = {}, extend, email = "capture" } = {}) {
   const db = await createLocalDb();
   const sentEmails = [];
-  const config = { ...loadConfig({ SIGN_IN_TEST_MODE: "true" }), ...configOverrides };
-  const app = createApp({
-    db,
-    config,
-    sendSignInEmail: async (email, code) => {
-      sentEmails.push({ email, code });
+  const config = {
+    ...loadConfig({ SIGN_IN_TEST_MODE: "true", OPERATOR_SECRET: TEST_OPERATOR_SECRET }),
+    ...configOverrides,
+  };
+  const senders = {
+    capture: async (to, code) => {
+      sentEmails.push({ email: to, code });
     },
-  });
+    fail: async () => {
+      throw new Error("simulated email failure");
+    },
+    none: null,
+  };
+  const app = createApp({ db, config, sendSignInEmail: senders[email] });
   if (extend) extend({ app, db });
   const server = await new Promise((resolve) => {
     const s = app.listen(0, "127.0.0.1", () => resolve(s));
@@ -102,4 +111,4 @@ async function loadFixtureInto(testApp) {
   return { projectId: (fixtureId) => projectIds.get(fixtureId), facultyId: (fixtureId) => userIds.get(fixtureId) };
 }
 
-module.exports = { startTestApp, createClient, signIn, uniqueEmail, loadFixtureInto };
+module.exports = { startTestApp, createClient, signIn, uniqueEmail, loadFixtureInto, TEST_OPERATOR_SECRET };
