@@ -139,3 +139,7 @@ select {
 .contact { border-top: 1px solid #ddd; margin-top: 1.5rem; padding-top: 0.5rem; }
 .contact textarea { max-width: 100%; }
 .button-link.primary { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+
+/* R2-21: tells faculty projects and industry projects apart. */
+.kind { font-size: 0.85rem; font-weight: 600; color: #555; margin: 0 0 0.25rem; }
+.kind-industry { color: #92400e; }

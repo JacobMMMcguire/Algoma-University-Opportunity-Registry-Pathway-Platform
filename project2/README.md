@@ -1,9 +1,12 @@
 # Project 2 — Opportunity Registry and Pathway Platform
 
 Release 1: faculty and project discovery with first contact by email.
+Release 2 (in progress): accountless partner intake, faculty-supervised industry
+opportunities, and faculty notification subscriptions.
 
 - **Live:** https://algoma-opportunity-registry-r1-backend.onrender.com (auto-deploys the
-  `r1-development` branch)
+  `r2-development` branch; work on feature branches off it). Release 1 as assessed is
+  `r1-development`, tag `R1-submission`.
 - **Developers and coding agents:** read [AGENTS.md](AGENTS.md) first, for the rules,
   code layout, testing, and how to add features.
 - **Evaluators:** see [release_submission.md](release_submission.md) and
@@ -14,7 +17,7 @@ Release 1: faculty and project discovery with first contact by email.
 Kept completely separate from Phase 0 (which lives on `master` with its own Render services
 and Supabase project, and must not be touched while it is assessed):
 
-- **Render:** one Web Service, root directory `project2/backend`, branch `r1-development`,
+- **Render:** one Web Service, root directory `project2/backend`, branch `r2-development`,
   build `npm install`, start `npm start`, health check `/api/health`. It serves the API and
   the frontend.
 - **Supabase:** a dedicated project. Its Session pooler connection string is `DATABASE_URL`
@@ -101,3 +104,61 @@ For `release_submission.md`:
   into Supabase via `npm run seed:fixture:sql`). It is rerunnable, never runs automatically,
   and has no controls in the app. Automated tests check the app against the fixture's own
   expected-visibility flags.
+
+## Release 2 notes input: partner intake (R2-01 to R2-06)
+
+- Organisations propose a project at `/partner.html` ("Propose a project" in the menu) with
+  no account or sign-in: organisation, contact name and email, title, description, optional
+  areas, and how many student teams they could take (one team only, multiple teams
+  possible, not sure).
+- An incomplete submission is refused with a list of what to fix, and nothing is saved.
+- A new submission is never shown to students. It waits as "Awaiting faculty supervisor",
+  visible to verified faculty and staff at `/submissions.html`.
+- Partner text is treated as data: it is shown exactly as typed and never runs as code or
+  changes any record (fixture S-203 is stored and shown as ordinary text).
+- Partner contact name and email are shown to verified faculty and staff only, never on any
+  student or public page.
+
+## Release 2 notes input: faculty publication gate and coordination (R2-07 to R2-15)
+
+- An industry opportunity appears in student discovery as soon as one verified faculty
+  member presses **I'm willing to supervise this**. There is no staff publication step.
+- Any number of faculty can say they're willing; nobody gets exclusive rights. Withdrawing
+  removes only yourself: if nobody is left, the opportunity goes back to "Awaiting faculty
+  supervisor" and leaves student discovery; otherwise it stays visible.
+- Saying you're willing needs the same as publishing a project: the public-display choice
+  made (either answer) and a faculty profile, because students see the supervisor's name.
+- Faculty see how many verified faculty are willing, and who, on every opportunity.
+- Faculty can record the partner engagement state (Not contacted, Discussion underway,
+  Partner confirmed, No longer pursuing). Other faculty see it with the name of whoever
+  recorded it. It is coordination only: it blocks nobody from volunteering or contacting
+  the partner, and it is never shown to students or visitors.
+
+## Release 2 notes input: notifications (R2-16 to R2-20)
+
+- **Delivery: an in-product notification list** at `/notifications.html` ("Notifications"
+  in the menu for verified faculty). No email is sent.
+- Faculty choose "nothing", "every new industry opportunity" or chosen areas in a private
+  section of `/profile.html`. The choice never appears on any public or student page.
+- A faculty member is notified when a submission arrives that matches their settings at
+  that moment, so changes apply to later submissions. Notifications only help: every
+  opportunity can always be browsed at `/submissions.html`, notified or not.
+
+## Release 2 notes input: discovery and regression (R2-21 to R2-26)
+
+- `/projects.html` lists faculty projects and supervised industry projects together. Each
+  card is labelled "Faculty project" or "Industry project · proposed by (organisation)",
+  and a Type filter shows one kind. All the R1 filters apply to both (industry projects have
+  no student level or term, so those filters leave them out).
+- An industry project's page, `/opportunity.html?id=N`, names each supervising faculty
+  member and links to their profile. Logged-out visitors see an industry project only
+  through supervisors who allowed public display. Contact drafts an email to a supervising
+  faculty member, never to the partner.
+- Only verified faculty can record willingness or engagement; students and staff get
+  "access denied" whatever the request says, and naming another faculty member in a request
+  only ever affects the person signed in. Staff can read partner submissions (R2-05).
+- The Release 1 API and pages keep working as before; all R1 test suites still pass.
+- The assessed version will be tagged `R2-submission` on `r2-development` (R2-26).
+- The R2 fixtures (`r2_fixtures/`) are loaded by the same `npm run seed:fixture`, after
+  applying migrations `003` and `004`. Automated tests check the app against
+  `expected_intake_outcomes.json`, including which faculty each submission notifies.

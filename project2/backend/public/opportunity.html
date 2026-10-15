@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Industry project — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <article id="opportunity-view" hidden aria-labelledby="opportunity-title">
+      <p><a href="projects.html">All projects</a></p>
+      <p class="kind kind-industry">Industry project · proposed by <span id="opportunity-organisation"></span></p>
+      <h1 id="opportunity-title" tabindex="-1"></h1>
+      <p class="note">
+        This project comes from an outside organisation and is supervised by Algoma faculty. To ask about
+        it, contact a supervising faculty member below.
+      </p>
+      <p id="opportunity-audience" class="hint" hidden>
+        This project is visible only to people signed in with an Algoma account.
+      </p>
+
+      <h2>Supervising faculty</h2>
+      <ul id="opportunity-supervisors"></ul>
+
+      <section aria-labelledby="about-heading">
+        <h2 id="about-heading">About the project</h2>
+        <p id="opportunity-description" class="prewrap"></p>
+      </section>
+
+      <section id="areas-section" hidden aria-labelledby="areas-heading">
+        <h2 id="areas-heading">Research and project areas</h2>
+        <ul id="opportunity-areas" class="tags"></ul>
+      </section>
+
+      <div id="contact-choice" class="field" hidden>
+        <label for="contact-faculty">Faculty member to contact</label>
+        <select id="contact-faculty"></select>
+      </div>
+      <section id="contact-section" hidden></section>
+      <section id="no-contact" class="note" hidden aria-labelledby="no-contact-heading">
+        <h2 id="no-contact-heading">Contact</h2>
+        <p id="no-contact-text"></p>
+      </section>
+    </article>
+
+    <section id="not-found" hidden>
+      <h1>Project not found</h1>
+      <p id="not-found-text"></p>
+      <p><a href="projects.html">See all projects</a></p>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="form-pickers.js"></script>
+  <script src="contact.js"></script>
+  <script src="opportunity.js"></script>
+</body>
+</html>

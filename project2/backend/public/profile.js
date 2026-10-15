@@ -65,6 +65,51 @@ function focusField(field) {
   }
 }
 
+// R2-16, R2-20: private notification settings, saved separately from the profile.
+function renderSubscriptionModes(modes, selected) {
+  $("subscription-mode-options").replaceChildren(
+    ...modes.map((mode) => {
+      const label = document.createElement("label");
+      label.className = "choice";
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "subscriptionMode";
+      input.value = mode.value;
+      input.checked = mode.value === selected;
+      const text = document.createElement("span");
+      text.textContent = mode.label;
+      label.append(input, text);
+      return label;
+    }),
+  );
+}
+
+function selectedSubscriptionMode() {
+  return document.querySelector('input[name="subscriptionMode"]:checked')?.value || null;
+}
+
+function updateSubscriptionAreas() {
+  $("subscription-areas").hidden = selectedSubscriptionMode() !== "areas";
+}
+
+$("subscription-mode").addEventListener("change", updateSubscriptionAreas);
+
+$("subscription-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const status = $("subscription-status");
+  const res = await api("/api/notifications/subscriptions", {
+    method: "PUT",
+    body: { mode: selectedSubscriptionMode(), researchAreas: readAreaPicker($("subscription-areas-picker")) },
+  });
+  if (!res.ok) {
+    showStatus(status, res.data.error || "Could not save your notification settings.", { error: true });
+    if (res.data.field === "researchAreas") focusAreaPicker($("subscription-areas-picker"));
+    else document.querySelector('input[name="subscriptionMode"]')?.focus();
+    return;
+  }
+  showStatus(status, "Notification settings saved. They apply to opportunities submitted from now on.");
+});
+
 $("profile-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const selected = document.querySelector('input[name="inquiryPreference"]:checked');
@@ -100,9 +145,15 @@ $("profile-form").addEventListener("submit", async (event) => {
     return;
   }
 
-  const [res, options] = await Promise.all([api("/api/faculty/me/profile"), api("/api/options")]);
-  if (!res.ok || !options.ok) {
-    showStatus(statusEl, res.data.error || options.data.error || "Could not load your profile.", { error: true });
+  const [res, options, subs] = await Promise.all([
+    api("/api/faculty/me/profile"),
+    api("/api/options"),
+    api("/api/notifications/subscriptions"),
+  ]);
+  if (!res.ok || !options.ok || !subs.ok) {
+    showStatus(statusEl, res.data.error || options.data.error || subs.data.error || "Could not load your profile.", {
+      error: true,
+    });
     return;
   }
   const { profile, inquiryOptions, limits } = res.data;
@@ -113,5 +164,13 @@ $("profile-form").addEventListener("submit", async (event) => {
     countEl: $("researchAreas-count"),
   });
   if (profile) fillForm(profile);
+  const { subscription, modes } = subs.data;
+  renderSubscriptionModes(modes, subscription.mode);
+  const allAreas = options.data.researchAreaGroups.flatMap((g) => g.areas);
+  renderAreaPicker($("subscription-areas-picker"), options.data.researchAreaGroups, subscription.researchAreas, {
+    max: allAreas.length,
+    countEl: $("subscription-areas-count"),
+  });
+  updateSubscriptionAreas();
   $("panel").hidden = false;
 })();

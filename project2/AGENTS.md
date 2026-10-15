@@ -1,8 +1,10 @@
 # Project 2 — guide for developers and coding agents
 
-Opportunity Registry and Pathway Platform, Release 1 (R1-01 to R1-26): students discover
-Algoma faculty and projects and contact faculty by email. The course brief and R1
-requirements are the spec; this file is how the codebase works and the rules for changing it.
+Opportunity Registry and Pathway Platform. Release 1 (R1-01 to R1-26): students discover
+Algoma faculty and projects and contact faculty by email. Release 2 (R2-01 to R2-26, current):
+outside organisations propose projects without an account, and those become student-visible
+industry opportunities once a verified faculty member is willing to supervise. The course brief
+and the R1 and R2 requirements are the spec; this file is how the codebase works and the rules for changing it.
 
 **Everything for Project 2 is inside `project2/`**: code in `project2/backend/`, docs in
 `project2/`. Files and folders at the repository root other than `.gitignore`, `.github/`,
@@ -11,13 +13,14 @@ Run every command from `project2/backend/`.
 
 ## Hard rules
 
-1. **Branches.** Work on a feature branch off `r1-development` and merge back into it.
+1. **Branches.** Work on a feature branch off `r2-development` and merge back into it.
+   `r1-development` holds the assessed Release 1 (tag `R1-submission`); leave it alone.
    Never push to or merge into `master`: it holds the submitted Phase 0 app, which is still
    being assessed. Never edit the Phase 0 files at the repository root (listed in the root
    `AGENTS.md`) or Phase 0's Render services and Supabase project.
-2. **Merging to `r1-development` deploys to production immediately.** Render auto-deploys
-   that branch to https://algoma-opportunity-registry-r1-backend.onrender.com. Run
-   `npm test` before merging.
+2. **Merging to `r2-development` deploys to production immediately.** Render auto-deploys
+   that branch to https://algoma-opportunity-registry-r1-backend.onrender.com (the service
+   keeps its R1-era name). Run `npm test` before merging.
 3. **The Supabase database is shared and live.** Change the schema only with a new numbered
    migration (see "Database changes"), apply it before merging code that needs it, and never
    edit a migration that has already been applied.
@@ -47,6 +50,11 @@ Run every command from `project2/backend/`.
 | Faculty-created projects | R1-11 to R1-16 | Done (see "Faculty projects" below) |
 | Discovery, contact, production usability | R1-17 to R1-26 | Jacob, done (see "Discovery" below) |
 | Fixture loading, submission files | Brief, "Submission evidence" | Jacob, done (`release_submission.md`, `evaluation_adapter.json`) |
+| Accountless partner intake | R2-01 to R2-06 | Done (see "Industry opportunities" below) |
+| Faculty publication gate, coordination | R2-07 to R2-15 | Done (see "Industry opportunities" below) |
+| Notification subscriptions | R2-16 to R2-20 | Done (see "Industry opportunities" below) |
+| Student discovery, authorization, regression | R2-21 to R2-25 | Done (see "Industry opportunities" below) |
+| Assessed version tag | R2-26 | To do at submission: tag `R2-submission` |
 
 ## Layout (`project2/backend/`)
 
@@ -56,10 +64,10 @@ src/app.js              createApp({ db, config, sendSignInEmail }): mounts route
 src/config.js           Environment settings (domain, TTLs, email, test mode)
 src/db.js               Postgres pool, in-memory PGlite db, migration runner
 src/auth.js             Session lookup and guards (requireAuth, requireStaff, ...)
-src/visibility.js       The public-visibility rule (R1-10, R1-14)
-src/catalog.js          Fixed lists: research areas, student levels, terms, inquiry wording
+src/visibility.js       The public-visibility rule (R1-10, R1-14) and who counts as a supervisor (R2)
+src/catalog.js          Fixed lists: areas, levels, terms, inquiry wording, R2 capacity/engagement/subscription
 src/validation.js       Shared input clean-up (text, research areas, ids, search patterns)
-src/fixture.js          Turns ../r1_fixture.json into idempotent seed SQL
+src/fixture.js          Turns ../r1_fixture.json and ../r2_fixtures/ into idempotent seed SQL
 src/email.js            Brevo sender
 src/routes/auth.js      /api/auth: sign-in codes, sessions (R1-01 to R1-03)
 src/routes/admin.js     /api/admin: grant or revoke faculty (R1-04)
@@ -67,12 +75,16 @@ src/routes/account.js   /api/account: public-profile choice (R1-05 to R1-07)
 src/routes/faculty.js   /api/faculty: profiles, faculty discovery (R1-08 to R1-10, R1-17, R1-18)
 src/routes/projects.js  /api/projects: projects, project discovery (R1-11 to R1-16, R1-19 to R1-21)
 src/routes/options.js   /api/options: the fixed lists for the forms
+src/routes/partner-submissions.js  /api/partner-submissions: intake, faculty review, willingness,
+                        engagement (R2-01 to R2-14, R2-24)
+src/routes/opportunities.js    /api/opportunities: student discovery of industry opportunities (R2-21 to R2-23)
+src/routes/notifications.js    /api/notifications: subscriptions and notification list (R2-16 to R2-20)
 migrations/NNN_*.sql    Schema history, applied in order
 public/                 Frontend, served by Express from the same origin as the API
 test/                   node:test suites and helpers (in-memory Postgres)
-scripts/dev-local.js    Run the app locally on an in-memory database with the fixture loaded
+scripts/dev-local.js    Run the app locally on an in-memory database with the R1 and R2 fixtures loaded
 scripts/migrate.js      Apply pending migrations to DATABASE_URL
-scripts/seed-fixture.js Load the R1 fixture into DATABASE_URL, or print it as SQL
+scripts/seed-fixture.js Load the R1 and R2 fixtures into DATABASE_URL, or print them as SQL
 ```
 
 The frontend is served by the backend, not a separate static site, so the session cookie is
@@ -85,12 +97,12 @@ From `project2/backend/` (Node 22+):
 - `npm install`
 - `npm test`: every suite, against a fresh in-memory Postgres (PGlite). No credentials.
 - `npm run dev:local`: the full app at http://localhost:3001 on an in-memory database with
-  the R1 fixture loaded; it resets on restart. There's no email locally, so sign in as a
+  the R1 and R2 fixtures loaded; it resets on restart. There's no email locally, so sign in as a
   fixture account (see "Fixture" below) and read its code at `/operator.html` with the
   local-only operator secret the script prints.
 - `npm start`: production mode, needs `DATABASE_URL` in `.env` (see `.env.example`).
 - `npm run seed:fixture` (needs `DATABASE_URL`) or `npm run seed:fixture:sql` (prints SQL to
-  paste into the Supabase SQL Editor): load or reset the R1 fixture.
+  paste into the Supabase SQL Editor): load or reset the R1 and R2 fixtures.
 
 ## Using auth in feature code
 
@@ -104,6 +116,7 @@ Guards (each is a complete middleware list; use one per route):
 | `auth.requireAuth` | Any signed-in user (401 otherwise) |
 | `auth.requireStaff` | Staff (403 otherwise) |
 | `auth.requireVerifiedFaculty` | Currently verified faculty (403 otherwise) |
+| `auth.requireVerifiedFacultyOrStaff` | Verified faculty or staff (403 otherwise); for reading partner submissions |
 | `auth.requirePublicProfileChoice` | Verified faculty who have made the public-profile choice (409 with `code: "public_profile_choice_required"` otherwise) |
 | `await auth.getSessionUser(req)` | Not a guard: the user row or `null`, for routes that serve both logged-out and signed-in visitors |
 
@@ -160,6 +173,12 @@ const sql = `SELECT ... FROM faculty_profiles JOIN users ON users.id = faculty_p
 This also applies to direct URLs (R1-24): a logged-out request for a non-public profile or
 project must get 404, not the record.
 
+Industry opportunities (R2) extend the same rule rather than adding a new one:
+`visibleSupervisorSql(viewer)` in `src/visibility.js` says which willing supervisors a viewer
+can see (verified faculty with a profile, plus `PUBLIC_FACULTY_SQL` when logged out). An
+opportunity is visible exactly when it has at least one such supervisor, and only those
+supervisors are named.
+
 ## Writing tests
 
 `test/helpers.js` provides:
@@ -171,13 +190,17 @@ project must get 404, not the record.
 - `createClient(baseUrl)`: a signed-out client. Clients keep their own cookie like a browser.
 - `uniqueEmail(prefix)`: a fresh `@algomau.ca` address per call.
 - `loadFixtureInto(t)`: loads the R1 fixture; returns `projectId("P-101")` and
-  `facultyId("F-ALEX")` lookups.
+  `facultyId("F-ALEX")` lookups. For R2, `src/fixture.js` also exports
+  `buildSubscriptionFixtureSql`, `intakeRequestBody` and `loadIntakeFixture` (see
+  `test/notifications.test.js`).
 
 Signing the same address in more than 3 times per test file hits the real rate limit; reuse
 the session instead (see `test/discovery.test.js`).
 
 For R1-16, sign in two faculty and assert that B gets 404 (and no change in the database)
-when editing A's profile or project by id, body or URL.
+when editing A's profile or project by id, body or URL. For R2-24, assert that students and
+staff get 403 and that naming another faculty member in the body only ever affects yourself
+(`test/publication-gate.test.js`).
 
 ## Database changes
 
@@ -196,8 +219,11 @@ the file into the Project 2 Supabase SQL Editor (or `npm run migrate` with `DATA
 
 Applied so far: `000` (initial), `001` (public-profile choice on `users`, guess limit),
 `002` (`fixture_id` on `users` and `projects`; student levels fixed to three values with a
-CHECK constraint). The public-profile choice lives on `users` (`public_profile_choice`), not
-on `faculty_profiles`.
+CHECK constraint). Written, **not yet applied to the live database** (apply both, in order,
+before merging R2): `003` (`partner_submissions`) and `004` (`opportunity_supervisors`,
+engagement columns, `faculty_subscriptions`, `notifications`; drops the unused
+`partner_submissions.status`). The public-profile choice lives on `users`
+(`public_profile_choice`), not on `faculty_profiles`.
 
 ## Frontend conventions
 
@@ -333,3 +359,59 @@ on `faculty_profiles`.
   with an authorised operator reading the code, and are refused when test mode is off.
 - `test/fixture.test.js` checks the app against the fixture's own `expected_public` and
   `expected_authenticated` flags.
+- R2 fixtures live in `project2/r2_fixtures/`. The seed also loads
+  `intake_submissions.json` into `partner_submissions` (by `fixture_id`, reset to pending),
+  sending each one through the same validation as the public form, so S-204 is skipped. It
+  also loads `faculty_subscriptions.json` first and creates the notifications the fixture
+  submissions would have caused, and resets fixture submissions to no supervisors and "Not
+  contacted".
+  `test/partner-intake.test.js` checks the app against `expected_intake_outcomes.json`.
+  `test/notifications.test.js` checks `notified_faculty_by_submission` and `F-MEI`.
+
+## Industry opportunities (R2-01 to R2-25, done)
+
+Partner submissions and industry opportunities are the same rows (`partner_submissions`); an
+opportunity's state is derived, never stored.
+
+- **Intake (R2-01 to R2-06).** Organisations propose a project at `/partner.html` with no
+  account: `POST /api/partner-submissions` with `organisation`, `contactName`,
+  `contactEmail`, `title`, `description`, `researchAreas` (0 to 10 from the fixed list;
+  optional) and `capacity` (`one-team-only`, `multiple-teams`, `not-sure`). Every field except
+  areas is required. A 400 lists every problem at once in `errors` (`[{ field, message }]`)
+  and stores nothing. Anything else in the body (state, supervisors, ids) is ignored.
+- **State (R2-07, R2-08, R2-10).** "Awaiting faculty supervisor" until at least one verified
+  faculty member with a profile is willing to supervise; then "Supervised" and in student
+  discovery. Revoked supervisors stop counting at once, and count again if re-verified.
+- **Willingness (R2-07, R2-09, R2-10).** `PUT` / `DELETE /api/partner-submissions/:id/willingness`
+  adds or removes a row in `opportunity_supervisors` for `req.user` only. Any number of
+  faculty can; no row is special. Adding needs `requirePublicProfileChoice` and a profile
+  (409 `faculty_profile_required`), like publishing a project, because students see the
+  supervisor's name.
+- **Coordination (R2-11 to R2-14).** The faculty view (`GET /api/partner-submissions`,
+  `/:id`, verified faculty and staff) has `supervisorCount`, `supervisors`, and
+  `engagement: { value, label, by, updatedAt }`. `PUT /:id/engagement` with `{ state }`
+  (`not_contacted`, `discussion_underway`, `partner_confirmed`, `no_longer_pursuing`) is open
+  to every verified faculty member and records them as `by`. It locks nothing. Staff can
+  read all of this but not change it.
+- **Student discovery (R2-21 to R2-23).** `GET /api/opportunities` and `/:id` take the same
+  filters as `/api/projects` (an industry opportunity has no level or term, so those filters
+  exclude it). `/projects.html` lists both kinds, labelled "Faculty project" or "Industry
+  project · proposed by (organisation)", with a Type filter; industry ones open at
+  `/opportunity.html?id=`. Each supervisor the viewer may see is listed and linked, and
+  Contact goes to a supervisor's university email (following their inquiry preference),
+  never to the partner. `/api/projects` itself is unchanged.
+- **Never public (R2-05, R2-15, R2-17).** Partner contact details, capacity and engagement
+  exist only in the faculty view; `toOpportunity` in `routes/opportunities.js` is the only
+  student-facing shape. Subscriptions are only readable by their owner.
+- **Notifications (R2-16 to R2-20).** In-product list, not email. Faculty choose "nothing",
+  "every new opportunity" or chosen areas in the private section of `/profile.html`
+  (`GET` / `PUT /api/notifications/subscriptions`; no public-display choice needed). When a
+  submission arrives, the same SQL statement adds a `notifications` row for each verified
+  faculty member whose current settings match (`SUBSCRIBER_MATCH_SQL`), so changes apply
+  only from then on. `/notifications.html` lists them (`GET /api/notifications`). Browsing
+  `/submissions.html` always shows everything (R2-19).
+- **Partner text is data (R2-03).** It is stored as written (minus control characters) and
+  rendered with `textContent` on every page. Never put it through `innerHTML`, even escaped.
+- Pages: `partner.html` (public intake), `submissions.html` (faculty and staff review, with
+  willingness and engagement controls), `notifications.html`, `opportunity.html` (student
+  detail), plus the changes to `projects.html` and `profile.html` above.

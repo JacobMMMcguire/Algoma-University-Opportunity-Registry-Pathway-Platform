@@ -31,8 +31,11 @@ const NAV_LINKS = [
   { href: "index.html", label: "Home" },
   { href: "faculty.html", label: "Faculty" },
   { href: "projects.html", label: "Projects" },
+  { href: "partner.html", label: "Propose a project (organisations)" },
   { href: "profile.html", label: "Your faculty profile", show: (s) => s.user?.isVerifiedFaculty },
   { href: "my-projects.html", label: "Your projects", show: (s) => s.user?.isVerifiedFaculty },
+  { href: "submissions.html", label: "Industry opportunities (faculty)", show: (s) => s.user?.isVerifiedFaculty || s.user?.isStaff },
+  { href: "notifications.html", label: "Notifications", show: (s) => s.user?.isVerifiedFaculty },
   { href: "admin.html", label: "Staff: faculty verification", show: (s) => s.user?.isStaff },
   { href: "operator.html", label: "Operator console (test mode)", show: (s) => s.testMode },
 ];

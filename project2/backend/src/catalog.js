@@ -162,6 +162,45 @@ function describeInquiryPreference(code) {
   return { label: option.label, explanation: option.explanation };
 }
 
+// R2-06: how many student teams a partner could work with. The codes are the fixture's own
+// (r2_fixtures/intake_submissions.json); faculty see the label.
+const PARTNER_CAPACITIES = [
+  { value: "one-team-only", label: "One student team only" },
+  { value: "multiple-teams", label: "Multiple teams possible" },
+  { value: "not-sure", label: "Not sure yet" },
+];
+
+function describeCapacity(code) {
+  const option = PARTNER_CAPACITIES.find((o) => o.value === code) || PARTNER_CAPACITIES.at(-1);
+  return { value: option.value, label: option.label };
+}
+
+// R2-08: an opportunity's state, derived from how many verified faculty are willing to supervise.
+const OPPORTUNITY_STATES = {
+  awaiting_supervisor: "Awaiting faculty supervisor",
+  supervised: "Supervised: visible to students",
+};
+
+// R2-12: partner engagement, recorded by faculty for each other's information.
+const ENGAGEMENT_STATES = [
+  { value: "not_contacted", label: "Not contacted" },
+  { value: "discussion_underway", label: "Discussion underway" },
+  { value: "partner_confirmed", label: "Partner confirmed" },
+  { value: "no_longer_pursuing", label: "No longer pursuing" },
+];
+
+function describeEngagement(code) {
+  const option = ENGAGEMENT_STATES.find((o) => o.value === code) || ENGAGEMENT_STATES[0];
+  return { value: option.value, label: option.label };
+}
+
+// R2-16: what a faculty member is notified about.
+const SUBSCRIPTION_MODES = [
+  { value: "none", label: "Nothing: I'll browse industry opportunities myself" },
+  { value: "all", label: "Every new industry opportunity" },
+  { value: "areas", label: "New industry opportunities in the areas I choose" },
+];
+
 // Sorts terms chronologically; anything not in "<Season> <Year>" form goes last, alphabetically.
 function compareTerms(a, b) {
   const key = (term) => {
@@ -183,4 +222,10 @@ module.exports = {
   compareTerms,
   INQUIRY_PREFERENCES,
   describeInquiryPreference,
+  PARTNER_CAPACITIES,
+  describeCapacity,
+  OPPORTUNITY_STATES,
+  ENGAGEMENT_STATES,
+  describeEngagement,
+  SUBSCRIPTION_MODES,
 };

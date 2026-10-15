@@ -52,6 +52,14 @@ function createAuth(db) {
     next();
   }
 
+  // R2-02, R2-05: partner submissions and their contact details are for these two roles only.
+  function verifiedFacultyOrStaffOnly(req, res, next) {
+    if (!req.user.is_verified_faculty && !req.user.is_staff) {
+      return res.status(403).json({ error: "Verified faculty or staff access required." });
+    }
+    next();
+  }
+
   // R1-05: a faculty member must have explicitly chosen public or not (either answer is fine,
   // per R1-06) before anything of theirs can be published.
   function publicProfileChosen(req, res, next) {
@@ -89,6 +97,7 @@ function createAuth(db) {
     requireAuth: [authenticate],
     requireStaff: [authenticate, staffOnly],
     requireVerifiedFaculty: [authenticate, verifiedFacultyOnly],
+    requireVerifiedFacultyOrStaff: [authenticate, verifiedFacultyOrStaffOnly],
     requirePublicProfileChoice: [authenticate, verifiedFacultyOnly, publicProfileChosen],
   };
 }

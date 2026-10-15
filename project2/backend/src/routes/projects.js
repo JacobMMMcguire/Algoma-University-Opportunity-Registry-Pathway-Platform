@@ -359,4 +359,4 @@ function createProjectsRouter({ db, auth }) {
   return router;
 }
 
-module.exports = { createProjectsRouter };
+module.exports = { createProjectsRouter, parseFilters };
