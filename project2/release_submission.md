@@ -1,100 +1,95 @@
 # Release Submission
 
-Release: R1
+Release: R2
 Team: Jacob McGuire, Sineru Mahamillage, Paris Lad
 Deployment: https://algoma-opportunity-registry-r1-backend.onrender.com
 Repository: https://github.com/JacobMMMcguire/Algoma-University-Opportunity-Registry-Pathway-Platform
-Release tag: R1-submission (on branch `r1-development`)
-Commit: e8bc7e26ac814e50dbc31bc8e76852e4dbe2720d
-Adapter: project2/evaluation_adapter.json
+Release tag: R2-submission
+Commit: <!-- TODO at freeze: full SHA of the commit the R2-submission tag points to -->
+Adapter: project2/evaluation_adapter.json (we couldn't find `evaluation_adapter_template.json` on
+the course site, so this extends our R1 adapter with the intake surface, the willingness and
+engagement actions, the subscription settings and student discovery)
 Known issues:
-- **Test mode is on.** Unused sign-in codes are listed at `/operator.html` so testers can use
-  accounts with no inbox. While it is on, anyone who can open the site can read a pending
-  code and sign in as that `@algomau.ca` address. This is the accepted cost of the
-  instructor-approved test mode.
-- **Email may land in junk.** Codes are emailed through Brevo from a verified Gmail sender.
-  With no team-owned domain, there is no DKIM or DMARC alignment, so university filters may
-  treat them as junk.
+- **Test mode is on, and limited to authorised operators.** Sign-in codes for the synthetic test
+  accounts are readable at `/operator.html` only by signed-in staff or with a private operator
+  access code. Real users get their codes by email only.
+- **The partner form has no rate limit or CAPTCHA.** Anyone can submit repeatedly. Submissions
+  are never public (they go to faculty and staff only), but repeated ones would add noise and
+  notifications.
+- **Notifications are in-product only.** No email is sent for new opportunities.
+- **Industry opportunities have no student level or target term**, so filtering projects by
+  either of those leaves industry opportunities out. The project list doesn't explain this
+  on the page.
+- **Sign-in emails may land in junk.** They come from a verified Gmail sender through Brevo,
+  with no team-owned domain.
 - **First load can take about a minute.** The free Render instance sleeps when idle.
-- **Fixture projects have no description**, because the fixture provides none, so their pages
-  show no "About the project" section. A faculty member must add one before saving edits to
-  such a project.
-- **Contact needs a mail account.** "Open in Gmail" needs the student signed in to Google
-  with their Algoma account, and "Open in email app" needs a mail app configured. The copy
-  buttons work everywhere.
+- **Fixture projects from R1 have no description**, because the fixture provides none.
 
-Test notes: The app is a single Render web service that serves the API and the pages from one
-address. All pages and API paths are under the deployment URL above. To sign in: on the home
-page, enter a test account address, press "Send sign-in code", open `/operator.html` (linked in
-the menu), copy the code, and enter it. Each address can request 3 codes per 10 minutes.
+Test notes: One Render web service serves the pages and the API from the deployment URL above.
+Partners need no account: use `/partner.html` ("Propose a project" in the menu) while signed out.
+To sign in as a test account: on the home page enter its address and press "Send sign-in code".
+Then open `/operator.html`, enter the operator access code (shared privately through the course
+channel, never in this repository), copy the code, and enter it. Each address can request 3 codes
+per 10 minutes. The Release 1 version is preserved at tag `R1-submission`.
 
 ## Test accounts
 
-All accounts are synthetic and created by the fixture seed. None has an inbox: sign in with the
-operator-console steps above.
+All are synthetic, created by the fixture seed, and have no inbox.
 
 | Account | Role | Use it to check |
 |---|---|---|
-| `fixture-test-staff@algomau.ca` | Staff | R1-04: grant or revoke verified faculty at `/admin.html` |
-| `fixture-test-student@algomau.ca` | Student (signed in) | Signed-in discovery, which includes Dr. Mei Chen and her project |
-| `fixture-f-alex@algomau.ca` | Verified faculty, public, open to inquiries | R1-05 to R1-08 and R1-11 to R1-16: profile, projects, publish, close, public choice |
-| `fixture-f-priya@algomau.ca` | Verified faculty, public, listed projects only | R1-09, R1-22: contact through projects only |
-| `fixture-f-jordan@algomau.ca` | Verified faculty, public, no projects | R1-18 |
-| `fixture-f-mei@algomau.ca` | Verified faculty, declined public display | R1-06, R1-10, R1-14: signed-in only |
-| `fixture-u-pending@algomau.ca` | Signed in, not verified | R1-03: no faculty features until staff verify |
-
-Any other `@algomau.ca` address also works as a new student account. A real address gets the
-code by email as well as on the operator console.
+| *(none: signed out)* | Partner | R2-01 to R2-06: submit at `/partner.html` with no account |
+| `fixture-test-student@algomau.ca` | Student | R2-21 to R2-23: industry and faculty projects together at `/projects.html` |
+| `fixture-test-staff@algomau.ca` | Staff | R2-02, R2-05: sees every submission and partner contact at `/submissions.html`; R1-04 verification |
+| `fixture-f-alex@algomau.ca` | Verified faculty; subscribed to AI and Data Science | R2-07 to R2-14: willingness, engagement; R2-18 area notifications |
+| `fixture-f-priya@algomau.ca` | Verified faculty; subscribed to Human-Computer Interaction | R2-09, R2-13: a second faculty member on the same opportunity |
+| `fixture-f-jordan@algomau.ca` | Verified faculty; subscribed to everything | R2-18: notified about every submission |
+| `fixture-f-mei@algomau.ca` | Verified faculty; subscribed to nothing; signed-in-only profile | R2-19: never notified, still browses every opportunity |
+| `fixture-u-pending@algomau.ca` | Signed in, not verified | R2-24: no willingness, engagement or partner contact details |
 
 ## Release-specific evidence
 
-- **Email transport (R1-01):** real email through Brevo's HTTPS API, plus the instructor-approved
-  test mode, because fixture accounts have no inbox and university delivery is not guaranteed.
-  Either way, codes are short-lived (10 minutes), single-use (enforced in one SQL statement),
-  limited to 5 wrong guesses, and only issued to addresses whose domain after the final `@` is
-  exactly `algomau.ca` (server-side `ALLOWED_EMAIL_DOMAIN`).
-- **First admin (R1-04):** created out of band. The first staff member signed in once, then
-  `UPDATE users SET is_staff = true WHERE email = '...';` was run in the Supabase SQL Editor.
-  The fixture seed creates the peer-tester staff account the same way. No sign-in path
-  grants staff or faculty capability.
-- **How the R1 fixture was loaded:** run migration
-  `project2/backend/migrations/002_fixture_ids_and_student_levels.sql`, then
-  `npm run seed:fixture` from `project2/backend` (or `npm run seed:fixture:sql`, pasted into
-  the Supabase SQL Editor). The seed can be rerun to reset fixture records to the fixture's
-  values without touching other data. There are no fixture controls in the app.
-  - Fixture terms are translated: inquiry `general` becomes "Open to general student
-    inquiries", `listed-projects-only` becomes "Inquiries about listed projects only", and
-    status `withdrawn` becomes Closed.
-  - Each fixture account's address is `fixture-<fixture_id>@algomau.ca`.
-- **Public versus signed-in behaviour, checked from a logged-out session** on the live
-  deployment on 2026-10-01, after seeding (all of the following passed):
-  - Logged out, `/projects.html` lists exactly P-101, P-103, P-104 and P-107, the fixture's
-    `expected_public` projects. `/faculty.html` lists Alex Morgan, Priya Shah and Jordan
-    Lee.
-  - Opening P-102, P-105, P-106 or P-108 by URL shows "not found", as does
-    `/faculty.html?id=` for Mei Chen or Taylor Pending.
-  - Signed in as `fixture-test-student@algomau.ca`, P-105 and Dr. Mei Chen also appear.
-  - Automated: `project2/backend/test/fixture.test.js` checks every fixture project and
-    faculty member against the fixture's `expected_public` and `expected_authenticated`
-    flags (`npm test`).
-- **Phone width and accessibility (R1-25, R1-26):** sixteen views across the student, faculty
-  and staff journeys were checked in headless Chrome at 390px. None scrolled sideways, and
-  axe-core (WCAG 2.1 A/AA plus best practice) reported no violations. Keyboard checks:
-  - Filter results move focus to the result count.
-  - Contact opens with Enter and focuses the subject.
-  - Form errors move focus to the field that needs fixing.
-- **Automated tests:** 105 `node:test` tests in `project2/backend/test`, run against an
-  in-memory Postgres with `npm test`. They cover R1-01 to R1-24, including cross-user edits
-  (R1-16), filters (R1-20), contact (R1-22) and persistence across sessions (R1-23).
+- **Deployed assessed URL:** https://algoma-opportunity-registry-r1-backend.onrender.com
+  (Render deploys branch `r1-development`; `r2-development` points at the same commit).
+- **Immutable release identifier:** tag `R2-submission`, commit above.
+- **How the R2 fixture was loaded:**
+  1. Run migrations `project2/backend/migrations/003_partner_submissions.sql` and
+     `004_supervision_engagement_subscriptions.sql` in the Supabase SQL Editor.
+  2. Run `npm run seed:fixture:sql` from `project2/backend` and paste its output into the same
+     editor. Equivalently, run `npm run seed:fixture` with `DATABASE_URL` set. This loads the R1
+     fixture and then the R2 fixtures.
 
-## Post-freeze changes
-
-Everything above describes the frozen release (`R1-submission` → `e8bc7e2`), which is unchanged.
-
-- **2026-10-09: operator console now requires authorisation.** This responds to the
-  instructor's Critical finding of 2026-10-07 on R1-01 and R1-03. The test-mode code console
-  (`/operator.html`, `GET /api/auth/pending-challenges`) now needs a signed-in staff session
-  or the private operator access code, and lists codes for the fixture test accounts only.
-  Real users' codes are never shown and arrive by email. Peer testers get the operator access
-  code through the course's private channel. The sign-in steps in "Test notes" are otherwise
-  the same. The fix's commit and its redeployed version are linked in the instructor's issue.
+  `expected_intake_outcomes.json` was treated as acceptance criteria, not imported:
+  - Each submission in `intake_submissions.json` goes through the same validation as the public
+    form, so S-204 (empty organisation and title) is rejected and never stored.
+  - The accepted five arrive with no supervisor, so they read "Awaiting faculty supervisor" and
+    are not student-visible.
+  - Notifications are generated from `faculty_subscriptions.json` exactly as the form would
+    generate them.
+  - `project2/backend/test/partner-intake.test.js`, `notifications.test.js` and
+    `publication-gate.test.js` check the app against every entry in
+    `expected_intake_outcomes.json`.
+- **Evaluator setup:** the accounts above, through the operator console. The partner role needs
+  no setup.
+- **How notifications are delivered:** an in-product notification list at `/notifications.html`
+  ("Notifications" in the menu, verified faculty only). No email. **To observe one:**
+  1. While signed out, submit a project at `/partner.html` with the area *Human-Computer
+     Interaction*.
+  2. Sign in as `fixture-f-priya@algomau.ca` and open Notifications. The new submission is at the
+     top.
+  3. Signed in as `fixture-f-mei@algomau.ca` (subscribed to nothing), it is not in her
+     notifications, but it is listed for her at `/submissions.html` (R2-19).
+- **Public versus private, checked logged out on the live deployment** on 2026-10-16, after
+  seeding:
+  - `/api/opportunities` returns no industry opportunities, since none has a supervisor yet.
+  - Searching the public list for S-203's injected text finds nothing.
+  - `/api/partner-submissions` and `/api/notifications` return 401.
+  - The four public R1 projects are unchanged.
+  - Signed in as `fixture-test-staff@algomau.ca`, `/submissions.html` lists exactly the five
+    accepted submissions (no S-204). S-203's injected instructions and `<script>` tag display
+    as plain text with no script run, and it remains "Awaiting faculty supervisor".
+- **Automated tests:** 186 `node:test` tests (`npm test` in `project2/backend`) cover R1 and
+  R2-01 to R2-25, including cross-user and non-faculty attempts (R2-24) and the R1 regression
+  suites (R2-25).
+- **Post-R1 change carried into R2:** the instructor's R1 security finding was fixed in tag
+  `R1-fix-1`. The operator console requires authorisation and only shows test-account codes.

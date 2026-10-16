@@ -158,7 +158,8 @@ For `release_submission.md`:
   "access denied" whatever the request says, and naming another faculty member in a request
   only ever affects the person signed in. Staff can read partner submissions (R2-05).
 - The Release 1 API and pages keep working as before; all R1 test suites still pass.
-- The assessed version will be tagged `R2-submission` on `r2-development` (R2-26).
+- The assessed version is tagged `R2-submission` on the deployed commit (R2-26). R2 was merged
+  into `r1-development`, the branch Render deploys; `r2-development` is moved to the same commit.
 - The R2 fixtures (`r2_fixtures/`) are loaded by the same `npm run seed:fixture`, after
   applying migrations `003` and `004`. Automated tests check the app against
   `expected_intake_outcomes.json`, including which faculty each submission notifies.

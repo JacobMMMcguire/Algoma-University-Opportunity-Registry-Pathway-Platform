@@ -1,6 +1,6 @@
 {
   "project": "Project 2 - Opportunity Registry and Pathway Platform",
-  "release": "R1",
+  "release": "R2",
   "base_url": "https://algoma-opportunity-registry-r1-backend.onrender.com",
 
   "faculty_directory_endpoint": "/api/faculty",
@@ -25,13 +25,19 @@
       "text": "q",
       "research_area": "area",
       "inquiry_preference": "inquiry"
+    },
+    "industry_opportunities": {
+      "text": "q",
+      "research_area": "area",
+      "faculty": "facultyId",
+      "note": "Same parameters and values as /api/projects. Industry opportunities have no student level or term, so level or term leaves none."
     }
   },
   "query_parameter_values": {
-    "area": "One research area name exactly as listed, case-insensitive, e.g. Artificial Intelligence. The fixture's five areas are all valid.",
+    "area": "One research area name exactly as listed, case-insensitive, e.g. Artificial Intelligence.",
     "level": "undergraduate | graduate (projects marked 'Undergraduate or Graduate' match both)",
     "term": "A term as stored, e.g. Winter 2027 (case-insensitive)",
-    "facultyId": "A faculty member's id (same id as /api/faculty/{id})",
+    "facultyId": "A faculty member's id (same id as /api/faculty/{id}); for industry opportunities, matches a supervising faculty member",
     "inquiry": "open | projects_only | not_accepting",
     "q": "Free text, case-insensitive substring; % and _ are matched literally"
   },
@@ -44,31 +50,118 @@
   "faculty_inquiry_preference_field": "inquiryPreference.label",
   "contact_field": "contact.email",
 
+  "partner_intake": {
+    "page_route": "/partner.html",
+    "submit_endpoint": "POST /api/partner-submissions",
+    "authentication": "none (R2-01)",
+    "request_body": {
+      "organisation": "required",
+      "contactName": "required",
+      "contactEmail": "required, an email address",
+      "title": "required",
+      "description": "required",
+      "researchAreas": "optional array of research area names",
+      "capacity": "required: one-team-only | multiple-teams | not-sure (R2-06)"
+    },
+    "success": "HTTP 201 { submission: { id, title, state: { value: 'awaiting_supervisor', label: 'Awaiting faculty supervisor' } } }",
+    "rejection": "HTTP 400 { error, errors: [{ field, message }] }; nothing is stored (R2-04)",
+    "note": "Any other fields in the body (state, ids, supervisors) are ignored (R2-03)."
+  },
+
+  "faculty_opportunity_views": {
+    "who": "verified faculty and staff (others: 401 signed out, 403 signed in)",
+    "page_route": "/submissions.html",
+    "list_endpoint": "GET /api/partner-submissions",
+    "list_results_path": "submissions",
+    "detail_endpoint": "GET /api/partner-submissions/{id}",
+    "detail_results_path": "submission",
+    "fields": {
+      "state": "state.value: awaiting_supervisor | supervised; state.label: 'Awaiting faculty supervisor' (R2-08)",
+      "capacity": "capacity.label (R2-06)",
+      "interest_count": "supervisorCount (R2-11)",
+      "supervisors": "supervisors[].displayName",
+      "engagement": "engagement.label and engagement.by.displayName (R2-13)",
+      "partner_contact": "contact.name, contact.email (R2-05: faculty and staff views only)"
+    }
+  },
+
+  "willingness_actions": {
+    "who": "verified faculty only, always acting as the signed-in user (R2-24)",
+    "record": "PUT /api/partner-submissions/{id}/willingness",
+    "withdraw": "DELETE /api/partner-submissions/{id}/willingness",
+    "preconditions": "the faculty member has made the R1 public-display choice and has a faculty profile; otherwise HTTP 409 with code public_profile_choice_required or faculty_profile_required",
+    "effect": "First willing supervisor makes the opportunity student-visible (R2-07); any number may record willingness (R2-09); withdrawing removes only the caller, and it leaves student discovery only when none remain (R2-10)."
+  },
+
+  "engagement_action": {
+    "who": "verified faculty only (R2-24)",
+    "endpoint": "PUT /api/partner-submissions/{id}/engagement",
+    "request_body": "{ \"state\": \"not_contacted\" | \"discussion_underway\" | \"partner_confirmed\" | \"no_longer_pursuing\" }",
+    "effect": "Records the state and the caller as the one who recorded it (R2-12, R2-13). Locks nothing (R2-14). Never in student or public responses (R2-15)."
+  },
+
+  "subscription_settings": {
+    "who": "verified faculty, for themselves only",
+    "page_route": "/profile.html (section 'Notifications about industry opportunities')",
+    "read_endpoint": "GET /api/notifications/subscriptions",
+    "update_endpoint": "PUT /api/notifications/subscriptions",
+    "request_body": "{ \"mode\": \"none\" | \"all\" | \"areas\", \"researchAreas\": [area names, required when mode is areas] }",
+    "note": "Private (R2-17). Changes apply to submissions created afterwards (R2-20)."
+  },
+
+  "notifications": {
+    "delivery": "in-product list; no email (R2-18)",
+    "page_route": "/notifications.html",
+    "endpoint": "GET /api/notifications",
+    "results_path": "notifications",
+    "how_to_observe": "Submit at /partner.html with area Human-Computer Interaction, then sign in as fixture-f-priya@algomau.ca and open Notifications. fixture-f-mei@algomau.ca subscribes to nothing and is never notified, but sees every opportunity at /submissions.html (R2-19)."
+  },
+
+  "student_discovery": {
+    "page_route": "/projects.html (faculty and industry projects in one list; page-only filter 'type' = faculty | industry)",
+    "industry_directory_endpoint": "GET /api/opportunities",
+    "industry_directory_results_path": "opportunities",
+    "industry_detail_endpoint": "GET /api/opportunities/{id}",
+    "industry_detail_results_path": "opportunity",
+    "industry_page_route": "/opportunity.html?id={id}",
+    "kind_field": "kind ('industry'); faculty projects come from /api/projects (R2-21)",
+    "supervisors_field": "supervisors[] with id and displayName, linking to /faculty.html?id={id} (R2-22)",
+    "contact_field": "supervisors[].contact.email on the detail endpoint: a supervising faculty member, never the partner (R2-23)",
+    "never_included": "partner contact name and email, capacity, engagement state or who is engaging (R2-05, R2-15)"
+  },
+
   "public_surfaces": [
     "GET /api/faculty and /faculty.html: verified faculty who allowed public display",
     "GET /api/faculty/{id} and /faculty.html?id={id}: the same faculty only",
     "GET /api/projects and /projects.html: published projects of those faculty",
-    "GET /api/projects/{id} and /projects.html?id={id}: the same projects only"
+    "GET /api/projects/{id} and /projects.html?id={id}: the same projects only",
+    "GET /api/opportunities and /opportunity.html?id={id}: industry opportunities with at least one supervisor who allowed public display; only those supervisors are named",
+    "/partner.html and POST /api/partner-submissions: the accountless intake form"
   ],
   "authenticated_only_surfaces": [
-    "The same four surfaces, signed in, additionally include verified faculty who declined public display and their published projects",
+    "The faculty, project and opportunity surfaces above, signed in, additionally include verified faculty who declined public display, their published projects, and opportunities they supervise",
+    "/submissions.html and /api/partner-submissions/*: verified faculty and staff only",
+    "/notifications.html, /api/notifications and /api/notifications/subscriptions: verified faculty only, own data only",
     "/profile.html, /my-projects.html, /project-edit.html: verified faculty only",
     "/admin.html and /api/admin/*: staff only"
   ],
-  "hidden_response": "Records the viewer may not see (drafts, closed or withdrawn projects, signed-in-only records when logged out, unverified or revoked faculty) return HTTP 404, identical to a missing record.",
+  "hidden_response": "Records the viewer may not see (drafts, closed or withdrawn projects, opportunities awaiting a supervisor, signed-in-only records when logged out, unverified or revoked faculty) return HTTP 404, identical to a missing record.",
 
   "authentication": {
     "method": "Passwordless 6-digit code, restricted to @algomau.ca; session is an httpOnly cookie",
     "request_code": "POST /api/auth/request-challenge {\"email\": \"...\"}",
-    "read_code_in_test_mode": "GET /api/auth/pending-challenges (also /operator.html)",
+    "read_code_in_test_mode": "GET /api/auth/pending-challenges (also /operator.html), for test accounts only, with a signed-in staff session or the X-Operator-Secret header. The operator access code is shared privately, never in this repository.",
     "verify_code": "POST /api/auth/verify {\"email\": \"...\", \"code\": \"...\"}"
   },
   "test_accounts": {
+    "partner": "none: use /partner.html signed out",
     "staff": "fixture-test-staff@algomau.ca",
     "student": "fixture-test-student@algomau.ca",
     "verified_faculty_public": "fixture-f-alex@algomau.ca",
-    "verified_faculty_signed_in_only": "fixture-f-mei@algomau.ca",
+    "verified_faculty_second": "fixture-f-priya@algomau.ca",
+    "verified_faculty_subscribed_to_all": "fixture-f-jordan@algomau.ca",
+    "verified_faculty_signed_in_only_no_subscriptions": "fixture-f-mei@algomau.ca",
     "unverified_faculty": "fixture-u-pending@algomau.ca"
   },
-  "fixture_loading": "npm run seed:fixture (from project2/backend), or npm run seed:fixture:sql pasted into the Supabase SQL Editor. Fixture accounts are fixture-<fixture_id lowercased>@algomau.ca."
+  "fixture_loading": "Migrations 003 and 004, then npm run seed:fixture (from project2/backend), or npm run seed:fixture:sql pasted into the Supabase SQL Editor. Loads the R1 fixture and the R2 fixtures; S-204 is rejected by the same validation as the public form."
 }
