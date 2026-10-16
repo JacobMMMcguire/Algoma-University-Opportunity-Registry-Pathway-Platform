@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notifications — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <h1>Notifications</h1>
+    <p id="denied" hidden></p>
+
+    <section id="panel" hidden>
+      <p>
+        New industry opportunities that match your
+        <a href="profile.html#subscriptions-heading">notification settings</a>, newest first.
+        Notifications only point you to opportunities: you can always see every one under
+        <a href="submissions.html">Industry opportunities</a>.
+      </p>
+      <p id="result-count" class="result-count"></p>
+      <ul id="notification-list" class="cards"></ul>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="notifications.js"></script>
+</body>
+</html>

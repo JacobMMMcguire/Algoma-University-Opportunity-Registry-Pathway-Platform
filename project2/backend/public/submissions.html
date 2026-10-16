@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Industry opportunities — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <p id="denied" hidden></p>
+
+    <section id="list-view" hidden aria-labelledby="list-heading">
+      <h1 id="list-heading">Industry opportunities</h1>
+      <p>
+        Project ideas sent in by outside organisations through the
+        <a href="partner.html">public proposal form</a>. An opportunity is shown to students as soon as
+        one verified faculty member says they're willing to supervise it. Partner contact details,
+        engagement and capacity are shown to verified faculty and staff only.
+      </p>
+      <p id="result-count" class="result-count"></p>
+      <ul id="submission-list" class="cards"></ul>
+    </section>
+
+    <article id="submission-view" hidden aria-labelledby="submission-title">
+      <p><a href="submissions.html">All industry opportunities</a></p>
+      <h1 id="submission-title" tabindex="-1"></h1>
+      <p class="note"><strong id="submission-state"></strong> <span id="submission-state-hint"></span></p>
+      <p id="student-link" hidden><a href="#">View it as students see it</a></p>
+
+      <dl class="facts">
+        <div><dt>Organisation</dt><dd id="submission-organisation"></dd></div>
+        <div><dt>Capacity</dt><dd id="submission-capacity"></dd></div>
+        <div><dt>Received</dt><dd id="submission-received"></dd></div>
+      </dl>
+
+      <h2>Description</h2>
+      <p class="hint">Exactly as the partner wrote it.</p>
+      <p id="submission-description" class="prewrap"></p>
+
+      <h2>Areas</h2>
+      <ul id="submission-areas" class="tags"></ul>
+      <p id="no-areas" class="hint" hidden>The partner didn't choose any areas.</p>
+
+      <section aria-labelledby="supervisors-heading">
+        <h2 id="supervisors-heading">Faculty willing to supervise</h2>
+        <p id="supervisor-count"></p>
+        <ul id="supervisor-list"></ul>
+        <p class="hint">Any number of faculty can say they're willing. Nobody gets exclusive rights, and
+          withdrawing only removes you.</p>
+        <div class="actions" id="willingness-actions" hidden>
+          <button type="button" class="primary" id="willing">I'm willing to supervise this</button>
+          <button type="button" id="withdraw">Withdraw my willingness</button>
+        </div>
+      </section>
+
+      <section aria-labelledby="engagement-heading">
+        <h2 id="engagement-heading">Partner engagement</h2>
+        <p id="engagement-current"></p>
+        <form id="engagement-form" hidden novalidate>
+          <div class="field">
+            <label for="engagement-state">Update the engagement state</label>
+            <select id="engagement-state" name="state" aria-describedby="engagement-hint"></select>
+            <p id="engagement-hint" class="hint">For coordination only: it doesn't stop anyone else from
+              contacting the partner or offering to supervise. You'll be shown as the one who recorded it.</p>
+          </div>
+          <button type="submit">Save engagement state</button>
+        </form>
+      </section>
+
+      <section aria-labelledby="contact-heading">
+        <h2 id="contact-heading">Partner contact</h2>
+        <p class="hint">Visible to verified faculty and staff only.</p>
+        <dl class="facts">
+          <div><dt>Name</dt><dd id="contact-name"></dd></div>
+          <div><dt>Email</dt><dd><a id="contact-email" href="#"></a></dd></div>
+        </dl>
+      </section>
+    </article>
+
+    <section id="not-found" hidden>
+      <h1>Opportunity not found</h1>
+      <p><a href="submissions.html">See all industry opportunities</a></p>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="form-pickers.js"></script>
+  <script src="submissions.js"></script>
+</body>
+</html>

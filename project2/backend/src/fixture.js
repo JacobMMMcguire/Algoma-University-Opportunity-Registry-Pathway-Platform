@@ -1,11 +1,13 @@
-// Loads the course's synthetic R1 fixture (project2/r1_fixture.json) as one idempotent SQL
-// script: rerunning it resets the fixture records to the fixture's values and leaves every
-// other record alone. Used by `npm run seed:fixture`, `npm run dev:local` and the tests.
+// Loads the course's synthetic R1 fixture (project2/r1_fixture.json) and R2 fixtures
+// (project2/r2_fixtures/: partner submissions and faculty subscriptions) as idempotent SQL scripts: rerunning them resets
+// the fixture records to the fixture's values and leaves every other record alone. Used by
+// `npm run seed:fixture`, `npm run dev:local` and the tests.
 const fs = require("fs");
 const path = require("path");
 const { STUDENT_LEVELS, canonicalArea, canonicalTerm } = require("./catalog");
 
 const FIXTURE_PATH = path.join(__dirname, "..", "..", "r1_fixture.json");
+const R2_FIXTURE_DIR = path.join(__dirname, "..", "..", "r2_fixtures");
 
 // The fixture has no email addresses. These are deliberately unlike real Algoma addresses
 // (firstname.lastname@), have no inbox, and are never emailed (see routes/auth.js).
@@ -105,4 +107,108 @@ COMMIT;
 `;
 }
 
-module.exports = { FIXTURE_PATH, EXTRA_ACCOUNTS, fixtureEmail, loadFixture, buildFixtureSql };
+function readR2Fixture(name) {
+  return JSON.parse(fs.readFileSync(path.join(R2_FIXTURE_DIR, name), "utf8"));
+}
+
+function loadIntakeFixture() {
+  return readR2Fixture("intake_submissions.json");
+}
+
+function loadSubscriptionFixture() {
+  return readR2Fixture("faculty_subscriptions.json").subscriptions;
+}
+
+// The fixture's submissions, in the API's field names.
+function intakeRequestBody(s) {
+  return {
+    organisation: s.organisation,
+    contactName: s.contact_name,
+    contactEmail: s.contact_email,
+    title: s.title,
+    description: s.description,
+    researchAreas: s.areas,
+    capacity: s.capacity,
+  };
+}
+
+// R2-16: the fixture faculty's private notification settings. Load before the submissions,
+// so they notify the right faculty.
+function buildSubscriptionFixtureSql(subscriptions) {
+  const statements = subscriptions.map((sub) => {
+    const where = `subscription ${sub.faculty_id}`;
+    if (!["none", "all", "areas"].includes(sub.mode)) throw new Error(`${where}: unknown mode "${sub.mode}".`);
+    const subAreas = sub.mode === "areas" ? areas(sub.areas, where) : [];
+    return `INSERT INTO faculty_subscriptions (user_id, mode, research_areas, updated_at)
+SELECT id, ${literal(sub.mode)}, ${textArray(subAreas)}, now() FROM users WHERE fixture_id = ${literal(sub.faculty_id)}
+ON CONFLICT (user_id) DO UPDATE SET mode = EXCLUDED.mode, research_areas = EXCLUDED.research_areas, updated_at = now();`;
+  });
+  return `-- R2 faculty subscriptions: generated from r2_fixtures/faculty_subscriptions.json by npm run seed:fixture.
+BEGIN;
+${statements.join("\n\n")}
+COMMIT;
+`;
+}
+
+// Each submission goes through the same validation as the public form, so the ones the form
+// would reject (S-204) are left out, exactly as if a partner had sent them. Accepted ones are
+// reset to how they arrive: no supervisors, not contacted. Matching subscribers are notified,
+// as they would be by the form.
+function buildIntakeFixtureSql(submissions) {
+  // Required here, not at the top, so loading the R1 fixture never depends on the R2 router.
+  const { SUBSCRIBER_MATCH_SQL, validateSubmission } = require("./routes/partner-submissions");
+  const statements = [];
+  const accepted = [];
+  const rejected = [];
+  for (const s of submissions) {
+    const { submission, errors } = validateSubmission(intakeRequestBody(s));
+    if (errors) {
+      rejected.push(s.fixture_id);
+      continue;
+    }
+    accepted.push(s.fixture_id);
+    statements.push(`INSERT INTO partner_submissions (fixture_id, organisation, contact_name, contact_email, title, description, research_areas, capacity)
+VALUES (${literal(s.fixture_id)}, ${literal(submission.organisation)}, ${literal(submission.contactName)}, ${literal(submission.contactEmail)},
+  ${literal(submission.title)}, ${literal(submission.description)}, ${textArray(submission.researchAreas)}, ${literal(submission.capacity)})
+ON CONFLICT (fixture_id) DO UPDATE SET organisation = EXCLUDED.organisation, contact_name = EXCLUDED.contact_name,
+  contact_email = EXCLUDED.contact_email, title = EXCLUDED.title, description = EXCLUDED.description,
+  research_areas = EXCLUDED.research_areas, capacity = EXCLUDED.capacity,
+  engagement_state = 'not_contacted', engagement_user_id = NULL, engagement_updated_at = NULL;`);
+  }
+  const fixtureIds = textArray(accepted);
+  statements.push(`DELETE FROM opportunity_supervisors WHERE submission_id IN
+  (SELECT id FROM partner_submissions WHERE fixture_id = ANY(${fixtureIds}));`);
+  statements.push(`INSERT INTO notifications (user_id, submission_id)
+SELECT fs.user_id, s.id FROM partner_submissions s
+JOIN faculty_subscriptions fs ON true
+JOIN users ON users.id = fs.user_id
+WHERE s.fixture_id = ANY(${fixtureIds}) AND ${SUBSCRIBER_MATCH_SQL}
+ON CONFLICT DO NOTHING;`);
+  return `-- R2 partner submissions: generated from r2_fixtures/intake_submissions.json by npm run seed:fixture.
+-- Rejected by validation, so not loaded: ${rejected.join(", ") || "none"}.
+BEGIN;
+${statements.join("\n\n")}
+COMMIT;
+`;
+}
+
+// Everything R2 adds, in order. Needs the R1 fixture loaded first (for the faculty accounts).
+function buildR2FixtureSql() {
+  return `${buildSubscriptionFixtureSql(loadSubscriptionFixture())}
+${buildIntakeFixtureSql(loadIntakeFixture())}`;
+}
+
+module.exports = {
+  FIXTURE_PATH,
+  R2_FIXTURE_DIR,
+  EXTRA_ACCOUNTS,
+  fixtureEmail,
+  loadFixture,
+  buildFixtureSql,
+  loadIntakeFixture,
+  loadSubscriptionFixture,
+  intakeRequestBody,
+  buildSubscriptionFixtureSql,
+  buildIntakeFixtureSql,
+  buildR2FixtureSql,
+};

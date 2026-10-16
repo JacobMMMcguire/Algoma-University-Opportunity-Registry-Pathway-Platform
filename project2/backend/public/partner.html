@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Propose a student project — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <h1 id="heading" tabindex="-1">Propose a student project</h1>
+
+    <section id="intro">
+      <p>
+        Have a project Algoma University students could work on? Tell us about it here. You don't need
+        an account.
+      </p>
+      <p class="note">
+        Algoma faculty review every idea. Students only see it once a faculty member agrees to supervise
+        it, and your contact details are shared with faculty and staff only, never with students or the
+        public.
+      </p>
+    </section>
+
+    <form id="intake-form" novalidate>
+      <div class="field">
+        <label for="organisation">Organisation name</label>
+        <input id="organisation" name="organisation" required maxlength="150" autocomplete="organization">
+      </div>
+
+      <div class="field">
+        <label for="contactName">Your name</label>
+        <input id="contactName" name="contactName" required maxlength="100" autocomplete="name">
+      </div>
+
+      <div class="field">
+        <label for="contactEmail">Your email</label>
+        <input id="contactEmail" name="contactEmail" type="email" required maxlength="254" autocomplete="email"
+          aria-describedby="contactEmail-hint">
+        <p id="contactEmail-hint" class="hint">Faculty will use this to get in touch with you.</p>
+      </div>
+
+      <div class="field">
+        <label for="title">Project title</label>
+        <input id="title" name="title" required maxlength="150" aria-describedby="title-hint">
+        <p id="title-hint" class="hint">A few words, e.g. "Warehouse pick-path visualisation".</p>
+      </div>
+
+      <div class="field">
+        <label for="description">What would students work on?</label>
+        <textarea id="description" name="description" rows="5" required maxlength="1000"
+          aria-describedby="description-hint"></textarea>
+        <p id="description-hint" class="hint">The problem, and what a good result would look like. Up to 1000 characters.</p>
+      </div>
+
+      <fieldset aria-describedby="researchAreas-hint">
+        <legend>Areas (optional)</legend>
+        <p id="researchAreas-hint" class="hint">Choose any that fit, to help the right faculty find it. Not sure? Leave
+          them blank. <span id="researchAreas-count"></span></p>
+        <div id="researchAreas-picker"></div>
+      </fieldset>
+
+      <fieldset id="capacity">
+        <legend>How many student teams could you work with?</legend>
+        <div id="capacity-options"></div>
+      </fieldset>
+
+      <button type="submit" class="primary" id="submit">Send project idea</button>
+    </form>
+
+    <section id="done" hidden aria-labelledby="done-heading">
+      <h2 id="done-heading" tabindex="-1">Thank you, we've received your project idea</h2>
+      <p>
+        "<span id="done-title"></span>" is now with Algoma faculty for review. It isn't shown to students
+        unless a faculty member agrees to supervise it.
+      </p>
+      <p><a href="partner.html">Propose another project</a></p>
+    </section>
+
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="form-pickers.js"></script>
+  <script src="partner.js"></script>
+</body>
+</html>

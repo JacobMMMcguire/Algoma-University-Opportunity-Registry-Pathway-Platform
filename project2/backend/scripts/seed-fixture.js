@@ -1,13 +1,15 @@
-// Loads project2/r1_fixture.json into the database. Safe to rerun: it resets the fixture
+// Loads project2/r1_fixture.json and the R2 partner submissions (project2/r2_fixtures/) into
+// the database. Needs migration 003 applied first. Safe to rerun: it resets the fixture
 // records to the fixture's values and leaves every other record alone.
 //
 //   npm run seed:fixture        apply to DATABASE_URL (from .env)
 //   npm run seed:fixture:sql    print the SQL instead, to paste into the Supabase SQL Editor
 require("dotenv").config();
 const { createPool } = require("../src/db");
-const { buildFixtureSql, loadFixture } = require("../src/fixture");
+const { buildFixtureSql, buildR2FixtureSql, loadFixture } = require("../src/fixture");
 
-const sql = buildFixtureSql(loadFixture());
+const sql = `${buildFixtureSql(loadFixture())}
+${buildR2FixtureSql()}`;
 
 if (process.argv.includes("--sql")) {
   process.stdout.write(sql);
@@ -20,7 +22,7 @@ if (process.argv.includes("--sql")) {
     const db = createPool(process.env.DATABASE_URL);
     try {
       await db.exec(sql);
-      console.log("R1 fixture loaded.");
+      console.log("R1 fixture and R2 partner submissions loaded.");
     } finally {
       await db.end();
     }

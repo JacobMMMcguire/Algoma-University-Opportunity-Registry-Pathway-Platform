@@ -52,6 +52,26 @@
 
         <button type="submit" class="primary">Save profile</button>
       </form>
+
+      <section aria-labelledby="subscriptions-heading">
+        <h2 id="subscriptions-heading">Notifications about industry opportunities</h2>
+        <p class="hint">Private: these settings are never shown on your profile or to students. Changes apply
+          to opportunities submitted from now on. You can always browse every opportunity under
+          <a href="submissions.html">Industry opportunities</a>, whatever you choose here.</p>
+        <form id="subscription-form" novalidate>
+          <fieldset id="subscription-mode">
+            <legend>Notify me about</legend>
+            <div id="subscription-mode-options"></div>
+          </fieldset>
+          <fieldset id="subscription-areas" aria-describedby="subscription-areas-hint" hidden>
+            <legend>Areas to be notified about</legend>
+            <p id="subscription-areas-hint" class="hint">Choose at least one. <span id="subscription-areas-count"></span></p>
+            <div id="subscription-areas-picker"></div>
+          </fieldset>
+          <button type="submit">Save notification settings</button>
+          <p id="subscription-status" class="status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
     </section>
 
     <p id="status" class="status" role="status" aria-live="polite"></p>
