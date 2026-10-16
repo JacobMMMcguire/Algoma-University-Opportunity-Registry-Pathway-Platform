@@ -5,7 +5,7 @@ Team: Jacob McGuire, Sineru Mahamillage, Paris Lad
 Deployment: https://algoma-opportunity-registry-r1-backend.onrender.com
 Repository: https://github.com/JacobMMMcguire/Algoma-University-Opportunity-Registry-Pathway-Platform
 Release tag: R2-submission
-Commit: <!-- TODO at freeze: full SHA of the commit the R2-submission tag points to -->
+Commit: abc3e2d39981d13f32241a1f9fdf6a55ba4c461d
 Adapter: project2/evaluation_adapter.json (we couldn't find `evaluation_adapter_template.json` on
 the course site, so this extends our R1 adapter with the intake surface, the willingness and
 engagement actions, the subscription settings and student discovery)
