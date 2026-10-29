@@ -11,11 +11,13 @@ and the R1 and R2 requirements are the spec; this file is how the codebase works
 
 ## Hard rules
 
-1. **Branches.** Work on a feature branch off `r2-development` and merge back into it.
-   `r1-development` holds the assessed Release 1 (tag `R1-submission`); leave it alone.
+1. **Branches.** Render deploys **`r1-development`** (the name is historical). Develop on the
+   current release branch (`r3-development` for R3, or a feature branch off it) and merge into
+   `r1-development` only when it should go live. Assessed releases are tags (`R1-submission`,
+   `R2-submission`, ...): never move or replace one.
    Never push to or merge into `master`: it holds the graded Phase 0 app (also at tag
    `phase0-complete`). Don't touch Phase 0's Render services or Supabase project.
-2. **Merging to `r2-development` deploys to production immediately.** Render auto-deploys
+2. **Merging to `r1-development` deploys to production immediately.** Render auto-deploys
    that branch to https://algoma-opportunity-registry-r1-backend.onrender.com (the service
    keeps its R1-era name). Run `npm test` before merging.
 3. **The Supabase database is shared and live.** Change the schema only with a new numbered

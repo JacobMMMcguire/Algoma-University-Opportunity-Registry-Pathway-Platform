@@ -1,12 +1,13 @@
 # Project 2 — Opportunity Registry and Pathway Platform
 
 Release 1: faculty and project discovery with first contact by email.
-Release 2 (in progress): accountless partner intake, faculty-supervised industry
-opportunities, and faculty notification subscriptions.
+Release 2: accountless partner intake, faculty-supervised industry opportunities, and faculty
+notification subscriptions.
+Release 3 (in progress, branch `r3-development`): matching, term lifecycle and outcomes.
 
 - **Live:** https://algoma-opportunity-registry-r1-backend.onrender.com (auto-deploys the
-  `r2-development` branch; work on feature branches off it). Release 1 as assessed is
-  `r1-development`, tag `R1-submission`.
+  `r1-development` branch). Assessed releases are the tags `R1-submission` and
+  `R2-submission`.
 - **Developers and coding agents:** read [AGENTS.md](AGENTS.md) first, for the rules,
   code layout, testing, and how to add features.
 - **Evaluators:** see [release_submission.md](release_submission.md) and
@@ -17,7 +18,7 @@ opportunities, and faculty notification subscriptions.
 Kept completely separate from the graded Phase 0 warm-up, which lives on `master` with its own
 Render services and Supabase project:
 
-- **Render:** one Web Service, root directory `project2/backend`, branch `r2-development`,
+- **Render:** one Web Service, root directory `project2/backend`, branch `r1-development`,
   build `npm install`, start `npm start`, health check `/api/health`. It serves the API and
   the frontend.
 - **Supabase:** a dedicated project. Its Session pooler connection string is `DATABASE_URL`
