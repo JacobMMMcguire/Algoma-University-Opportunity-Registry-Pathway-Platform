@@ -7,17 +7,14 @@ industry opportunities once a verified faculty member is willing to supervise. T
 and the R1 and R2 requirements are the spec; this file is how the codebase works and the rules for changing it.
 
 **Everything for Project 2 is inside `project2/`**: code in `project2/backend/`, docs in
-`project2/`. Files and folders at the repository root other than `.gitignore`, `.github/`,
-`AGENTS.md` and `CLAUDE.md` belong to Phase 0 and must be ignored (see the root `AGENTS.md`).
-Run every command from `project2/backend/`.
+`project2/`. Run every command from `project2/backend/`.
 
 ## Hard rules
 
 1. **Branches.** Work on a feature branch off `r2-development` and merge back into it.
    `r1-development` holds the assessed Release 1 (tag `R1-submission`); leave it alone.
-   Never push to or merge into `master`: it holds the submitted Phase 0 app, which is still
-   being assessed. Never edit the Phase 0 files at the repository root (listed in the root
-   `AGENTS.md`) or Phase 0's Render services and Supabase project.
+   Never push to or merge into `master`: it holds the graded Phase 0 app (also at tag
+   `phase0-complete`). Don't touch Phase 0's Render services or Supabase project.
 2. **Merging to `r2-development` deploys to production immediately.** Render auto-deploys
    that branch to https://algoma-opportunity-registry-r1-backend.onrender.com (the service
    keeps its R1-era name). Run `npm test` before merging.

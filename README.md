@@ -1,15 +1,8 @@
-# Phase 0 Starter Application
+# Algoma University Opportunity Registry and Pathway Platform
 
-Tiny frontend + Node/Express API + PostgreSQL app for the deploy/test/issue/fix/redeploy exercise.
+The app lives in [`project2/`](project2/). Start with [project2/README.md](project2/README.md)
+(overview, infrastructure, release notes) and [project2/AGENTS.md](project2/AGENTS.md)
+(how the code works and the rules for changing it).
 
-## Intentional defect
-The initial backend accepts whitespace-only item titles. Do not fix it before a peer reports it.
-
-## Local setup
-1. Create PostgreSQL database and run `schema.sql`.
-2. In `backend/`, copy `.env.example` to `.env` and set `DATABASE_URL`.
-3. Run `npm install` then `npm start`.
-4. Set `window.API_BASE_URL` in `frontend/config.js`.
-5. Serve the `frontend/` directory with any static server.
-
-Use instructor-approved no-cost hosting for deployment. Do not commit `.env`.
+The Phase 0 warm-up app that used to sit at the repository root has been graded and removed
+from this branch. It is preserved at tag `phase0-complete` and on `master`.

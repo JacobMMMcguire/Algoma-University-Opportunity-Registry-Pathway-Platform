@@ -14,8 +14,8 @@ opportunities, and faculty notification subscriptions.
 
 ## Infrastructure
 
-Kept completely separate from Phase 0 (which lives on `master` with its own Render services
-and Supabase project, and must not be touched while it is assessed):
+Kept completely separate from the graded Phase 0 warm-up, which lives on `master` with its own
+Render services and Supabase project:
 
 - **Render:** one Web Service, root directory `project2/backend`, branch `r2-development`,
   build `npm install`, start `npm start`, health check `/api/health`. It serves the API and
