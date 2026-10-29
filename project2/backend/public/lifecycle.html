@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Terms and deadlines — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <h1>Terms and deadlines</h1>
+    <p id="denied" hidden></p>
+
+    <section id="panel" hidden>
+      <p id="intro"></p>
+      <div class="note">
+        <p>What each state means for students:</p>
+        <ul>
+          <li><strong>Open:</strong> listed for students until its deadline.</li>
+          <li><strong>Matched:</strong> students have confirmed a match, so it's no longer listed and doesn't expire.</li>
+          <li><strong>Expired:</strong> the deadline passed without a confirmed match. Nothing is deleted; reopen it with a new deadline, or renew it for a later term.</li>
+          <li><strong>Withdrawn:</strong> no longer offered. It can be reopened.</li>
+          <li><strong>Completed:</strong> the work is finished. Renew it to offer it again in a later term.</li>
+          <li><strong>Archived:</strong> kept for the record only.</li>
+        </ul>
+        <p>Students who open an opportunity that is no longer listed are told which of these applies.</p>
+      </div>
+      <ul id="items" class="cards"></ul>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="form-pickers.js"></script>
+  <script src="lifecycle.js"></script>
+</body>
+</html>

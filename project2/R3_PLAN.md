@@ -1,6 +1,6 @@
 # Release 3 plan: matching, term lifecycle and outcomes
 
-Status: **proposed, awaiting team approval.** Due 2026-11-11. Branch `r3-development`, merged into
+Status: **approved 2026-10-29** (D7 revised to a separate table). Due 2026-11-11. Branch `r3-development`, merged into
 `r1-development` (which Render deploys) only when ready to go live.
 
 Acceptance criteria: `r3_fixtures/expected_lifecycle_results.json`, evaluated as of the
@@ -30,7 +30,11 @@ fixture's `evaluation_date`, 2026-11-06.
 **D3. An adjustable clock.**
 - A `CLOCK_DATE` setting (YYYY-MM-DD) means "today" for lifecycle decisions. Unset means the
   real date.
-- Render gets `CLOCK_DATE=2026-11-06` for evaluation.
+- Render gets `CLOCK_DATE=2026-11-06` for evaluation. The date may still change: the team has
+  asked the instructor whether it should be 2026-11-11 (the R3 due date) instead. Changing it
+  is a Render setting only, with no code change. Tests read the fixture's `evaluation_date`
+  rather than hard-coding a date. No fixture deadline falls between 6 and 11 November, so
+  either date gives the same expected results.
 - Pages show "Dates evaluated as of 6 November 2026 (simulated)" whenever it's set. This
   gets recorded in the release notes.
 
@@ -60,9 +64,14 @@ fixture's `evaluation_date`, 2026-11-06.
 
 - Only the invited students and faculty on that opportunity can see a match (R3-05, R3-22).
 
-**D7. Partner agreement (R3-07)** reuses R2's engagement state "Partner confirmed". It will be
-shown as "Partner agreed in principle, recorded by <faculty>", and the page will make clear it
-is a faculty member's record, not partner activity in the system.
+**D7. Partner agreement (R3-07)** gets its own table, `partner_agreements`, with records per run.
+- Each record says who recorded it and when. Records are never overwritten: recording again, or
+  retracting, adds a row, so the history is kept. A renewed run starts with no agreement, and
+  the earlier term's agreement stays with the earlier run.
+- It is shown as "Partner agreed in principle, recorded by <faculty> on <date>". The page makes
+  clear this is a faculty member's statement, not partner activity in the system.
+- R2's engagement option "Partner confirmed" is relabelled "Partner agreed in principle".
+  Only the label changes; the stored value and R2 behaviour stay the same.
 
 **D8. Outcomes and showcase.**
 - An `outcomes` table (`run_id`, summary, completion date, links, confirmation) and an
@@ -94,7 +103,7 @@ is a faculty member's record, not partner activity in the system.
 
 ## Build order
 
-1. Clock, runs and lifecycle states, the discovery filter, and the reasons shown on opportunity
+1. **Done 2026-10-29.** Clock, runs and lifecycle states, the discovery filter, and the reasons shown on opportunity
    pages. Migration 005. (R3-08 to R3-13, R3-19)
 2. Student profiles and matches. (R3-01 to R3-07, R3-22)
 3. Outcomes, the showcase, and outcomes on faculty and student profiles. (R3-14 to R3-18,
@@ -104,3 +113,22 @@ is a faculty member's record, not partner activity in the system.
 
 Every step enforces authorization on the server (R3-21) and has tests named after its
 requirements.
+
+## Step 1 design notes
+
+- **Runs.** Every faculty project and partner submission always has at least one run. Migration
+  005 creates run 1 for existing records, and database triggers create it for new ones, so the
+  old code still running during deployment can't leave a record without a run. The current
+  run is the one with the highest `run_number`.
+- **Who changes a run.** The project's owner for a faculty project; any willing supervisor for
+  an industry opportunity; staff for either. The Centre deadline is staff only.
+- **The term** lives on the run. `projects.target_term` is kept equal to the current run's term,
+  so R1 filters and older code keep working.
+- **Legacy `closed`.** Migration 005 gives closed projects a withdrawn run but leaves
+  `projects.status` as `closed`, so the R1 code still live during deployment keeps hiding them.
+  The new code treats `projects.status` as publication only (draft or not) and reads
+  withdrawal from the run. Close still answers `status: "closed"` for R1 compatibility.
+- **"Today"** is `CLOCK_DATE` if set, otherwise the date in Toronto. A deadline passes at the
+  end of its day: an opportunity with deadline 20 October is still open on 20 October.
+- **Industry runs** start with no term or deadline, so they never expire until a supervisor
+  sets a deadline.

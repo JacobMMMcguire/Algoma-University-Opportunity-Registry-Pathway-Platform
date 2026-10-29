@@ -42,6 +42,8 @@ function renderProjects(projects) {
       return `<li class="card" data-project="${escapeHtml(p.id)}">
         <h2>${escapeHtml(p.title)}</h2>
         <p><strong>${escapeHtml(PROJECT_STATUS_LABELS[p.status])}</strong> · ${escapeHtml(p.targetTerm)}</p>
+        ${p.status === "draft" ? "" : `<p class="hint">${escapeHtml(p.lifecycle.reason)}
+          <a href="lifecycle.html">Terms and deadlines</a></p>`}
         <div class="actions">
           <a class="button-link" href="project-edit.html?id=${id}" aria-label="${escapeHtml(`Edit: ${p.title}`)}">Edit</a>
           <a class="button-link" href="projects.html?id=${id}" aria-label="${escapeHtml(`View: ${p.title}`)}">View</a>

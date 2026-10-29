@@ -6,6 +6,7 @@ const {
   describeCapacity,
   describeEngagement,
 } = require("../catalog");
+const { currentRunJoin, describeLifecycle } = require("../lifecycle");
 const { cleanAreas, cleanText, parseId } = require("../validation");
 const { isPubliclyVisibleFaculty, visibleSupervisorSql } = require("../visibility");
 
@@ -102,6 +103,8 @@ function toReviewerOpportunity(row, supervisors, viewer) {
     supervisorCount: supervisors.length,
     supervisors: supervisors.map((s) => ({ id: s.id, displayName: s.display_name, publiclyVisible: isPubliclyVisibleFaculty(s) })),
     viewerIsSupervisor: supervisors.some((s) => s.id === viewer.id),
+    // R3-08 to R3-11: the current run's term, deadline and lifecycle state.
+    lifecycle: describeLifecycle(row),
     engagement: {
       ...describeEngagement(row.engagement_state),
       by: row.engagement_user_id ? { id: row.engagement_user_id, displayName: row.engagement_by_name } : null,
@@ -113,11 +116,12 @@ function toReviewerOpportunity(row, supervisors, viewer) {
 }
 
 // Opportunities (all of them, or the one with `id`) in the faculty and staff shape.
-async function loadForReviewers(db, viewer, id = null) {
+async function loadForReviewers(db, config, viewer, id = null) {
   const rows = (
     await db.query(
-      `SELECT ps.*, coalesce(efp.display_name, eu.email) AS engagement_by_name
+      `SELECT ps.*, run.*, coalesce(efp.display_name, eu.email) AS engagement_by_name
        FROM partner_submissions ps
+       ${currentRunJoin(config, "industry", "ps")}
        LEFT JOIN users eu ON eu.id = ps.engagement_user_id
        LEFT JOIN faculty_profiles efp ON efp.user_id = eu.id
        WHERE $1::int IS NULL OR ps.id = $1
@@ -150,7 +154,7 @@ async function loadForReviewers(db, viewer, id = null) {
 // R2-01 to R2-14, R2-24: anyone can submit a project idea, with no account; verified faculty
 // and staff read them; only verified faculty record willingness to supervise or partner
 // engagement, always as themselves (req.user), never as anyone named in the request.
-function createPartnerSubmissionsRouter({ db, auth }) {
+function createPartnerSubmissionsRouter({ db, config, auth }) {
   const router = express.Router();
 
   // R2-01: public, no sign-in. R2-02: a new submission has no supervisors, so it is awaiting
@@ -211,7 +215,7 @@ function createPartnerSubmissionsRouter({ db, auth }) {
   router.get("/", auth.requireVerifiedFacultyOrStaff, async (req, res, next) => {
     try {
       res.json({
-        submissions: await loadForReviewers(db, req.user),
+        submissions: await loadForReviewers(db, config, req.user),
         capacities: PARTNER_CAPACITIES,
         engagementStates: ENGAGEMENT_STATES,
         limits: LIMITS,
@@ -225,7 +229,7 @@ function createPartnerSubmissionsRouter({ db, auth }) {
     try {
       const id = parseId(req.params.id);
       if (id === null) return res.status(400).json({ error: "Invalid submission id." });
-      const [submission] = await loadForReviewers(db, req.user, id);
+      const [submission] = await loadForReviewers(db, config, req.user, id);
       if (!submission) return res.status(404).json({ error: "Submission not found." });
       res.json({ submission, engagementStates: ENGAGEMENT_STATES });
     } catch (error) {
@@ -241,7 +245,7 @@ function createPartnerSubmissionsRouter({ db, auth }) {
       const exists = await db.query("SELECT 1 FROM partner_submissions WHERE id = $1", [id]);
       if (exists.rows.length === 0) return res.status(404).json({ error: "Submission not found." });
       await change(id);
-      const [submission] = await loadForReviewers(db, req.user, id);
+      const [submission] = await loadForReviewers(db, config, req.user, id);
       res.json({ submission });
     } catch (error) {
       next(error);

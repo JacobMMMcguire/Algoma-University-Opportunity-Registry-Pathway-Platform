@@ -23,6 +23,9 @@ function renderContact(opportunity, supervisor, session) {
 function renderOpportunity(opportunity, session) {
   document.title = `${opportunity.title} — Opportunity Registry`;
   $("opportunity-title").textContent = opportunity.title;
+  $("opportunity-lifecycle").textContent = [opportunity.targetTerm && `For ${opportunity.targetTerm}.`, opportunity.lifecycle.reason]
+    .filter(Boolean)
+    .join(" ");
   $("opportunity-organisation").textContent = opportunity.organisation;
   $("opportunity-audience").hidden = opportunity.publiclyVisible;
   $("opportunity-description").textContent = opportunity.description;
@@ -84,13 +87,7 @@ function renderOpportunity(opportunity, session) {
   renderNav(session);
   const id = new URLSearchParams(location.search).get("id");
   const res = id === null ? { status: 404 } : await api(`/api/opportunities/${encodeURIComponent(id)}`);
-  if (res.status === 404 || res.status === 400) {
-    $("not-found-text").textContent = session.authenticated
-      ? "This project doesn't exist or is no longer available."
-      : "This project doesn't exist or isn't available publicly. Signing in may let you see it.";
-    $("not-found").hidden = false;
-    return;
-  }
+  if (res.status === 404 || res.status === 400) return showNotFound(res, session);
   if (!res.ok) return showStatus(statusEl, res.data.error || "Could not load this project.", { error: true });
   renderOpportunity(res.data.opportunity, session);
 })();

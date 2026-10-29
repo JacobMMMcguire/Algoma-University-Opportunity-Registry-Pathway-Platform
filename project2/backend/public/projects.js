@@ -40,7 +40,8 @@ function mergeFilters(a, b) {
 // R2-21: each card says which kind it is. Industry projects name their partner organisation and
 // supervising faculty, and open on their own page.
 function projectCard(p) {
-  const details = [p.faculty.displayName, p.targetTerm, p.studentLevel].filter(Boolean);
+  const deadline = p.lifecycle.effectiveDeadline && `Deadline ${formatDay(p.lifecycle.effectiveDeadline)}`;
+  const details = [p.faculty.displayName, p.targetTerm, p.studentLevel, deadline].filter(Boolean);
   return `<li class="card">
     <p class="kind">Faculty project</p>
     <h2><a href="projects.html?id=${encodeURIComponent(p.id)}">${escapeHtml(p.title)}</a></h2>
@@ -54,7 +55,11 @@ function opportunityCard(o) {
   return `<li class="card">
     <p class="kind kind-industry">Industry project · proposed by ${escapeHtml(o.organisation)}</p>
     <h2><a href="opportunity.html?id=${encodeURIComponent(o.id)}">${escapeHtml(o.title)}</a></h2>
-    <p>Supervised by ${escapeHtml(supervisors)}</p>
+    <p>${escapeHtml(
+      [`Supervised by ${supervisors}`, o.targetTerm, o.lifecycle.effectiveDeadline && `Deadline ${formatDay(o.lifecycle.effectiveDeadline)}`]
+        .filter(Boolean)
+        .join(" · "),
+    )}</p>
     <p class="hint">${escapeHtml(o.researchAreas.join(" · "))}</p>
   </li>`;
 }
@@ -118,6 +123,8 @@ function renderList(data, industryData, session, query) {
 function renderProject(project, session) {
   document.title = `${project.title} — Opportunity Registry`;
   $("project-title").textContent = project.title;
+  // R3-19: whether it is still open and, for its owner previewing it, why not.
+  $("project-lifecycle").textContent = project.status === "draft" ? "" : project.lifecycle.reason;
 
   // Owners can open their own drafts and closed projects; say clearly that students can't.
   const isOwner = session.user?.id === project.faculty.id;
@@ -186,13 +193,6 @@ function renderProject(project, session) {
   $("project-view").hidden = false;
 }
 
-function renderNotFound(session) {
-  $("not-found-text").textContent = session.authenticated
-    ? "This project doesn't exist or is no longer available."
-    : "This project doesn't exist or isn't available publicly. Signing in may let you see it.";
-  $("not-found").hidden = false;
-}
-
 submitFiltersAsUrl($("filters"), "projects.html");
 
 (async () => {
@@ -221,7 +221,7 @@ submitFiltersAsUrl($("filters"), "projects.html");
   }
 
   const res = await api(`/api/projects/${encodeURIComponent(id)}`);
-  if (res.status === 404 || res.status === 400) return renderNotFound(session);
+  if (res.status === 404 || res.status === 400) return showNotFound(res, session);
   if (!res.ok) return showStatus(statusEl, res.data.error || "Could not load this project.", { error: true });
   renderProject(res.data.project, session);
 })();

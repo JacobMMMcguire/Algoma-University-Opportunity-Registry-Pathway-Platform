@@ -18,6 +18,7 @@ function fillForm(p) {
   fillSelect($("studentLevel"), options.studentLevels, p.studentLevel || "", "Not specified");
   renderTermPicker($("targetTerm"), $("targetTerm-year"), { seasons: options.termSeasons, years: options.termYears }, p.targetTerm);
   $("prerequisites").value = p.prerequisites || "";
+  $("deadline").value = p.lifecycle?.deadline || "";
 }
 
 function renderState() {
@@ -54,6 +55,7 @@ $("project-form").addEventListener("submit", async (event) => {
     studentLevel: $("studentLevel").value,
     targetTerm: readTerm($("targetTerm"), $("targetTerm-year")),
     prerequisites: $("prerequisites").value,
+    deadline: $("deadline").value,
   };
   const res = project
     ? await api(`/api/projects/${encodeURIComponent(project.id)}`, { method: "PUT", body })

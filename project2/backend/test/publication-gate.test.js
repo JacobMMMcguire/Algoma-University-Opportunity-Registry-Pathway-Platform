@@ -207,7 +207,7 @@ describe("faculty publication gate and coordination", () => {
       const labels = {
         not_contacted: "Not contacted",
         discussion_underway: "Discussion underway",
-        partner_confirmed: "Partner confirmed",
+        partner_confirmed: "Partner agreed in principle",
         no_longer_pursuing: "No longer pursuing",
       };
       for (const [state, label] of Object.entries(labels)) {

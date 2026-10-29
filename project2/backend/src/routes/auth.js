@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const express = require("express");
 const { generateSessionToken, toPublicUser } = require("../auth");
+const { describeClock } = require("../lifecycle");
 
 function normalizeEmail(value) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
@@ -177,8 +178,8 @@ function createAuthRouter({ db, config, auth, sendSignInEmail }) {
       const user = await auth.getSessionUser(req);
       res.json(
         user
-          ? { authenticated: true, testMode: config.testMode, user: toPublicUser(user) }
-          : { authenticated: false, testMode: config.testMode },
+          ? { authenticated: true, testMode: config.testMode, clock: describeClock(config), user: toPublicUser(user) }
+          : { authenticated: false, testMode: config.testMode, clock: describeClock(config) },
       );
     } catch (error) {
       next(error);

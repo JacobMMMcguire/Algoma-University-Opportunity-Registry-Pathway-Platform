@@ -1,10 +1,12 @@
 # Project 2 — guide for developers and coding agents
 
 Opportunity Registry and Pathway Platform. Release 1 (R1-01 to R1-26): students discover
-Algoma faculty and projects and contact faculty by email. Release 2 (R2-01 to R2-26, current):
+Algoma faculty and projects and contact faculty by email. Release 2 (R2-01 to R2-26):
 outside organisations propose projects without an account, and those become student-visible
-industry opportunities once a verified faculty member is willing to supervise. The course brief
-and the R1 and R2 requirements are the spec; this file is how the codebase works and the rules for changing it.
+industry opportunities once a verified faculty member is willing to supervise. Release 3 (R3-01
+to R3-24, in progress): two-sided matches, term lifecycle and outcomes; its design decisions are
+in [R3_PLAN.md](R3_PLAN.md). The course brief and the release requirements are the spec; this
+file is how the codebase works and the rules for changing it.
 
 **Everything for Project 2 is inside `project2/`**: code in `project2/backend/`, docs in
 `project2/`. Run every command from `project2/backend/`.
@@ -53,7 +55,10 @@ and the R1 and R2 requirements are the spec; this file is how the codebase works
 | Faculty publication gate, coordination | R2-07 to R2-15 | Done (see "Industry opportunities" below) |
 | Notification subscriptions | R2-16 to R2-20 | Done (see "Industry opportunities" below) |
 | Student discovery, authorization, regression | R2-21 to R2-25 | Done (see "Industry opportunities" below) |
-| Assessed version tag | R2-26 | To do at submission: tag `R2-submission` |
+| Assessed version tag | R2-26 | Done: tag `R2-submission` |
+| Term lifecycle, discovery filter | R3-08 to R3-13, R3-19 | Jacob, done (see "Term lifecycle" below) |
+| Student profiles and matches | R3-01 to R3-07, R3-22 | Next (R3_PLAN.md step 2) |
+| Outcomes and showcase | R3-14 to R3-18, R3-20 | To do (R3_PLAN.md step 3) |
 
 ## Layout (`project2/backend/`)
 
@@ -78,12 +83,14 @@ src/routes/partner-submissions.js  /api/partner-submissions: intake, faculty rev
                         engagement (R2-01 to R2-14, R2-24)
 src/routes/opportunities.js    /api/opportunities: student discovery of industry opportunities (R2-21 to R2-23)
 src/routes/notifications.js    /api/notifications: subscriptions and notification list (R2-16 to R2-20)
+src/lifecycle.js        Term runs: the clock, derived lifecycle states and reasons (R3-08 to R3-13, R3-19)
+src/routes/lifecycle.js /api/lifecycle: managing terms, deadlines and lifecycle state (R3-08 to R3-13)
 migrations/NNN_*.sql    Schema history, applied in order
 public/                 Frontend, served by Express from the same origin as the API
 test/                   node:test suites and helpers (in-memory Postgres)
 scripts/dev-local.js    Run the app locally on an in-memory database with the R1 and R2 fixtures loaded
 scripts/migrate.js      Apply pending migrations to DATABASE_URL
-scripts/seed-fixture.js Load the R1 and R2 fixtures into DATABASE_URL, or print them as SQL
+scripts/seed-fixture.js Load the R1 to R3 fixtures into DATABASE_URL, or print them as SQL
 ```
 
 The frontend is served by the backend, not a separate static site, so the session cookie is
@@ -218,10 +225,12 @@ the file into the Project 2 Supabase SQL Editor (or `npm run migrate` with `DATA
 
 Applied so far: `000` (initial), `001` (public-profile choice on `users`, guess limit),
 `002` (`fixture_id` on `users` and `projects`; student levels fixed to three values with a
-CHECK constraint). Written, **not yet applied to the live database** (apply both, in order,
-before merging R2): `003` (`partner_submissions`) and `004` (`opportunity_supervisors`,
+CHECK constraint), `003` (`partner_submissions`) and `004` (`opportunity_supervisors`,
 engagement columns, `faculty_subscriptions`, `notifications`; drops the unused
-`partner_submissions.status`). The public-profile choice lives on `users`
+`partner_submissions.status`). Written, **not yet applied to the live database** (apply before
+merging R3): `005` (`opportunity_runs` with triggers that give every new project and partner
+submission its first run, `run_changes`, `matches`, `match_students`,
+`partner_agreements`). The public-profile choice lives on `users`
 (`public_profile_choice`), not on `faculty_profiles`.
 
 ## Frontend conventions
@@ -414,3 +423,55 @@ opportunity's state is derived, never stored.
 - Pages: `partner.html` (public intake), `submissions.html` (faculty and staff review, with
   willingness and engagement controls), `notifications.html`, `opportunity.html` (student
   detail), plus the changes to `projects.html` and `profile.html` above.
+
+## Term lifecycle (R3-08 to R3-13, R3-19, done)
+
+Design decisions D1 to D4 and D10 in [R3_PLAN.md](R3_PLAN.md); this is how the code does it.
+
+- **Runs.** Every project and partner submission has runs in `opportunity_runs`, one per term
+  it is offered for. The current run has the highest `run_number`. Migration 005 created run 1
+  for existing records, and triggers create it for new ones, so never insert a run for a new
+  record yourself. Join the current run with `currentRunJoin(config, kind, alias)` from
+  `src/lifecycle.js`. It adds `run.*` columns, including `run.lifecycle_state`.
+- **States.** A run stores `open`, `withdrawn`, `completed` or `archived`. `matched` (a fully
+  confirmed match on the run) and `expired` (open, no confirmed match, effective deadline
+  before today) are derived in SQL by `lifecycleStateSql`. Never store them.
+  `describeLifecycle(row)` gives the API shape: `state`, `label`, `available`, `reason` (the
+  sentence students see), term and deadlines.
+- **The clock.** `today(config)` is `CLOCK_DATE` (YYYY-MM-DD) if set, otherwise the date in
+  Toronto. A deadline passes at the end of its day. A malformed `CLOCK_DATE` stops the server
+  at startup. `/api/auth/me` returns `clock`, and every page shows a notice while it is
+  simulated. `npm run dev:local` uses the R3 fixture's `evaluation_date` unless `CLOCK_DATE`
+  is set (`CLOCK_DATE=` means the real date).
+- **Deadlines (R3-08).** Faculty set `deadline` (on the project form, or the lifecycle page for
+  industry opportunities). Staff set `centre_deadline`, which wins when present.
+- **Projects.** `projects.status` is still draft/published/closed for R1. Withdrawing sets the
+  run to withdrawn and the project to `closed`; reopening reverses both. `projects.target_term`
+  is kept equal to the current run's term. A `closed` project counts as withdrawn whatever its
+  run says.
+- **Managing (`/api/lifecycle`, verified faculty or staff).**
+  - Who may manage: the project's owner; willing supervisors of an industry opportunity; staff
+    for every published project and every industry opportunity. That rule is in the SQL
+    (`managedSql`), so anyone else gets 404 (R3-21).
+  - Routes:
+    - `GET /` lists what you manage.
+    - `GET /:kind/:id` returns one record with every run and its history (`kind` is `project`
+      or `industry`).
+    - `PUT /:kind/:id/schedule` sets `{ targetTerm, deadline }`.
+    - `PUT /:kind/:id/centre-deadline` sets `{ centreDeadline }`. Staff only.
+    - `POST /:kind/:id/state` takes `{ action: withdraw | complete | archive | reopen, deadline? }`.
+    - `POST /:kind/:id/renew` takes `{ targetTerm, deadline? }` and adds a run.
+  - Allowed actions per state are in `ACTIONS_BY_STATE`. Only a matched run can be completed.
+    Only expired or completed runs can be renewed. Reopening needs an effective deadline that
+    hasn't passed. Every stored change adds a row to `run_changes`.
+- **Discovery (R3-19).** `/api/projects` and `/api/opportunities` list only runs whose state is
+  `open`. Their detail routes still return 404 for anything no longer available, as in R1.
+  When the viewer could otherwise see the record, the 404 body adds
+  `removed: { id, title, lifecycle }`, and the page shows its reason.
+- **Fixture.** `buildR3FixtureSql` loads `r3_fixtures/lifecycle_fixture.json`. Industry
+  opportunities attach to the R2 submission with the same title, with their owner as a willing
+  supervisor. Faculty ones become projects with the fixture id. Terms such as `2026S` become
+  `Summer 2026`. Each record is reset to a single run, with matches as in the fixture.
+  `test/lifecycle.test.js` checks `expected_lifecycle_results.json` as of the fixture's
+  `evaluation_date`, and again as of 2026-11-11.
+- Page: `lifecycle.html` ("Terms and deadlines" in the menu).

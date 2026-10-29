@@ -164,3 +164,28 @@ For `release_submission.md`:
 - The R2 fixtures (`r2_fixtures/`) are loaded by the same `npm run seed:fixture`, after
   applying migrations `003` and `004`. Automated tests check the app against
   `expected_intake_outcomes.json`, including which faculty each submission notifies.
+
+## Release 3 notes input: term lifecycle (R3-08 to R3-13, R3-19)
+
+- **Clock (fixture deadlines):** the server treats `CLOCK_DATE` as today for every deadline.
+  Render has `CLOCK_DATE=2026-11-06`, the R3 fixture's `evaluation_date`, and every page shows
+  "Deadlines are evaluated as of 6 November 2026 (a simulated date, set for evaluation)". With
+  it unset, the real date in Toronto is used. A deadline passes at the end of its day.
+- Each opportunity has a target term and an optional faculty deadline. Centre staff can set a
+  Centre deadline, which overrides it (R3-08).
+- Lifecycle states:
+  - **Open.**
+  - **Matched:** a fully confirmed match exists; it doesn't expire.
+  - **Expired:** the deadline passed without a confirmed match.
+  - **Withdrawn**, **Completed** and **Archived**.
+
+  Only withdrawn, completed and archived are stored. Matched and expired are worked out from
+  the matches and the date, so they can't go stale. Nothing is ever deleted.
+- Faculty manage their own projects and the industry opportunities they supervise, and staff
+  manage all of them, at `/lifecycle.html` ("Terms and deadlines"). There they can withdraw,
+  complete, archive, reopen (with a new deadline if it has passed), or renew an expired or
+  completed opportunity for a later term. Renewal keeps the same record and id and adds a new
+  run, so earlier terms keep their matches and history.
+- Student discovery lists only open opportunities. Opening a removed one by its link says why,
+  for example "Expired: the deadline, 20 October 2026, passed without a confirmed match."
+- R2's engagement option "Partner confirmed" is now labelled "Partner agreed in principle".

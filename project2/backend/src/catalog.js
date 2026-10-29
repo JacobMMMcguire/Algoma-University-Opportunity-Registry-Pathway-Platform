@@ -185,7 +185,7 @@ const OPPORTUNITY_STATES = {
 const ENGAGEMENT_STATES = [
   { value: "not_contacted", label: "Not contacted" },
   { value: "discussion_underway", label: "Discussion underway" },
-  { value: "partner_confirmed", label: "Partner confirmed" },
+  { value: "partner_confirmed", label: "Partner agreed in principle" },
   { value: "no_longer_pursuing", label: "No longer pursuing" },
 ];
 

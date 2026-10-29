@@ -143,3 +143,10 @@ select {
 /* R2-21: tells faculty projects and industry projects apart. */
 .kind { font-size: 0.85rem; font-weight: 600; color: #555; margin: 0 0 0.25rem; }
 .kind-industry { color: #92400e; }
+
+/* R3: lifecycle state and the simulated-date notice. */
+.lifecycle { font-weight: 600; margin: 0 0 0.75rem; }
+.clock-note { background: #fff7e6; border-bottom: 1px solid #f0c36d; margin: 0; padding: 0.4rem 1rem; font-size: 0.9rem; }
+.history { font-size: 0.9rem; padding-left: 1.25rem; }
+.inline-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end; margin: 0.5rem 0; }
+.inline-form label { display: flex; flex-direction: column; font-size: 0.9rem; }

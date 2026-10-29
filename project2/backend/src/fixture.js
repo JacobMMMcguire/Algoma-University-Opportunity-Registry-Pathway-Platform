@@ -8,6 +8,7 @@ const { STUDENT_LEVELS, canonicalArea, canonicalTerm } = require("./catalog");
 
 const FIXTURE_PATH = path.join(__dirname, "..", "..", "r1_fixture.json");
 const R2_FIXTURE_DIR = path.join(__dirname, "..", "..", "r2_fixtures");
+const R3_FIXTURE_DIR = path.join(__dirname, "..", "..", "r3_fixtures");
 
 // The fixture has no email addresses. These are deliberately unlike real Algoma addresses
 // (firstname.lastname@), have no inbox, and are never emailed (see routes/auth.js).
@@ -198,9 +199,109 @@ function buildR2FixtureSql() {
 ${buildIntakeFixtureSql(loadIntakeFixture())}`;
 }
 
+function readR3Fixture(name) {
+  return JSON.parse(fs.readFileSync(path.join(R3_FIXTURE_DIR, name), "utf8"));
+}
+
+function loadLifecycleFixture() {
+  return readR3Fixture("lifecycle_fixture.json");
+}
+
+// The fixture's terms are "2026F" style. F is Fall and W is Winter; S is taken to be Summer
+// (R3_PLAN.md D9: its deadline is in May and the work finished in August).
+const TERM_SEASON_CODES = { W: "Winter", S: "Summer", F: "Fall" };
+
+function fixtureTerm(code, where) {
+  const match = /^(\d{4})([WSF])$/.exec(code || "");
+  const term = match && canonicalTerm(`${TERM_SEASON_CODES[match[2]]} ${match[1]}`);
+  if (!term) throw new Error(`${where}: "${code}" is not a term like 2026F.`);
+  return term;
+}
+
+const RUN_STATES = ["open", "withdrawn", "completed", "archived"];
+
+// SQL selecting the record an R3 opportunity is loaded as (R3_PLAN.md D9): an industry one is
+// the R2 partner submission with the same title, a faculty one a project with its fixture id.
+function r3RecordSql(o) {
+  return o.source === "industry"
+    ? `SELECT id FROM partner_submissions WHERE fixture_id IS NOT NULL AND title = ${literal(o.title)}`
+    : `SELECT id FROM projects WHERE fixture_id = ${literal(o.fixture_id)}`;
+}
+
+// R3: term runs and matches (R3-01 to R3-13). Needs the R1 and R2 fixtures loaded first. Each
+// fixture opportunity is reset to a single run with the fixture's term, deadline and state, and
+// its matches to the fixture's responses. Students are fixture accounts (fixture-s01@algomau.ca).
+function buildR3FixtureSql(fixture = loadLifecycleFixture()) {
+  const statements = [];
+  const opportunities = new Map(fixture.opportunities.map((o) => [o.fixture_id, o]));
+  const r2Titles = new Set(loadIntakeFixture().map((s) => s.title));
+
+  for (const o of fixture.opportunities) {
+    const where = `opportunity ${o.fixture_id}`;
+    if (!RUN_STATES.includes(o.state)) throw new Error(`${where}: unknown state "${o.state}".`);
+    const term = fixtureTerm(o.term, where);
+    const owner = literal(o.owner);
+    let runColumn;
+    if (o.source === "industry") {
+      if (!r2Titles.has(o.title)) throw new Error(`${where}: no R2 partner submission is titled "${o.title}".`);
+      runColumn = "submission_id";
+      // The owner is a willing supervisor, so the opportunity has faculty support (R2-07).
+      statements.push(`INSERT INTO opportunity_supervisors (submission_id, faculty_user_id)
+SELECT (${r3RecordSql(o)}), id FROM users WHERE fixture_id = ${owner}
+ON CONFLICT DO NOTHING;`);
+    } else if (o.source === "faculty") {
+      runColumn = "project_id";
+      // The fixture gives no description or areas; the pages hide empty ones.
+      statements.push(`INSERT INTO projects (fixture_id, faculty_user_id, title, description, research_areas, target_term, status, updated_at)
+SELECT ${literal(o.fixture_id)}, id, ${literal(o.title)}, '', ARRAY[]::text[], ${literal(term)},
+  ${literal(o.state === "withdrawn" ? "closed" : "published")}, now()
+FROM users WHERE fixture_id = ${owner}
+ON CONFLICT (fixture_id) DO UPDATE SET faculty_user_id = EXCLUDED.faculty_user_id, title = EXCLUDED.title,
+  target_term = EXCLUDED.target_term, status = EXCLUDED.status, updated_at = now();`);
+    } else {
+      throw new Error(`${where}: unknown source "${o.source}".`);
+    }
+    // Back to one run, as the fixture describes it. Deleting later runs also deletes their matches.
+    statements.push(`DELETE FROM opportunity_runs WHERE ${runColumn} = (${r3RecordSql(o)}) AND run_number > 1;`);
+    statements.push(`UPDATE opportunity_runs SET target_term = ${literal(term)}, deadline = ${literal(o.deadline)},
+  centre_deadline = NULL, state = ${literal(o.state)}, state_changed_by = NULL, state_changed_at = NULL
+WHERE ${runColumn} = (${r3RecordSql(o)}) AND run_number = 1;`);
+  }
+
+  for (const m of fixture.matches) {
+    const where = `match ${m.fixture_id}`;
+    const o = opportunities.get(m.opportunity);
+    if (!o) throw new Error(`${where}: unknown opportunity ${m.opportunity}.`);
+    const runColumn = o.source === "industry" ? "submission_id" : "project_id";
+    statements.push(`DELETE FROM matches WHERE fixture_id = ${literal(m.fixture_id)};`);
+    statements.push(`INSERT INTO matches (fixture_id, run_id, proposed_by)
+SELECT ${literal(m.fixture_id)}, r.id, (SELECT id FROM users WHERE fixture_id = ${literal(m.proposed_by)})
+FROM opportunity_runs r WHERE r.${runColumn} = (${r3RecordSql(o)}) AND r.run_number = 1;`);
+    // A declined match: whoever didn't confirm declined. Otherwise they haven't answered yet.
+    const unconfirmed = m.state === "declined" ? "declined" : "pending";
+    for (const student of m.students) {
+      const response = m.confirmed_by.includes(student) ? "confirmed" : unconfirmed;
+      statements.push(`INSERT INTO match_students (match_id, student_email, response, responded_at)
+SELECT id, ${literal(fixtureEmail(student))}, ${literal(response)}, ${response === "pending" ? "NULL" : "now()"}
+FROM matches WHERE fixture_id = ${literal(m.fixture_id)};`);
+    }
+  }
+
+  return `-- R3 lifecycle fixture ${fixture.fixture_version}: generated from r3_fixtures/lifecycle_fixture.json by npm run seed:fixture.
+-- Deadlines are evaluated as of CLOCK_DATE (set it to the fixture's evaluation_date, ${fixture.evaluation_date}).
+BEGIN;
+${statements.join("\n\n")}
+COMMIT;
+`;
+}
+
 module.exports = {
   FIXTURE_PATH,
   R2_FIXTURE_DIR,
+  R3_FIXTURE_DIR,
+  loadLifecycleFixture,
+  buildR3FixtureSql,
+  fixtureTerm,
   EXTRA_ACCOUNTS,
   fixtureEmail,
   loadFixture,

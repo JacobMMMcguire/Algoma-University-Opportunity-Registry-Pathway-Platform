@@ -40,7 +40,7 @@ function renderList(submissions) {
       const card = el("li", undefined, "card");
       card.append(
         heading,
-        el("p", `${s.state.label} · ${s.supervisorCount} willing to supervise · Engagement: ${s.engagement.label}`),
+        el("p", `${s.state.label} · ${s.supervisorCount} willing to supervise · Engagement: ${s.engagement.label} · ${s.lifecycle.label}`),
         el("p", `${s.organisation} · ${s.capacity.label} · received ${formatDate(s.createdAt)}`),
         el("p", s.researchAreas.join(" · ") || "No areas chosen", "hint"),
       );

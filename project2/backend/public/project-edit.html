@@ -66,6 +66,15 @@
         </fieldset>
 
         <div class="field">
+          <label for="deadline">Deadline (optional)</label>
+          <input type="date" id="deadline" name="deadline" aria-describedby="deadline-hint">
+          <p id="deadline-hint" class="hint">
+            After this date the project leaves student listings, unless students have confirmed a match.
+            If Centre staff set a deadline, theirs applies instead.
+          </p>
+        </div>
+
+        <div class="field">
           <label for="prerequisites">Desired background or prerequisites (optional)</label>
           <textarea id="prerequisites" name="prerequisites" rows="3" maxlength="1000"
             aria-describedby="prerequisites-hint"></textarea>
