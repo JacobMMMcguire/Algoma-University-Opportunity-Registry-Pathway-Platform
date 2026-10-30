@@ -150,3 +150,9 @@ select {
 .history { font-size: 0.9rem; padding-left: 1.25rem; }
 .inline-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end; margin: 0.5rem 0; }
 .inline-form label { display: flex; flex-direction: column; font-size: 0.9rem; }
+.responses { margin: 0.25rem 0 0.5rem; padding-left: 1.25rem; }
+.match-list { list-style: none; padding: 0; margin: 0.5rem 0; }
+.match-list > li { border-top: 1px solid #eee; padding: 0.5rem 0; }
+.card h3 { font-size: 1.15rem; margin: 0 0 0.25rem; }
+.card h4 { font-size: 1rem; margin: 0.75rem 0 0.25rem; }
+.propose textarea { max-width: 100%; }

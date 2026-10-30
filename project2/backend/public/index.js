@@ -28,6 +28,23 @@ function showSignedIn(user) {
 
   $("public-profile").hidden = !user.isVerifiedFaculty;
   if (user.isVerifiedFaculty) renderPublicProfileChoice(user);
+  if (!user.isVerifiedFaculty && !user.isStaff) showWaitingMatches();
+}
+
+// R3-05: "Has faculty proposed something to me, and what do I do?" answered on arrival.
+async function showWaitingMatches() {
+  const note = $("matches-note");
+  const res = await api("/api/matches");
+  const waiting = res.ok ? res.data.matches.filter((m) => m.you.canConfirm).length : 0;
+  note.hidden = waiting === 0;
+  if (waiting === 0) return;
+  note.textContent = waiting === 1
+    ? "A faculty member has proposed a match to you. "
+    : `Faculty have proposed ${waiting} matches to you. `;
+  const link = document.createElement("a");
+  link.href = "matches.html";
+  link.textContent = "Confirm or decline";
+  note.append(link);
 }
 
 // R1-05 and R1-07: the choice is explicit (nothing preselected until made) and can be changed.

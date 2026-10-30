@@ -57,7 +57,7 @@ file is how the codebase works and the rules for changing it.
 | Student discovery, authorization, regression | R2-21 to R2-25 | Done (see "Industry opportunities" below) |
 | Assessed version tag | R2-26 | Done: tag `R2-submission` |
 | Term lifecycle, discovery filter | R3-08 to R3-13, R3-19 | Jacob, done (see "Term lifecycle" below) |
-| Student profiles and matches | R3-01 to R3-07, R3-22 | Next (R3_PLAN.md step 2) |
+| Student profiles and matches | R3-01 to R3-07, R3-22 | Jacob, done (see "Matches" below) |
 | Outcomes and showcase | R3-14 to R3-18, R3-20 | To do (R3_PLAN.md step 3) |
 
 ## Layout (`project2/backend/`)
@@ -75,7 +75,7 @@ src/fixture.js          Turns ../r1_fixture.json and ../r2_fixtures/ into idempo
 src/email.js            Brevo sender
 src/routes/auth.js      /api/auth: sign-in codes, sessions (R1-01 to R1-03)
 src/routes/admin.js     /api/admin: grant or revoke faculty (R1-04)
-src/routes/account.js   /api/account: public-profile choice (R1-05 to R1-07)
+src/routes/account.js   /api/account: public-profile choice (R1-05 to R1-07), student profiles (R3)
 src/routes/faculty.js   /api/faculty: profiles, faculty discovery (R1-08 to R1-10, R1-17, R1-18)
 src/routes/projects.js  /api/projects: projects, project discovery (R1-11 to R1-16, R1-19 to R1-21)
 src/routes/options.js   /api/options: the fixed lists for the forms
@@ -85,6 +85,7 @@ src/routes/opportunities.js    /api/opportunities: student discovery of industry
 src/routes/notifications.js    /api/notifications: subscriptions and notification list (R2-16 to R2-20)
 src/lifecycle.js        Term runs: the clock, derived lifecycle states and reasons (R3-08 to R3-13, R3-19)
 src/routes/lifecycle.js /api/lifecycle: managing terms, deadlines and lifecycle state (R3-08 to R3-13)
+src/routes/matches.js   /api/matches: proposing and answering matches, partner agreement (R3-01 to R3-07, R3-22)
 migrations/NNN_*.sql    Schema history, applied in order
 public/                 Frontend, served by Express from the same origin as the API
 test/                   node:test suites and helpers (in-memory Postgres)
@@ -230,7 +231,7 @@ engagement columns, `faculty_subscriptions`, `notifications`; drops the unused
 `partner_submissions.status`). Written, **not yet applied to the live database** (apply before
 merging R3): `005` (`opportunity_runs` with triggers that give every new project and partner
 submission its first run, `run_changes`, `matches`, `match_students`,
-`partner_agreements`). The public-profile choice lives on `users`
+`partner_agreements`) and `006` (`student_profiles`). The public-profile choice lives on `users`
 (`public_profile_choice`), not on `faculty_profiles`.
 
 ## Frontend conventions
@@ -475,3 +476,40 @@ Design decisions D1 to D4 and D10 in [R3_PLAN.md](R3_PLAN.md); this is how the c
   `test/lifecycle.test.js` checks `expected_lifecycle_results.json` as of the fixture's
   `evaluation_date`, and again as of 2026-11-11.
 - Page: `lifecycle.html` ("Terms and deadlines" in the menu).
+
+## Matches (R3-01 to R3-07, R3-22, done)
+
+Design decisions D5 to D7 and the step 2 notes in [R3_PLAN.md](R3_PLAN.md).
+
+- **Tables.** `matches` (on a run, `proposed_by`, `withdrawn_at`/`withdrawn_by`) and
+  `match_students` (one row per student email: `pending`, `confirmed` or `declined`). A match's
+  state is worked out by `matchState` in `src/routes/matches.js`: withdrawn, then declined, then
+  confirmed (everyone), partly confirmed, proposed. `fullyConfirmedMatchSql` in
+  `src/lifecycle.js` is the same rule in SQL, and makes a run Matched. Never store either.
+- **Who sees a match (R3-22).** Its students (by the session's email) and the verified faculty
+  who manage the opportunity (`MANAGES_RUN_SQL`): project owner or willing supervisor. Nobody
+  else, staff included; everyone else gets 404. No public or discovery response mentions
+  matches.
+- **Routes (`/api/matches`).**
+  - `GET /`: matches proposed to the signed-in user. `GET /manage` (verified faculty): the
+    opportunities they manage, each with its matches (every run), `canPropose` and the
+    partner agreement.
+  - `POST /` (verified faculty) with `{ kind, opportunityId, students: [emails] }`: proposes on
+    the current run of an open opportunity they manage.
+  - `GET /:id`, then `POST /:id/confirm` and `/:id/decline` (the named student, for themselves
+    only) and `/:id/withdraw` (managing faculty).
+  - `POST /partner-agreements/:id` (supervisors of industry opportunity `id`) with
+    `{ agreed, note? }`: adds a `partner_agreements` row for the current run. The latest row is
+    the current answer.
+  - Each match in a response has `you: { canConfirm, canDecline, canWithdraw, ... }`. Pages
+    offer only those actions, and the server checks them again.
+- **R3-06 wording.** `MATCH_NOTICE` goes with every match. Don't use "approved", "registered",
+  "enrolled", "eligible" or "credit" in match wording (tested).
+- **Student profiles.** `GET` / `PUT /api/account/student-profile` (signed in, not verified
+  faculty) with `{ displayName, allowPublicProfile }`. Matches show the display name, or else
+  the email.
+- **Fixture.** `buildR3FixtureSql` creates an account and profile for every student the R3
+  fixture names (`fixtureStudents`). `test/matches.test.js` checks the fixture's match ids
+  against `expected_lifecycle_results.json`.
+- Pages: `matches.html` ("Matches": students' proposals and faculty's opportunities) and
+  `student-profile.html`. The home page tells students when a proposal is waiting.

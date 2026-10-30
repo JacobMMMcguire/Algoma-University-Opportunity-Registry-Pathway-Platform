@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your student profile — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <h1>Your student profile</h1>
+    <p id="denied" hidden></p>
+
+    <form id="profile-form" hidden novalidate>
+      <div class="field">
+        <label for="displayName">Your name</label>
+        <input id="displayName" name="displayName" required maxlength="100" autocomplete="name" aria-describedby="displayName-hint">
+        <p id="displayName-hint" class="hint">Shown to faculty and the other students on matches you're named on. Without it, they see your email address.</p>
+      </div>
+
+      <div class="note">
+        <p><strong>If you allow public display:</strong> your name may appear, to anyone, with
+          the results of projects you took part in, once a faculty member on the project has
+          confirmed them.</p>
+        <p><strong>If you don't:</strong> your name is shown only to people signed in with an
+          Algoma account.</p>
+        <p>Either way, the matches you're proposed for are never public. You can change this at
+          any time.</p>
+      </div>
+
+      <fieldset id="allowPublicProfile">
+        <legend>Allow public display of your name?</legend>
+        <label class="choice">
+          <input type="radio" name="allow" value="true">
+          <span>Yes, anyone can see it with my confirmed project results</span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="allow" value="false">
+          <span>No, only signed-in Algoma users</span>
+        </label>
+      </fieldset>
+
+      <button type="submit" class="primary">Save profile</button>
+    </form>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="student-profile.js"></script>
+</body>
+</html>

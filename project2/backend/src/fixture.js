@@ -220,6 +220,13 @@ function fixtureTerm(code, where) {
 
 const RUN_STATES = ["open", "withdrawn", "completed", "archived"];
 
+// The students the R3 fixture names on matches and outcomes (S01, S02, ...), sorted.
+function fixtureStudents(fixture) {
+  const ids = new Set([...fixture.matches, ...(fixture.outcomes || [])].flatMap((x) => x.students));
+  for (const id of ids) if (!/^S\d{2}$/.test(id)) throw new Error(`student "${id}" is not like S01.`);
+  return [...ids].sort();
+}
+
 // SQL selecting the record an R3 opportunity is loaded as (R3_PLAN.md D9): an industry one is
 // the R2 partner submission with the same title, a faculty one a project with its fixture id.
 function r3RecordSql(o) {
@@ -235,6 +242,20 @@ function buildR3FixtureSql(fixture = loadLifecycleFixture()) {
   const statements = [];
   const opportunities = new Map(fixture.opportunities.map((o) => [o.fixture_id, o]));
   const r2Titles = new Set(loadIntakeFixture().map((s) => s.title));
+
+  // D9: every student the fixture names is a fixture account with a student profile. The
+  // fixture gives no names or public-display choices, so the profile has a neutral name and no
+  // choice yet, which counts as not public.
+  for (const student of fixtureStudents(fixture)) {
+    const email = literal(fixtureEmail(student));
+    statements.push(`INSERT INTO users (email, fixture_id, is_staff, is_verified_faculty, public_profile_choice, public_profile_choice_at)
+VALUES (${email}, ${literal(student)}, false, false, NULL, NULL)
+ON CONFLICT (email) DO UPDATE SET fixture_id = EXCLUDED.fixture_id, is_staff = false, is_verified_faculty = false,
+  public_profile_choice = NULL, public_profile_choice_at = NULL;`);
+    statements.push(`INSERT INTO student_profiles (user_id, display_name, public_profile_choice, updated_at)
+SELECT id, ${literal(`Student ${student}`)}, NULL, now() FROM users WHERE email = ${email}
+ON CONFLICT (user_id) DO UPDATE SET display_name = EXCLUDED.display_name, public_profile_choice = NULL, updated_at = now();`);
+  }
 
   for (const o of fixture.opportunities) {
     const where = `opportunity ${o.fixture_id}`;
@@ -301,6 +322,7 @@ module.exports = {
   R3_FIXTURE_DIR,
   loadLifecycleFixture,
   buildR3FixtureSql,
+  fixtureStudents,
   fixtureTerm,
   EXTRA_ACCOUNTS,
   fixtureEmail,

@@ -296,4 +296,4 @@ function createLifecycleRouter({ db, config, auth }) {
   return router;
 }
 
-module.exports = { createLifecycleRouter, ACTIONS_BY_STATE };
+module.exports = { createLifecycleRouter, ACTIONS_BY_STATE, managedSql };

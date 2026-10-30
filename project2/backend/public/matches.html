@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Matches — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <h1>Matches</h1>
+    <p id="denied" hidden></p>
+
+    <section id="student-section" hidden aria-labelledby="student-heading">
+      <h2 id="student-heading">Proposed to you</h2>
+      <div class="note">
+        <p>A faculty member can propose that you work with them on one of their opportunities. Each
+          student named answers for themselves: confirm if you intend to take part, or decline if
+          not. The match is confirmed only when every student named has confirmed.</p>
+        <p>Matches are private: only you, the other students named, and the faculty on the
+          opportunity can see them.</p>
+        <p id="student-notice"></p>
+      </div>
+      <p id="profile-hint" class="hint" hidden>Faculty see you by your email address. <a href="student-profile.html">Add the name you'd like them to see</a>.</p>
+      <ul id="student-matches" class="cards"></ul>
+    </section>
+
+    <section id="faculty-section" hidden aria-labelledby="faculty-heading">
+      <h2 id="faculty-heading">Your opportunities</h2>
+      <div class="note">
+        <p>Propose a match by naming the students' Algoma email addresses. Students who haven't
+          signed in yet see it when they do. Each student confirms or declines for themselves;
+          you can withdraw a proposal until everyone has confirmed.</p>
+        <p>Once every student named has confirmed, the opportunity is Matched: it leaves student
+          discovery and doesn't expire.</p>
+        <p id="faculty-notice"></p>
+      </div>
+      <ul id="opportunities" class="cards"></ul>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="matches.js"></script>
+</body>
+</html>

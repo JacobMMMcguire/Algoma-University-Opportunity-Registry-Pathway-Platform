@@ -105,7 +105,7 @@ fixture's `evaluation_date`, 2026-11-06.
 
 1. **Done 2026-10-29.** Clock, runs and lifecycle states, the discovery filter, and the reasons shown on opportunity
    pages. Migration 005. (R3-08 to R3-13, R3-19)
-2. Student profiles and matches. (R3-01 to R3-07, R3-22)
+2. **Done 2026-10-30.** Student profiles and matches. Migration 006. (R3-01 to R3-07, R3-22)
 3. Outcomes, the showcase, and outcomes on faculty and student profiles. (R3-14 to R3-18,
    R3-20) A good self-contained piece to hand to a teammate once steps 1 and 2 are merged.
 4. Fixture seed and expected-results tests, then the R1 and R2 regression pass. (R3-23)
@@ -132,3 +132,24 @@ requirements.
   end of its day: an opportunity with deadline 20 October is still open on 20 October.
 - **Industry runs** start with no term or deadline, so they never expire until a supervisor
   sets a deadline.
+
+## Step 2 design notes
+
+- **Who proposes and withdraws.** A verified faculty member who manages the opportunity as
+  faculty: the project's owner, or any willing supervisor of an industry opportunity. Staff
+  manage the lifecycle but don't take part in matches and can't see them (D6).
+- **Only open opportunities take proposals.** Not drafts, and not expired, matched, withdrawn,
+  completed or archived ones. A student can be on only one live match per run.
+- **Students** are named by `@algomau.ca` email, up to 10 per match, and can't be the proposer,
+  a verified faculty account or a staff account.
+- **Confirming needs the run to be current and open (or matched).** A late confirmation would
+  undo an expiry that has already happened, so it is refused with the reason. Reopening the
+  opportunity with a new deadline allows it again. Declining is never blocked.
+- **Declining after confirming** is allowed until everyone has confirmed (R3-04 says "before
+  confirmation"). After that a match can't be declined or withdrawn; the opportunity is
+  completed instead.
+- **Partner agreement** is recorded on the current run through
+  `POST /api/matches/partner-agreements/:id`, by supervisors only. The students on a match on
+  that run see it.
+- **Student profiles** (migration 006) hold a display name and a public-display choice (NULL
+  means not chosen, which counts as not public). Step 3 uses the choice for the showcase.

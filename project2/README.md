@@ -189,3 +189,29 @@ For `release_submission.md`:
 - Student discovery lists only open opportunities. Opening a removed one by its link says why,
   for example "Expired: the deadline, 20 October 2026, passed without a confirmed match."
 - R2's engagement option "Partner confirmed" is now labelled "Partner agreed in principle".
+
+## Release 3 notes input: matches (R3-01 to R3-07, R3-22)
+
+- A verified faculty member proposes a match on an open opportunity they manage, naming one or
+  more students by their Algoma email at `/matches.html` (R3-01). Students who haven't signed in
+  yet see it when they first do; the home page tells a student when a proposal is waiting.
+- Each student confirms or declines for themselves. A match is **confirmed** only when every
+  student named has confirmed; until then it is **proposed** or **partly confirmed** (R3-02).
+  Nobody can answer for anyone else, and students can only answer matches proposed to them
+  (R3-03).
+- Students can decline, even after confirming, until everyone has confirmed. Faculty can
+  withdraw a proposal until then. Declined and withdrawn matches are kept and shown as such
+  (R3-04). Every participant sees the state and each student's answer (R3-05).
+- A match on an opportunity whose deadline has passed can't be confirmed afterwards: the
+  expiry stands, and the faculty member can reopen the opportunity with a new deadline. This is
+  why M-402 (S11 never confirmed) leaves O-302 expired.
+- Every match shows: "It is not course registration, and it doesn't mean eligibility, academic
+  credit or any official approval has been checked or granted." (R3-06)
+- For industry opportunities, a supervising faculty member can record "Partner agreed in
+  principle, recorded by (name) on (date)", or retract it. Records are kept per term and never
+  overwritten, and the page says it is the faculty member's own statement (R3-07).
+- Matches are visible only to their students and the faculty who manage the opportunity: not
+  publicly, not to other students and not to staff (R3-22).
+- Students can add a display name and a public-display choice at `/student-profile.html`.
+  Fixture students S01, S02, S05, S08, S11 and S17 are accounts `fixture-s01@algomau.ca` and so
+  on, named "Student S01" and with no public-display choice (so not public).

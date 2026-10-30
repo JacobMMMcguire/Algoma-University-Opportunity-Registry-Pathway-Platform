@@ -79,7 +79,7 @@ function card(item) {
   ].filter(Boolean);
   return `<li class="card" data-key="${escapeHtml(keyOf(item))}">
     <p class="kind">${escapeHtml(kind)}${item.managedBy ? ` · ${escapeHtml(item.managedBy)}` : ""}${item.draft ? " · Draft" : ""}</p>
-    <h2><a href="${studentLink(item)}">${escapeHtml(item.title)}</a></h2>
+    <h2><a href="${studentLink(item)}"></a></h2>
     <p><strong>${escapeHtml(l.label)}</strong> · ${escapeHtml(dates.join(" · "))}</p>
     <p class="hint">${escapeHtml(l.reason)}</p>
     <details${openKey === keyOf(item) ? " open" : ""}>
@@ -117,6 +117,8 @@ function render() {
   list.innerHTML = items.map(card).join("");
   for (const item of items) {
     const el = list.querySelector(`[data-key="${CSS.escape(keyOf(item))}"]`);
+    // Industry titles are partner text: set as text, never as HTML (R2-03).
+    el.querySelector("h2 a").textContent = item.title;
     const termOptions = { seasons: options.termSeasons, years: options.termYears };
     const schedule = el.querySelector('[data-form="schedule"]');
     if (schedule) renderTermPicker(schedule.elements.season, schedule.elements.year, termOptions, item.lifecycle.term);

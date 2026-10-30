@@ -38,6 +38,8 @@ const NAV_LINKS = [
   { href: "submissions.html", label: "Industry opportunities (faculty)", show: (s) => s.user?.isVerifiedFaculty || s.user?.isStaff },
   { href: "notifications.html", label: "Notifications", show: (s) => s.user?.isVerifiedFaculty },
   { href: "lifecycle.html", label: "Terms and deadlines", show: (s) => s.user?.isVerifiedFaculty || s.user?.isStaff },
+  { href: "matches.html", label: "Matches", show: (s) => s.user && (s.user.isVerifiedFaculty || !s.user.isStaff) },
+  { href: "student-profile.html", label: "Your student profile", show: (s) => s.user && !s.user.isVerifiedFaculty && !s.user.isStaff },
   { href: "admin.html", label: "Staff: faculty verification", show: (s) => s.user?.isStaff },
   { href: "operator.html", label: "Operator console (test mode)", show: (s) => s.testMode },
 ];
