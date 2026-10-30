@@ -60,6 +60,7 @@ file is how the codebase works and the rules for changing it.
 | Student profiles and matches | R3-01 to R3-07, R3-22 | Jacob, done (see "Matches" below) |
 | Outcomes and showcase | R3-14 to R3-18, R3-20 | Jacob, done (see "Outcomes" below) |
 | Fixture seed, R1 and R2 regression | R3-23 | Jacob, done (see "Regression" below) |
+| Release files, assessed version tag | R3-24 | Done: `release_submission.md`, `evaluation_adapter.json`, tag `R3-submission` |
 
 ## Layout (`project2/backend/`)
 

@@ -1,18 +1,15 @@
 {
   "project": "Project 2 - Opportunity Registry and Pathway Platform",
-  "release": "R2",
+  "release": "R3",
   "base_url": "https://algoma-opportunity-registry-r1-backend.onrender.com",
-
   "faculty_directory_endpoint": "/api/faculty",
   "faculty_detail_endpoint": "/api/faculty/{id}",
   "faculty_page_route": "/faculty.html?id={id}",
   "faculty_directory_results_path": "faculty",
-
   "project_directory_endpoint": "/api/projects",
   "project_detail_endpoint": "/api/projects/{id}",
   "project_page_route": "/projects.html?id={id}",
   "project_directory_results_path": "projects",
-
   "query_parameters": {
     "projects": {
       "text": "q",
@@ -42,14 +39,12 @@
     "q": "Free text, case-insensitive substring; % and _ are matched literally"
   },
   "filter_semantics": "All given parameters must match (AND). An area matches if it is any one of the record's areas. Unknown values return HTTP 400 with an error message. Each directory response also includes a 'filters' object listing the available choices with counts, computed from what the viewer may see.",
-
   "id_field": "id",
   "research_areas_field": "researchAreas",
   "project_faculty_field": "faculty",
   "project_faculty_id_field": "faculty.id",
   "faculty_inquiry_preference_field": "inquiryPreference.label",
   "contact_field": "contact.email",
-
   "partner_intake": {
     "page_route": "/partner.html",
     "submit_endpoint": "POST /api/partner-submissions",
@@ -67,7 +62,6 @@
     "rejection": "HTTP 400 { error, errors: [{ field, message }] }; nothing is stored (R2-04)",
     "note": "Any other fields in the body (state, ids, supervisors) are ignored (R2-03)."
   },
-
   "faculty_opportunity_views": {
     "who": "verified faculty and staff (others: 401 signed out, 403 signed in)",
     "page_route": "/submissions.html",
@@ -84,7 +78,6 @@
       "partner_contact": "contact.name, contact.email (R2-05: faculty and staff views only)"
     }
   },
-
   "willingness_actions": {
     "who": "verified faculty only, always acting as the signed-in user (R2-24)",
     "record": "PUT /api/partner-submissions/{id}/willingness",
@@ -92,14 +85,12 @@
     "preconditions": "the faculty member has made the R1 public-display choice and has a faculty profile; otherwise HTTP 409 with code public_profile_choice_required or faculty_profile_required",
     "effect": "First willing supervisor makes the opportunity student-visible (R2-07); any number may record willingness (R2-09); withdrawing removes only the caller, and it leaves student discovery only when none remain (R2-10)."
   },
-
   "engagement_action": {
     "who": "verified faculty only (R2-24)",
     "endpoint": "PUT /api/partner-submissions/{id}/engagement",
     "request_body": "{ \"state\": \"not_contacted\" | \"discussion_underway\" | \"partner_confirmed\" | \"no_longer_pursuing\" }",
     "effect": "Records the state and the caller as the one who recorded it (R2-12, R2-13). Locks nothing (R2-14). Never in student or public responses (R2-15)."
   },
-
   "subscription_settings": {
     "who": "verified faculty, for themselves only",
     "page_route": "/profile.html (section 'Notifications about industry opportunities')",
@@ -108,7 +99,6 @@
     "request_body": "{ \"mode\": \"none\" | \"all\" | \"areas\", \"researchAreas\": [area names, required when mode is areas] }",
     "note": "Private (R2-17). Changes apply to submissions created afterwards (R2-20)."
   },
-
   "notifications": {
     "delivery": "in-product list; no email (R2-18)",
     "page_route": "/notifications.html",
@@ -116,7 +106,6 @@
     "results_path": "notifications",
     "how_to_observe": "Submit at /partner.html with area Human-Computer Interaction, then sign in as fixture-f-priya@algomau.ca and open Notifications. fixture-f-mei@algomau.ca subscribes to nothing and is never notified, but sees every opportunity at /submissions.html (R2-19)."
   },
-
   "student_discovery": {
     "page_route": "/projects.html (faculty and industry projects in one list; page-only filter 'type' = faculty | industry)",
     "industry_directory_endpoint": "GET /api/opportunities",
@@ -129,24 +118,30 @@
     "contact_field": "supervisors[].contact.email on the detail endpoint: a supervising faculty member, never the partner (R2-23)",
     "never_included": "partner contact name and email, capacity, engagement state or who is engaging (R2-05, R2-15)"
   },
-
   "public_surfaces": [
     "GET /api/faculty and /faculty.html: verified faculty who allowed public display",
     "GET /api/faculty/{id} and /faculty.html?id={id}: the same faculty only",
     "GET /api/projects and /projects.html: published projects of those faculty",
     "GET /api/projects/{id} and /projects.html?id={id}: the same projects only",
     "GET /api/opportunities and /opportunity.html?id={id}: industry opportunities with at least one supervisor who allowed public display; only those supervisors are named",
-    "/partner.html and POST /api/partner-submissions: the accountless intake form"
+    "/partner.html and POST /api/partner-submissions: the accountless intake form",
+    "GET /api/outcomes/showcase and /showcase.html: showcased outcomes only",
+    "GET /api/outcomes/{id}: a showcased outcome only",
+    "GET /api/students/{id} and /student.html?id={id}: students who chose public display"
   ],
   "authenticated_only_surfaces": [
     "The faculty, project and opportunity surfaces above, signed in, additionally include verified faculty who declined public display, their published projects, and opportunities they supervise",
     "/submissions.html and /api/partner-submissions/*: verified faculty and staff only",
     "/notifications.html, /api/notifications and /api/notifications/subscriptions: verified faculty only, own data only",
     "/profile.html, /my-projects.html, /project-edit.html: verified faculty only",
-    "/admin.html and /api/admin/*: staff only"
+    "/admin.html and /api/admin/*: staff only",
+    "/matches.html and /api/matches/*: the match's own students and managing faculty only",
+    "/outcomes.html, /api/outcomes/mine, and unconfirmed or private outcomes: their participants only",
+    "/lifecycle.html and /api/lifecycle/*: managing faculty and staff",
+    "/student-profile.html and /api/account/student-profile: the signed-in student's own profile",
+    "Signed in, /api/students/{id} also shows students with a profile who haven't chosen public display"
   ],
-  "hidden_response": "Records the viewer may not see (drafts, closed or withdrawn projects, opportunities awaiting a supervisor, signed-in-only records when logged out, unverified or revoked faculty) return HTTP 404, identical to a missing record.",
-
+  "hidden_response": "Records the viewer may not see (drafts, closed or withdrawn projects, opportunities awaiting a supervisor, signed-in-only records when logged out, unverified or revoked faculty, opportunities no longer open, other people's matches, unconfirmed or non-public outcomes) return HTTP 404, identical to a missing record. For an opportunity removed by its lifecycle, the 404 body adds removed.lifecycle.reason.",
   "authentication": {
     "method": "Passwordless 6-digit code, restricted to @algomau.ca; session is an httpOnly cookie",
     "request_code": "POST /api/auth/request-challenge {\"email\": \"...\"}",
@@ -161,7 +156,121 @@
     "verified_faculty_second": "fixture-f-priya@algomau.ca",
     "verified_faculty_subscribed_to_all": "fixture-f-jordan@algomau.ca",
     "verified_faculty_signed_in_only_no_subscriptions": "fixture-f-mei@algomau.ca",
-    "unverified_faculty": "fixture-u-pending@algomau.ca"
+    "unverified_faculty": "fixture-u-pending@algomau.ca",
+    "verified_faculty_owner_of_O-303": "fixture-f-priya@algomau.ca",
+    "students_for_the_two_student_match": [
+      "fixture-s08@algomau.ca",
+      "fixture-s11@algomau.ca"
+    ],
+    "student_on_public_outcome_R-501": "fixture-s02@algomau.ca",
+    "fixture_students": "fixture-s01@, fixture-s02@, fixture-s05@, fixture-s08@, fixture-s11@ and fixture-s17@algomau.ca"
   },
-  "fixture_loading": "Migrations 003 and 004, then npm run seed:fixture (from project2/backend), or npm run seed:fixture:sql pasted into the Supabase SQL Editor. Loads the R1 fixture and the R2 fixtures; S-204 is rejected by the same validation as the public form."
+  "fixture_loading": "Migrations 003 to 007, then npm run seed:fixture (from project2/backend), or npm run seed:fixture:sql pasted into the Supabase SQL Editor. One seed loads the R1, R2 and R3 fixtures; rerunning it restores the fixture's state, including the R3 matches and outcomes. S-204 is rejected by the same validation as the public form.",
+  "clock": {
+    "setting": "CLOCK_DATE=2026-11-06 on Render (the R3 fixture's evaluation_date); unset means the real date in Toronto",
+    "endpoint": "GET /api/auth/me -> clock: { today: 'YYYY-MM-DD', simulated: true, label: '6 November 2026' }",
+    "rule": "A deadline passes at the end of its day. The effective deadline is the Centre deadline if set, otherwise the faculty deadline (R3-08)."
+  },
+  "lifecycle": {
+    "who": "the project's owner, any willing supervisor of an industry opportunity, or staff (R3-21); others get 404",
+    "page_route": "/lifecycle.html ('Terms and deadlines' in the menu)",
+    "list_endpoint": "GET /api/lifecycle",
+    "list_results_path": "items",
+    "detail_endpoint": "GET /api/lifecycle/{kind}/{id}  (kind: project | industry; id as in /api/projects/{id} or /api/opportunities/{id})",
+    "detail_results_path": "item",
+    "state_field": "item.lifecycle.state: open | matched | expired | withdrawn | completed | archived; lifecycle.label; lifecycle.reason (a sentence)",
+    "other_fields": "lifecycle.term, deadline, centreDeadline, effectiveDeadline, runNumber",
+    "stored_vs_derived": "open, withdrawn, completed and archived are stored on the run. matched (open with a fully confirmed match) and expired (open, no fully confirmed match, effective deadline before the clock date) are worked out on every request (R3-09, R3-10).",
+    "actions": {
+      "schedule": "PUT /api/lifecycle/{kind}/{id}/schedule { targetTerm, deadline }",
+      "centre_deadline": "PUT /api/lifecycle/{kind}/{id}/centre-deadline { centreDeadline | null } (staff only)",
+      "state": "POST /api/lifecycle/{kind}/{id}/state { action: withdraw | complete | archive | reopen, deadline? } (reopen needs an effective deadline that hasn't passed; R3-13)",
+      "renew": "POST /api/lifecycle/{kind}/{id}/renew { targetTerm, deadline } (expired or completed only; adds a run to the same record, R3-12)"
+    },
+    "allowed_actions_by_state": {
+      "open": [
+        "schedule",
+        "withdraw",
+        "archive"
+      ],
+      "expired": [
+        "schedule",
+        "reopen",
+        "renew",
+        "withdraw",
+        "archive"
+      ],
+      "matched": [
+        "schedule",
+        "complete",
+        "archive"
+      ],
+      "withdrawn": [
+        "reopen",
+        "archive"
+      ],
+      "completed": [
+        "renew",
+        "reopen",
+        "archive"
+      ],
+      "archived": [
+        "reopen"
+      ]
+    },
+    "invalid_transition": "HTTP 409 { error, code: 'invalid_transition' }",
+    "discovery": "/api/projects and /api/opportunities list only open runs (R3-19); each record carries lifecycle. A removed record's detail URL returns 404 with removed: { id, title, lifecycle } when the viewer could otherwise see it."
+  },
+  "matches": {
+    "page_route": "/matches.html ('Matches' in the menu)",
+    "notice_field": "notice: a match is an intention to work together, not registration, credit or approval (R3-06)",
+    "student_list": "GET /api/matches (matches proposed to the signed-in student) -> matches",
+    "faculty_list": "GET /api/matches/manage (verified faculty: the opportunities they manage, each with matches and canPropose)",
+    "detail": "GET /api/matches/{id} -> match (its students and managing faculty only; everyone else, staff included, gets 404; R3-22)",
+    "propose": "POST /api/matches { kind: project | industry, opportunityId, students: [1 to 10 @algomau.ca emails] } (verified faculty who manage the opportunity; open opportunities only; the proposer is the session user; R3-01)",
+    "confirm": "POST /api/matches/{id}/confirm (the invited student, for themselves only; R3-02, R3-03)",
+    "decline": "POST /api/matches/{id}/decline (an invited student, until everyone has confirmed; R3-04)",
+    "withdraw": "POST /api/matches/{id}/withdraw (managing faculty, before full confirmation; R3-04)",
+    "state_field": "match.state: proposed | partly_confirmed | confirmed | declined | withdrawn; match.label; match.students[].response",
+    "rules": "A student can be on only one live match per run (409 already_matched). A match on a run that is no longer open or matched can't be confirmed (409 not_confirmable).",
+    "partner_agreement": "POST /api/matches/partner-agreements/{submissionId} { agreed: boolean, note? } (supervising faculty; append-only; shown as 'Partner agreed in principle, recorded by <faculty> on <date>'; R3-07)",
+    "student_profile": "GET and PUT /api/account/student-profile { displayName, allowPublicProfile } at /student-profile.html (D5)"
+  },
+  "outcomes": {
+    "page_route": "/outcomes.html ('Your outcomes' in the menu)",
+    "mine": "GET /api/outcomes/mine -> outcomes (the user's own, in any state) and recordable (confirmed matches they can record for)",
+    "record": "POST /api/outcomes { matchId, students: [emails], faculty: [ids], otherFacultyEmails?, summary, completedOn, links: { demo, repo, poster, video, image } } (a student on a fully confirmed match, or its managing faculty; always starts unconfirmed; R3-14)",
+    "detail": "GET /api/outcomes/{id} (participants: full view with publicStatus; others: the public view if showcased, otherwise 404)",
+    "edit": "PUT /api/outcomes/{id} { summary, completedOn, links } (participants; clears the confirmation)",
+    "confirm": "POST /api/outcomes/{id}/confirm and /unconfirm (a verified faculty participant only; R3-15)",
+    "show_on_profile": "PUT /api/outcomes/{id}/show-on-profile { show } (student participants, their own profile only; R3-18)",
+    "public_rule": "Showcased only when a still-verified faculty participant confirmed it, every faculty participant is verified and allows public display, and a faculty project's owner allows public display (R3-15, R3-16)."
+  },
+  "showcase": {
+    "page_route": "/showcase.html ('Completed work', public)",
+    "endpoint": "GET /api/outcomes/showcase[?facultyId={id} | ?studentId={id}]",
+    "results_path": "outcomes",
+    "fields": "id, opportunity { kind, title, organisation, term }, summary, completedOn, links [{ kind, label, url }], faculty [{ id, displayName }], students [{ id, displayName }], otherStudents (count of students not named)",
+    "never_included": "partner contact details, any email address, match participation, non-public faculty (R3-16, R3-22)",
+    "profiles": "faculty.html?id={id} lists that faculty member's showcased outcomes (R3-17). student.html?id={id} and GET /api/students/{id}: a student's profile and outcomes, for visitors only if the student chose public display (R3-17, R3-18, R3-20)."
+  },
+  "r3_fixture": {
+    "lifecycle_state_examples": {
+      "open": "O-303",
+      "matched": "O-301",
+      "expired": [
+        "O-302",
+        "O-304"
+      ],
+      "withdrawn": "O-305",
+      "completed": "O-306",
+      "archived": "O-307"
+    },
+    "outcomes": {
+      "public": "R-501",
+      "awaiting_confirmation": "R-502",
+      "confirmed_but_private": "R-503"
+    },
+    "record_lookup": "Fixture ids are not API ids. Faculty opportunities are /api/projects records with the fixture title; industry ones are /api/opportunities records with the fixture title (the R2 submission of that title). Students are fixture-<id>@algomau.ca, e.g. fixture-s01@algomau.ca."
+  }
 }

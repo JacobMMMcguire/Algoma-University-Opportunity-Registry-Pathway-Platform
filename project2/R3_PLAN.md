@@ -30,8 +30,8 @@ fixture's `evaluation_date`, 2026-11-06.
 **D3. An adjustable clock.**
 - A `CLOCK_DATE` setting (YYYY-MM-DD) means "today" for lifecycle decisions. Unset means the
   real date.
-- Render gets `CLOCK_DATE=2026-11-06` for evaluation. The date may still change: the team has
-  asked the instructor whether it should be 2026-11-11 (the R3 due date) instead. Changing it
+- Render has `CLOCK_DATE=2026-11-06` for evaluation, confirmed by the instructor on
+  2026-10-30 (the team had asked whether it should be 2026-11-11, the R3 due date). Changing it
   is a Render setting only, with no code change. Tests read the fixture's `evaluation_date`
   rather than hard-coding a date. No fixture deadline falls between 6 and 11 November, so
   either date gives the same expected results.
@@ -110,7 +110,7 @@ fixture's `evaluation_date`, 2026-11-06.
    Migration 007. (R3-14 to R3-18, R3-20)
 4. **Done 2026-10-30.** Fixture seed and expected-results tests, then the R1 and R2 regression
    pass. (R3-23)
-5. Release notes, adapter, the `R3-submission` tag. (R3-24)
+5. **Done 2026-10-30.** Release notes, adapter, the `R3-submission` tag. (R3-24)
 
 Every step enforces authorization on the server (R3-21) and has tests named after its
 requirements.
