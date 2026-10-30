@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your outcomes — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <h1>Your outcomes</h1>
+    <p id="denied" hidden></p>
+
+    <section id="panel" hidden>
+      <div class="note">
+        <p><strong>Who decides whether a result appears publicly?</strong></p>
+        <ul>
+          <li>A faculty member who worked on it confirms it. Until then, only the people on it can see it.</li>
+          <li>Once confirmed, it appears in <a href="showcase.html">Completed work</a> and on profiles only if every faculty member on it allows public display of their profile.</li>
+          <li>Students are named to visitors only if their own <a href="student-profile.html">student profile</a> allows it.</li>
+          <li>Each student decides whether it appears on their own profile. That doesn't remove it from the faculty profile or Completed work.</li>
+          <li>Editing a confirmed result takes it out of public view until a faculty member confirms it again.</li>
+        </ul>
+      </div>
+
+      <section id="record-section" hidden aria-labelledby="record-heading">
+        <h2 id="record-heading">Record an outcome</h2>
+        <p class="hint">For a match everyone confirmed. You're always included as a participant.</p>
+        <form id="record-form" novalidate>
+          <div class="field">
+            <label for="match">Match</label>
+            <select id="match" name="match"></select>
+          </div>
+          <fieldset id="students">
+            <legend>Students who took part</legend>
+            <div id="student-options"></div>
+          </fieldset>
+          <fieldset id="faculty">
+            <legend>Faculty who took part</legend>
+            <div id="faculty-options"></div>
+            <label for="otherFaculty">Other faculty (optional)</label>
+            <textarea id="otherFaculty" name="otherFaculty" rows="2" aria-describedby="otherFaculty-hint"></textarea>
+            <p id="otherFaculty-hint" class="hint">Algoma email addresses of other verified faculty, one per line.</p>
+          </fieldset>
+          <div class="field">
+            <label for="summary">Summary</label>
+            <textarea id="summary" name="summary" rows="4" maxlength="1000" required aria-describedby="summary-hint"></textarea>
+            <p id="summary-hint" class="hint">What was produced, in a few sentences. Up to 1000 characters.</p>
+          </div>
+          <div class="field">
+            <label for="completedOn">Completion date</label>
+            <input id="completedOn" name="completedOn" type="date" required>
+          </div>
+          <fieldset id="record-links">
+            <legend>Links (optional)</legend>
+            <p class="hint">Web addresses starting with https://</p>
+          </fieldset>
+          <button type="submit" class="primary">Record outcome</button>
+        </form>
+      </section>
+
+      <section aria-labelledby="list-heading">
+        <h2 id="list-heading">Outcomes you're on</h2>
+        <ul id="outcomes" class="cards"></ul>
+      </section>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="outcome-card.js"></script>
+  <script src="outcomes.js"></script>
+</body>
+</html>

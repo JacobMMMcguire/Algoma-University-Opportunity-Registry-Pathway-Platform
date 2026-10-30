@@ -308,6 +308,28 @@ FROM matches WHERE fixture_id = ${literal(m.fixture_id)};`);
     }
   }
 
+  // R3-14, R3-15 (D8): each outcome belongs to the fixture match on its opportunity that has
+  // its students. Its faculty member recorded it, and confirmed it if the fixture says so.
+  const { cleanLinks } = require("./routes/outcomes");
+  for (const r of fixture.outcomes || []) {
+    const where = `outcome ${r.fixture_id}`;
+    const match = fixture.matches.find((m) => m.opportunity === r.opportunity && r.students.every((s) => m.students.includes(s)));
+    if (!match) throw new Error(`${where}: no fixture match on ${r.opportunity} has students ${r.students.join(", ")}.`);
+    const { links, error } = cleanLinks(r.links);
+    if (error) throw new Error(`${where}: ${error}`);
+    const confirmedBy = r.faculty_confirmed ? "f.id" : "NULL";
+    statements.push(`DELETE FROM outcomes WHERE fixture_id = ${literal(r.fixture_id)};`);
+    statements.push(`INSERT INTO outcomes (fixture_id, match_id, summary, completed_on, links, created_by, confirmed_by, confirmed_at)
+SELECT ${literal(r.fixture_id)}, m.id, ${literal(r.summary)}, ${literal(r.completed)}, ${literal(JSON.stringify(links))}::jsonb,
+  f.id, ${confirmedBy}, ${r.faculty_confirmed ? "now()" : "NULL"}
+FROM matches m, users f WHERE m.fixture_id = ${literal(match.fixture_id)} AND f.fixture_id = ${literal(r.faculty)};`);
+    const people = [[r.faculty, "faculty"], ...r.students.map((s) => [s, "student"])];
+    for (const [id, role] of people) {
+      statements.push(`INSERT INTO outcome_participants (outcome_id, email, role)
+SELECT id, ${literal(fixtureEmail(id))}, ${literal(role)} FROM outcomes WHERE fixture_id = ${literal(r.fixture_id)};`);
+    }
+  }
+
   return `-- R3 lifecycle fixture ${fixture.fixture_version}: generated from r3_fixtures/lifecycle_fixture.json by npm run seed:fixture.
 -- Deadlines are evaluated as of CLOCK_DATE (set it to the fixture's evaluation_date, ${fixture.evaluation_date}).
 BEGIN;

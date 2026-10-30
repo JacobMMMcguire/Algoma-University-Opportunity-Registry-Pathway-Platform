@@ -4,6 +4,29 @@ function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 }
 
+// Builds an element without HTML strings, so user and partner text is always text. `props.text`
+// sets textContent; children may be strings or elements, and null/false children are skipped.
+function h(tag, props = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(props)) {
+    if (key === "class") node.className = value;
+    else if (key === "text") node.textContent = value;
+    else if (key.startsWith("data-") || key.startsWith("aria-")) node.setAttribute(key, value);
+    else node[key] = value;
+  }
+  node.append(...children.filter((c) => c !== null && c !== undefined && c !== false));
+  return node;
+}
+
+// Moves focus to `selector` after a change, so keyboard and screen-reader users land on what
+// changed. Headings and cards get tabindex="-1" so they can take focus.
+function focusElement(selector) {
+  const target = selector && document.querySelector(selector);
+  if (!target) return;
+  if (!target.matches("a[href], button, input, select, textarea")) target.tabIndex = -1;
+  target.focus();
+}
+
 // Calls the API on this same origin. Never throws: network failures come back as status 0.
 async function api(path, { method = "GET", body, headers = {} } = {}) {
   try {
@@ -39,6 +62,8 @@ const NAV_LINKS = [
   { href: "notifications.html", label: "Notifications", show: (s) => s.user?.isVerifiedFaculty },
   { href: "lifecycle.html", label: "Terms and deadlines", show: (s) => s.user?.isVerifiedFaculty || s.user?.isStaff },
   { href: "matches.html", label: "Matches", show: (s) => s.user && (s.user.isVerifiedFaculty || !s.user.isStaff) },
+  { href: "outcomes.html", label: "Your outcomes", show: (s) => s.user && (s.user.isVerifiedFaculty || !s.user.isStaff) },
+  { href: "showcase.html", label: "Completed work" },
   { href: "student-profile.html", label: "Your student profile", show: (s) => s.user && !s.user.isVerifiedFaculty && !s.user.isStaff },
   { href: "admin.html", label: "Staff: faculty verification", show: (s) => s.user?.isStaff },
   { href: "operator.html", label: "Operator console (test mode)", show: (s) => s.testMode },

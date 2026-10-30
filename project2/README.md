@@ -215,3 +215,22 @@ For `release_submission.md`:
 - Students can add a display name and a public-display choice at `/student-profile.html`.
   Fixture students S01, S02, S05, S08, S11 and S17 are accounts `fixture-s01@algomau.ca` and so
   on, named "Student S01" and with no public-display choice (so not public).
+
+## Release 3 notes input: outcomes and showcase (R3-14 to R3-18, R3-20)
+
+- A student on a confirmed match, or a faculty member on its opportunity, records an outcome at
+  `/outcomes.html` ("Your outcomes"): summary, completion date, the students and faculty who
+  took part, and optional demo, repository, poster, video and image links (R3-14).
+- Until a faculty member on it confirms it, only its participants can see it (R3-15). Editing a
+  confirmed outcome takes it out of public view until it is confirmed again.
+- A confirmed outcome appears in **Completed work** (`/showcase.html`) and on profiles only if
+  every faculty member on it allows public display (R3-16). That is why R-503 (F-MEI) stays
+  private while R-501 is public. Partner contact details never appear; only the organisation's
+  name.
+- Faculty profiles list their public outcomes. Students have a profile page too, shown to
+  visitors only if they chose public display (R3-17, R3-20). Each student chooses whether an
+  outcome appears on their own profile, which doesn't remove it from the faculty profile or
+  Completed work (R3-18).
+- Students are named to visitors only if their own profile is public; otherwise they are
+  counted, not named.
+- `/outcomes.html` explains who decides whether a result appears publicly.

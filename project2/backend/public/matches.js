@@ -8,40 +8,27 @@ const statusEl = $("status");
 let session = null;
 let focusAfterLoad = null; // a selector to focus once the lists are redrawn
 
-// Builds an element. `props.text` sets textContent; children may be strings or elements.
-function el(tag, props = {}, ...children) {
-  const node = document.createElement(tag);
-  for (const [key, value] of Object.entries(props)) {
-    if (key === "class") node.className = value;
-    else if (key === "text") node.textContent = value;
-    else if (key.startsWith("data-") || key.startsWith("aria-")) node.setAttribute(key, value);
-    else node[key] = value;
-  }
-  node.append(...children.filter((c) => c !== null && c !== undefined && c !== false));
-  return node;
-}
-
 const longDate = (timestamp) =>
   new Date(timestamp).toLocaleDateString("en-CA", { day: "numeric", month: "long", year: "numeric" });
 
 const kindLabel = (kind) => (kind === "industry" ? "Industry project" : "Faculty project");
 
 function studentList(match) {
-  return el(
+  return h(
     "ul",
     { class: "responses", "aria-label": "Students and their answers" },
     ...match.students.map((s) =>
-      el("li", {}, el("span", { text: s.isYou ? `${s.name} (you)` : s.name }), `: ${s.responseLabel}`),
+      h("li", {}, h("span", { text: s.isYou ? `${s.name} (you)` : s.name }), `: ${s.responseLabel}`),
     ),
   );
 }
 
 function partnerLine(agreement) {
   if (!agreement) return null;
-  return el(
+  return h(
     "p",
     { class: "hint" },
-    el("strong", { text: agreement.text }),
+    h("strong", { text: agreement.text }),
     agreement.note ? ` Note: ${agreement.note}` : "",
     ` ${agreement.explanation}`,
   );
@@ -49,10 +36,10 @@ function partnerLine(agreement) {
 
 function matchHeader(match) {
   return [
-    el("p", {}, el("strong", { text: match.label }), `: ${match.summary}`),
-    el("p", { class: "hint", text: `Proposed by ${match.proposedBy || "a faculty member"} on ${longDate(match.proposedAt)}.` }),
+    h("p", {}, h("strong", { text: match.label }), `: ${match.summary}`),
+    h("p", { class: "hint", text: `Proposed by ${match.proposedBy || "a faculty member"} on ${longDate(match.proposedAt)}.` }),
     match.withdrawnAt &&
-      el("p", { class: "hint", text: `Withdrawn by ${match.withdrawnBy || "a faculty member"} on ${longDate(match.withdrawnAt)}.` }),
+      h("p", { class: "hint", text: `Withdrawn by ${match.withdrawnBy || "a faculty member"} on ${longDate(match.withdrawnAt)}.` }),
     studentList(match),
   ];
 }
@@ -70,81 +57,83 @@ function nextStep(match) {
 }
 
 function studentCard(match) {
-  const card = el(
+  const card = h(
     "li",
     { class: "card", "data-match": match.id },
-    el("p", { class: "kind", text: [kindLabel(match.opportunity.kind), match.run.term].filter(Boolean).join(" · ") }),
-    el("h3", {}, el("a", { href: match.opportunity.link, text: match.opportunity.title })),
+    h("p", { class: "kind", text: [kindLabel(match.opportunity.kind), match.run.term].filter(Boolean).join(" · ") }),
+    h("h3", {}, h("a", { href: match.opportunity.link, text: match.opportunity.title })),
     ...matchHeader(match),
     partnerLine(match.partnerAgreement),
   );
   const step = nextStep(match);
-  if (step) card.append(el("p", { text: step }));
+  if (step) card.append(h("p", { text: step }));
+  if (match.state === "confirmed") card.append(h("p", {}, h("a", { href: `outcomes.html?match=${match.id}`, text: "Record what came of it" })));
   const buttons = [];
-  if (match.you.canConfirm) buttons.push(el("button", { type: "button", class: "primary", "data-action": "confirm", text: "Confirm" }));
-  if (match.you.canDecline) buttons.push(el("button", { type: "button", "data-action": "decline", text: "Decline" }));
-  if (buttons.length) card.append(el("div", { class: "actions" }, ...buttons));
+  if (match.you.canConfirm) buttons.push(h("button", { type: "button", class: "primary", "data-action": "confirm", text: "Confirm" }));
+  if (match.you.canDecline) buttons.push(h("button", { type: "button", "data-action": "decline", text: "Decline" }));
+  if (buttons.length) card.append(h("div", { class: "actions" }, ...buttons));
   return card;
 }
 
 function facultyMatch(match) {
-  const item = el(
+  const item = h(
     "li",
     { "data-match": match.id },
-    match.run.current ? null : el("p", { class: "kind", text: `Earlier run ${match.run.runNumber}${match.run.term ? `, ${match.run.term}` : ""}` }),
+    match.run.current ? null : h("p", { class: "kind", text: `Earlier run ${match.run.runNumber}${match.run.term ? `, ${match.run.term}` : ""}` }),
     ...matchHeader(match),
   );
+  if (match.state === "confirmed") item.append(h("p", {}, h("a", { href: `outcomes.html?match=${match.id}`, text: "Record an outcome" })));
   if (match.you.canWithdraw) {
-    item.append(el("div", { class: "actions" }, el("button", { type: "button", "data-action": "withdraw", text: "Withdraw proposal" })));
+    item.append(h("div", { class: "actions" }, h("button", { type: "button", "data-action": "withdraw", text: "Withdraw proposal" })));
   }
   return item;
 }
 
 function proposeForm(item, limits) {
   const id = `propose-${item.kind}-${item.id}`;
-  return el(
+  return h(
     "form",
     { class: "propose", "data-form": "propose", "aria-label": `Propose a match for ${item.title}` },
-    el("label", { htmlFor: id, text: "Students' Algoma email addresses" }),
-    el("textarea", { id, name: "students", rows: 3, "aria-describedby": `${id}-hint` }),
-    el("p", { id: `${id}-hint`, class: "hint", text: `One per line, up to ${limits.students}. Each student confirms for themselves.` }),
-    el("button", { type: "submit", class: "primary", text: "Propose match" }),
+    h("label", { htmlFor: id, text: "Students' Algoma email addresses" }),
+    h("textarea", { id, name: "students", rows: 3, "aria-describedby": `${id}-hint` }),
+    h("p", { id: `${id}-hint`, class: "hint", text: `One per line, up to ${limits.students}. Each student confirms for themselves.` }),
+    h("button", { type: "submit", class: "primary", text: "Propose match" }),
   );
 }
 
 function partnerForm(item, limits) {
   const id = `partner-${item.id}`;
   const agreed = item.partnerAgreement?.agreed;
-  return el(
+  return h(
     "form",
     { class: "inline-form", "data-form": "partner", "aria-label": `Partner agreement for ${item.title}` },
-    el("label", { htmlFor: id, text: "Note (optional)" }, el("input", { id, name: "note", maxLength: limits.note })),
-    el("button", { type: "submit", "data-agreed": "true", text: agreed ? "Record again: partner agreed" : "Record: partner agreed in principle" }),
-    agreed ? el("button", { type: "submit", "data-agreed": "false", text: "Retract the record" }) : null,
+    h("label", { htmlFor: id, text: "Note (optional)" }, h("input", { id, name: "note", maxLength: limits.note })),
+    h("button", { type: "submit", "data-agreed": "true", text: agreed ? "Record again: partner agreed" : "Record: partner agreed in principle" }),
+    agreed ? h("button", { type: "submit", "data-agreed": "false", text: "Retract the record" }) : null,
   );
 }
 
 function opportunityCard(item, limits) {
-  const card = el(
+  const card = h(
     "li",
     { class: "card", "data-key": `${item.kind}-${item.id}` },
-    el("p", { class: "kind", text: [kindLabel(item.kind), item.lifecycle.term].filter(Boolean).join(" · ") }),
-    el("h3", {}, el("a", { href: item.link, text: item.title })),
+    h("p", { class: "kind", text: [kindLabel(item.kind), item.lifecycle.term].filter(Boolean).join(" · ") }),
+    h("h3", {}, h("a", { href: item.link, text: item.title })),
     // The reason starts with the state, e.g. "Expired: the deadline ... passed".
-    el("p", { class: "lifecycle", text: item.lifecycle.reason }),
+    h("p", { class: "lifecycle", text: item.lifecycle.reason }),
   );
   if (item.canRecordPartnerAgreement) {
     card.append(
-      el("h4", { text: "Partner agreement" }),
+      h("h4", { text: "Partner agreement" }),
       partnerLine(item.partnerAgreement) ||
-        el("p", { class: "hint", text: "Not recorded for this term. Record it when the partner tells you they agree in principle." }),
+        h("p", { class: "hint", text: "Not recorded for this term. Record it when the partner tells you they agree in principle." }),
       partnerForm(item, limits),
     );
   }
-  card.append(el("h4", { text: "Matches" }));
-  card.append(item.matches.length ? el("ul", { class: "match-list" }, ...item.matches.map(facultyMatch)) : el("p", { class: "hint", text: "None yet." }));
+  card.append(h("h4", { text: "Matches" }));
+  card.append(item.matches.length ? h("ul", { class: "match-list" }, ...item.matches.map(facultyMatch)) : h("p", { class: "hint", text: "None yet." }));
   if (item.canPropose) card.append(proposeForm(item, limits));
-  else card.append(el("p", { class: "hint", text: "New matches can be proposed only while the opportunity is open." }));
+  else card.append(h("p", { class: "hint", text: "New matches can be proposed only while the opportunity is open." }));
   return card;
 }
 
@@ -185,7 +174,7 @@ function render() {
     $("student-matches").replaceChildren(
       ...(studentMatches.length
         ? studentMatches.map(studentCard)
-        : [el("li", { text: "No faculty member has proposed a match to you yet. When one does, it appears here." })]),
+        : [h("li", { text: "No faculty member has proposed a match to you yet. When one does, it appears here." })]),
     );
   }
   if (managed) {
@@ -193,13 +182,11 @@ function render() {
     $("opportunities").replaceChildren(
       ...(managed.opportunities.length
         ? managed.opportunities.map((item) => opportunityCard(item, managed.limits))
-        : [el("li", { text: "You have no published projects or supervised industry opportunities yet." })]),
+        : [h("li", { text: "You have no published projects or supervised industry opportunities yet." })]),
     );
   }
-  if (focusAfterLoad) {
-    document.querySelector(focusAfterLoad)?.focus();
-    focusAfterLoad = null;
-  }
+  focusElement(focusAfterLoad);
+  focusAfterLoad = null;
 }
 
 async function send(path, body, done, focusSelector) {

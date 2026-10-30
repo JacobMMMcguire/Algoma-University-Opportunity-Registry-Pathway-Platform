@@ -138,4 +138,13 @@ submitFiltersAsUrl($("filters"), "faculty.html");
   if (!res.ok) return showStatus(statusEl, res.data.error || "Could not load this profile.", { error: true });
   const contactViaProjects = renderProfile(res.data.profile, session);
   await renderProjects(res.data.profile.id, contactViaProjects);
+  await renderOutcomes(res.data.profile.id);
 })();
+
+// R3-17: confirmed outcomes this faculty member worked on that may be shown publicly.
+async function renderOutcomes(facultyId) {
+  const res = await api(`/api/outcomes/showcase?facultyId=${encodeURIComponent(facultyId)}`);
+  if (!res.ok || res.data.outcomes.length === 0) return;
+  $("profile-outcomes").replaceChildren(...res.data.outcomes.map((o) => outcomeCard(o, { level: 3 })));
+  $("outcomes-section").hidden = false;
+}

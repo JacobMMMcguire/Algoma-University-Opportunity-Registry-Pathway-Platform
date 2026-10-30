@@ -106,8 +106,8 @@ fixture's `evaluation_date`, 2026-11-06.
 1. **Done 2026-10-29.** Clock, runs and lifecycle states, the discovery filter, and the reasons shown on opportunity
    pages. Migration 005. (R3-08 to R3-13, R3-19)
 2. **Done 2026-10-30.** Student profiles and matches. Migration 006. (R3-01 to R3-07, R3-22)
-3. Outcomes, the showcase, and outcomes on faculty and student profiles. (R3-14 to R3-18,
-   R3-20) A good self-contained piece to hand to a teammate once steps 1 and 2 are merged.
+3. **Done 2026-10-30.** Outcomes, the showcase, and outcomes on faculty and student profiles.
+   Migration 007. (R3-14 to R3-18, R3-20)
 4. Fixture seed and expected-results tests, then the R1 and R2 regression pass. (R3-23)
 5. Release notes, adapter, the `R3-submission` tag. (R3-24)
 
@@ -153,3 +153,33 @@ requirements.
   that run see it.
 - **Student profiles** (migration 006) hold a display name and a public-display choice (NULL
   means not chosen, which counts as not public). Step 3 uses the choice for the showcase.
+
+## Step 3 design notes
+
+- **An outcome belongs to a fully confirmed match** (and so to that match's run). One match can
+  have several outcomes: R-501 and R-503 are both on M-404.
+- **Who records one.** A student on the match, or a verified faculty member who manages the
+  opportunity. The recorder is always a participant. Students named must be from the match.
+  Faculty are chosen from the opportunity's faculty, or named by email (any verified faculty
+  member with a profile, as F-MEI is on R-503). At least one of each, at most 5 faculty.
+- **Participants** are kept by email in `outcome_participants`, like `match_students`. Any
+  participant can edit the summary, date and links. Editing clears the confirmation, so what is
+  public is always what a faculty member confirmed. Nothing is deleted.
+- **Confirming.** A faculty participant who is currently verified confirms it, or takes the
+  confirmation back. A new outcome is always unconfirmed, whatever the request says.
+- **Showcased** when all of these hold, worked out on every request (`SHOWCASE_SQL`):
+  1. a faculty participant who is still verified confirmed it;
+  2. every faculty participant is verified, allows public display and has a profile;
+  3. for a faculty project, its owner allows public display.
+
+  The third rule stops an outcome revealing a non-public faculty member's project when they
+  aren't named on it. The showcase is the same for visitors and signed-in users; only the
+  students named differ.
+- **Students named.** Visitors see a student's name only if the student has a profile and chose
+  public display; signed-in users see every student with a profile (as for faculty, R1-10).
+  Anyone not named is counted ("1 student who hasn't chosen public display"). No emails appear.
+- **Profiles (R3-17, R3-18).** A faculty profile lists the showcased outcomes they're on. A
+  student profile (`student.html`, visible to signed-in users, and to visitors if public) lists
+  those the student hasn't hidden. Hiding affects only the student's own profile.
+- **Industry outcomes** show the organisation's name, as discovery does, and never its contact
+  details.

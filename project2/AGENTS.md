@@ -58,7 +58,7 @@ file is how the codebase works and the rules for changing it.
 | Assessed version tag | R2-26 | Done: tag `R2-submission` |
 | Term lifecycle, discovery filter | R3-08 to R3-13, R3-19 | Jacob, done (see "Term lifecycle" below) |
 | Student profiles and matches | R3-01 to R3-07, R3-22 | Jacob, done (see "Matches" below) |
-| Outcomes and showcase | R3-14 to R3-18, R3-20 | To do (R3_PLAN.md step 3) |
+| Outcomes and showcase | R3-14 to R3-18, R3-20 | Jacob, done (see "Outcomes" below) |
 
 ## Layout (`project2/backend/`)
 
@@ -86,6 +86,7 @@ src/routes/notifications.js    /api/notifications: subscriptions and notificatio
 src/lifecycle.js        Term runs: the clock, derived lifecycle states and reasons (R3-08 to R3-13, R3-19)
 src/routes/lifecycle.js /api/lifecycle: managing terms, deadlines and lifecycle state (R3-08 to R3-13)
 src/routes/matches.js   /api/matches: proposing and answering matches, partner agreement (R3-01 to R3-07, R3-22)
+src/routes/outcomes.js  /api/outcomes: outcomes, confirmation, the showcase; /api/students: student profiles (R3-14 to R3-18, R3-20)
 migrations/NNN_*.sql    Schema history, applied in order
 public/                 Frontend, served by Express from the same origin as the API
 test/                   node:test suites and helpers (in-memory Postgres)
@@ -231,7 +232,8 @@ engagement columns, `faculty_subscriptions`, `notifications`; drops the unused
 `partner_submissions.status`). Written, **not yet applied to the live database** (apply before
 merging R3): `005` (`opportunity_runs` with triggers that give every new project and partner
 submission its first run, `run_changes`, `matches`, `match_students`,
-`partner_agreements`) and `006` (`student_profiles`). The public-profile choice lives on `users`
+`partner_agreements`), `006` (`student_profiles`) and `007` (`outcomes`,
+`outcome_participants`). The public-profile choice lives on `users`
 (`public_profile_choice`), not on `faculty_profiles`.
 
 ## Frontend conventions
@@ -245,6 +247,9 @@ submission its first run, `run_changes`, `matches`, `match_students`,
   `getSession()`, `renderNav(session)`, `showStatus(el, msg, { error })`,
   `showApiError(el, res, fallback)` (adds a link to the fix for known error codes),
   `escapeHtml()` and `PROJECT_STATUS_LABELS`. Add new pages to `NAV_LINKS` there.
+  It also has `h(tag, props, ...children)`, which builds elements with `textContent` (use it
+  for anything showing partner text), and `focusElement(selector)`, which moves focus to what
+  changed after a save. `outcome-card.js` has `outcomeCard(outcome)`.
 - `form-pickers.js` has the fixed-list inputs (`renderAreaPicker`, `renderTermPicker`,
   `fillSelect`, `fillGroupedSelect`) and the filter-form helpers (`submitFiltersAsUrl`,
   `showResultCount`). `contact.js` has `renderContactPanel` (R1-22).
@@ -513,3 +518,45 @@ Design decisions D5 to D7 and the step 2 notes in [R3_PLAN.md](R3_PLAN.md).
   against `expected_lifecycle_results.json`.
 - Pages: `matches.html` ("Matches": students' proposals and faculty's opportunities) and
   `student-profile.html`. The home page tells students when a proposal is waiting.
+
+## Outcomes and showcase (R3-14 to R3-18, R3-20, done)
+
+Design decision D8 and the step 3 notes in [R3_PLAN.md](R3_PLAN.md).
+
+- **Tables.** `outcomes` (on a fully confirmed `match_id`: summary, `completed_on`, `links` as
+  JSON by kind, `confirmed_by`/`confirmed_at`) and `outcome_participants` (email, `faculty` or
+  `student`, and each student's `show_on_profile`).
+- **The showcase rule** is `SHOWCASE_SQL` in `src/routes/outcomes.js`, worked out on every
+  request and never stored. It requires:
+  - confirmation by a faculty participant who is still verified;
+  - every faculty participant verified, public by choice and with a profile;
+  - for a faculty project, an owner who is public by choice.
+
+  Use it for anything public. Don't write another version of it.
+- **Who sees what.**
+  - Participants (by the session's email) see their outcomes in full, with `publicStatus`
+    saying why it is or isn't public.
+  - Everyone else sees only showcased outcomes, through `toPublicOutcome`. It names faculty and
+    the students whose profiles the viewer may see (public ones for visitors), and only counts
+    the rest.
+  - No email or partner contact detail is ever in a public response.
+- **Routes (`/api/outcomes`).**
+  - `GET /showcase`, optionally with `?facultyId=` or `?studentId=` for one person's profile
+    (R3-17). For `studentId`, an outcome the student has hidden is left out (R3-18).
+  - `GET /mine` (signed in) returns your outcomes and `recordable`: the confirmed matches you
+    can record for, with the student and faculty choices.
+  - `POST /` takes `{ matchId, summary, completedOn, links, students, faculty, otherFacultyEmails }`.
+    It is always unconfirmed, and the recorder is always added.
+  - `GET /:id` gives participants the full view, anyone else the showcased view or 404.
+  - `PUT /:id` lets any participant edit content, which clears the confirmation.
+  - `POST /:id/confirm` and `/:id/unconfirm` are for verified faculty participants.
+  - `PUT /:id/show-on-profile` with `{ show }` is for students, and changes only their own row.
+- **Student profiles.** `GET /api/students/:id` returns a student with a profile: to signed-in
+  users, and to visitors only if they chose public display. It never mentions matches.
+- **Fixture.** `buildR3FixtureSql` attaches each outcome to the fixture match on its
+  opportunity that has its students. Links go through the same `cleanLinks` as the form.
+  `test/outcomes.test.js` checks `showcase_eligible_outcome_ids` and
+  `participants_only_outcome_ids`.
+- Pages: `outcomes.html` ("Your outcomes"), `showcase.html` ("Completed work", public),
+  `student.html?id=`, and a "Completed work" section on `faculty.html?id=`. Confirmed matches on
+  `matches.html` link to recording an outcome.

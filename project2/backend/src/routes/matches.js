@@ -471,4 +471,4 @@ function createMatchesRouter({ db, config, auth }) {
   return router;
 }
 
-module.exports = { createMatchesRouter, MATCH_NOTICE, matchState };
+module.exports = { createMatchesRouter, MANAGES_RUN_SQL, MATCH_NOTICE, matchState };
