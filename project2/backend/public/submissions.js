@@ -151,11 +151,13 @@ $("engagement-form").addEventListener("submit", async (event) => {
   if (!session.authenticated) {
     $("denied").innerHTML = 'Please <a href="index.html">sign in</a> first.';
     $("denied").hidden = false;
+    $("denied-heading").hidden = false;
     return;
   }
   if (!session.user.isVerifiedFaculty && !session.user.isStaff) {
     $("denied").textContent = "Industry opportunity reviews are for verified faculty and staff only.";
     $("denied").hidden = false;
+    $("denied-heading").hidden = false;
     return;
   }
 

@@ -108,7 +108,8 @@ fixture's `evaluation_date`, 2026-11-06.
 2. **Done 2026-10-30.** Student profiles and matches. Migration 006. (R3-01 to R3-07, R3-22)
 3. **Done 2026-10-30.** Outcomes, the showcase, and outcomes on faculty and student profiles.
    Migration 007. (R3-14 to R3-18, R3-20)
-4. Fixture seed and expected-results tests, then the R1 and R2 regression pass. (R3-23)
+4. **Done 2026-10-30.** Fixture seed and expected-results tests, then the R1 and R2 regression
+   pass. (R3-23)
 5. Release notes, adapter, the `R3-submission` tag. (R3-24)
 
 Every step enforces authorization on the server (R3-21) and has tests named after its
@@ -183,3 +184,20 @@ requirements.
   those the student hasn't hidden. Hiding affects only the student's own profile.
 - **Industry outcomes** show the organisation's name, as discovery does, and never its contact
   details.
+
+## Step 4 notes
+
+- **One seed.** `buildAllFixtureSql()` is what `npm run seed:fixture`, `dev:local` and
+  `test/regression.test.js` all load, so the tests check exactly what evaluators get.
+- **Reseeding restores the expected results.** On the R3 fixture opportunities, a reseed
+  deletes matches, partner agreements and run history added since the last seed (outcomes go
+  with their matches). Without this, an evaluator's practice match on O-303 would leave it
+  Matched after a reseed. Everything else is left alone, as in R1 and R2.
+- **Every expected result has a check.** The regression test has one check per key of
+  `expected_lifecycle_results.json` and fails if the file has a key without one.
+- **R1 and R2 still hold** with R3 loaded and the clock set. The one intended change: the four
+  R2 submissions reused by the R3 fixture leave student discovery, because R3 makes them
+  matched, expired or completed.
+- **Browser pass.** Every page, as every kind of user, at 390px with axe-core. Fixed: repeated
+  form names on `lifecycle.html` and `outcomes.html`, and no heading on `submissions.html` when
+  access is refused.

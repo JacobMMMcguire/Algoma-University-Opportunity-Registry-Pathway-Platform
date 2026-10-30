@@ -32,9 +32,11 @@ function termFields(prefix) {
 function controls(item) {
   const k = keyOf(item);
   const l = item.lifecycle;
+  // Each card has these forms, so the title keeps their names unique on the page.
+  const name = escapeHtml(item.title);
   const parts = [];
   if (item.actions.includes("schedule")) {
-    parts.push(`<form class="inline-form" data-form="schedule" aria-label="Term and deadline">
+    parts.push(`<form class="inline-form" data-form="schedule" aria-label="Term and deadline for ${name}">
       ${termFields(`${k}-schedule`)}
       ${dateField(`${k}-deadline`, "Faculty deadline", l.deadline)}
       <button type="submit">Save term and deadline</button>
@@ -46,20 +48,20 @@ function controls(item) {
     .join("");
   if (buttons) parts.push(`<div class="actions">${buttons}</div>`);
   if (item.actions.includes("reopen")) {
-    parts.push(`<form class="inline-form" data-form="reopen" aria-label="Reopen">
+    parts.push(`<form class="inline-form" data-form="reopen" aria-label="Reopen ${name}">
       ${dateField(`${k}-reopen`, "New deadline (needed if it has passed)")}
       <button type="submit">Reopen</button>
     </form>`);
   }
   if (item.actions.includes("renew")) {
-    parts.push(`<form class="inline-form" data-form="renew" aria-label="Renew for a later term">
+    parts.push(`<form class="inline-form" data-form="renew" aria-label="Renew ${name} for a later term">
       ${termFields(`${k}-renew`)}
       ${dateField(`${k}-renew-deadline`, "Deadline")}
       <button type="submit">Renew for this term</button>
     </form>`);
   }
   if (item.canSetCentreDeadline) {
-    parts.push(`<form class="inline-form" data-form="centre" aria-label="Centre deadline">
+    parts.push(`<form class="inline-form" data-form="centre" aria-label="Centre deadline for ${name}">
       ${dateField(`${k}-centre`, "Centre deadline (overrides the faculty deadline)", l.centreDeadline)}
       <button type="submit">Save Centre deadline</button>
       ${l.centreDeadline ? '<button type="button" data-action="clear-centre">Remove Centre deadline</button>' : ""}

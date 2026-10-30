@@ -66,7 +66,8 @@ function editForm(outcome) {
     h("summary", { text: "Edit summary, date and links" }),
     h(
       "form",
-      { "data-form": "edit", "aria-label": `Edit outcome for ${outcome.opportunity.title}`, noValidate: true },
+      // Two outcomes can share an opportunity (R-501 and R-503), so the date tells them apart.
+      { "data-form": "edit", "aria-label": `Edit outcome for ${outcome.opportunity.title}, completed ${outcome.completedOn}`, noValidate: true },
       h("div", { class: "field" }, h("label", { htmlFor: `${prefix}-summary`, text: "Summary" }),
         h("textarea", { id: `${prefix}-summary`, name: "summary", rows: 4, maxLength: data.limits.summary, value: outcome.summary })),
       h("div", { class: "field" }, h("label", { htmlFor: `${prefix}-date`, text: "Completion date" }),

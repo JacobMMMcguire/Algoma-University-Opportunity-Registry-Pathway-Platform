@@ -5,22 +5,13 @@
 const { createApp } = require("../src/app");
 const { loadConfig } = require("../src/config");
 const { createLocalDb } = require("../src/db");
-const {
-  buildFixtureSql,
-  buildR2FixtureSql,
-  buildR3FixtureSql,
-  fixtureEmail,
-  loadFixture,
-  loadLifecycleFixture,
-} = require("../src/fixture");
+const { buildAllFixtureSql, fixtureEmail, loadLifecycleFixture } = require("../src/fixture");
 
 // No email locally, so only the fixture test accounts can sign in.
 
 (async () => {
   const db = await createLocalDb();
-  await db.exec(buildFixtureSql(loadFixture()));
-  await db.exec(buildR2FixtureSql());
-  await db.exec(buildR3FixtureSql());
+  await db.exec(buildAllFixtureSql());
 
   // A fixed, local-only operator secret; production uses its own private OPERATOR_SECRET.
   const operatorSecret = process.env.OPERATOR_SECRET || "local-dev-operator-secret-not-for-production";

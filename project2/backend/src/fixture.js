@@ -283,7 +283,12 @@ ON CONFLICT (fixture_id) DO UPDATE SET faculty_user_id = EXCLUDED.faculty_user_i
       throw new Error(`${where}: unknown source "${o.source}".`);
     }
     // Back to one run, as the fixture describes it. Deleting later runs also deletes their matches.
+    // Run 1 loses any matches, partner agreements and state history added since the last seed
+    // (outcomes go with their matches), so a reseed restores the expected results exactly.
     statements.push(`DELETE FROM opportunity_runs WHERE ${runColumn} = (${r3RecordSql(o)}) AND run_number > 1;`);
+    for (const table of ["matches", "partner_agreements", "run_changes"]) {
+      statements.push(`DELETE FROM ${table} WHERE run_id IN (SELECT id FROM opportunity_runs WHERE ${runColumn} = (${r3RecordSql(o)}));`);
+    }
     statements.push(`UPDATE opportunity_runs SET target_term = ${literal(term)}, deadline = ${literal(o.deadline)},
   centre_deadline = NULL, state = ${literal(o.state)}, state_changed_by = NULL, state_changed_at = NULL
 WHERE ${runColumn} = (${r3RecordSql(o)}) AND run_number = 1;`);
@@ -338,8 +343,16 @@ COMMIT;
 `;
 }
 
+// Everything `npm run seed:fixture` loads, in order: R1, then R2, then R3 (which builds on both).
+function buildAllFixtureSql() {
+  return `${buildFixtureSql(loadFixture())}
+${buildR2FixtureSql()}
+${buildR3FixtureSql()}`;
+}
+
 module.exports = {
   FIXTURE_PATH,
+  buildAllFixtureSql,
   R2_FIXTURE_DIR,
   R3_FIXTURE_DIR,
   loadLifecycleFixture,

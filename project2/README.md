@@ -234,3 +234,17 @@ For `release_submission.md`:
 - Students are named to visitors only if their own profile is public; otherwise they are
   counted, not named.
 - `/outcomes.html` explains who decides whether a result appears publicly.
+
+## Release 3 notes input: regression (R3-23)
+
+- The R1, R2 and R3 fixtures load together with one `npm run seed:fixture`. Rerunning it
+  resets the fixture records, including any matches, partner agreements and outcomes added on
+  the R3 fixture opportunities, so evaluators can repeat a walkthrough from the same start.
+- With all three loaded and the clock at 6 November 2026, the tests check every R3 expected
+  result and that the R1 and R2 expected results still hold (`test/regression.test.js`).
+- One R2 behaviour changes on purpose: the R2 partner submissions that the R3 fixture reuses
+  (S-201, S-202, S-205, S-206) are matched, expired or completed in R3, so they leave student
+  discovery (R3-19).
+- Every page was checked as each kind of user at phone width with an accessibility checker.
+  Three small issues were fixed: repeated form names on two pages, and a missing page heading
+  on the industry opportunities page when access is refused.

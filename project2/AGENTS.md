@@ -59,6 +59,7 @@ file is how the codebase works and the rules for changing it.
 | Term lifecycle, discovery filter | R3-08 to R3-13, R3-19 | Jacob, done (see "Term lifecycle" below) |
 | Student profiles and matches | R3-01 to R3-07, R3-22 | Jacob, done (see "Matches" below) |
 | Outcomes and showcase | R3-14 to R3-18, R3-20 | Jacob, done (see "Outcomes" below) |
+| Fixture seed, R1 and R2 regression | R3-23 | Jacob, done (see "Regression" below) |
 
 ## Layout (`project2/backend/`)
 
@@ -71,7 +72,7 @@ src/auth.js             Session lookup and guards (requireAuth, requireStaff, ..
 src/visibility.js       The public-visibility rule (R1-10, R1-14) and who counts as a supervisor (R2)
 src/catalog.js          Fixed lists: areas, levels, terms, inquiry wording, R2 capacity/engagement/subscription
 src/validation.js       Shared input clean-up (text, research areas, ids, search patterns)
-src/fixture.js          Turns ../r1_fixture.json and ../r2_fixtures/ into idempotent seed SQL
+src/fixture.js          Turns ../r1_fixture.json, ../r2_fixtures/ and ../r3_fixtures/ into idempotent seed SQL
 src/email.js            Brevo sender
 src/routes/auth.js      /api/auth: sign-in codes, sessions (R1-01 to R1-03)
 src/routes/admin.js     /api/admin: grant or revoke faculty (R1-04)
@@ -477,7 +478,10 @@ Design decisions D1 to D4 and D10 in [R3_PLAN.md](R3_PLAN.md); this is how the c
 - **Fixture.** `buildR3FixtureSql` loads `r3_fixtures/lifecycle_fixture.json`. Industry
   opportunities attach to the R2 submission with the same title, with their owner as a willing
   supervisor. Faculty ones become projects with the fixture id. Terms such as `2026S` become
-  `Summer 2026`. Each record is reset to a single run, with matches as in the fixture.
+  `Summer 2026`. Each record is reset to a single run, with matches as in the fixture. Matches,
+  partner agreements and run history added on those records since the last seed are deleted
+  (outcomes go with their matches), so a reseed after an evaluator's walkthrough restores the
+  expected results exactly. Other records are left alone.
   `test/lifecycle.test.js` checks `expected_lifecycle_results.json` as of the fixture's
   `evaluation_date`, and again as of 2026-11-11.
 - Page: `lifecycle.html` ("Terms and deadlines" in the menu).
@@ -560,3 +564,20 @@ Design decision D8 and the step 3 notes in [R3_PLAN.md](R3_PLAN.md).
 - Pages: `outcomes.html` ("Your outcomes"), `showcase.html` ("Completed work", public),
   `student.html?id=`, and a "Completed work" section on `faculty.html?id=`. Confirmed matches on
   `matches.html` link to recording an outcome.
+
+## Regression (R3-23, done)
+
+- `test/regression.test.js` loads `buildAllFixtureSql()`, the exact SQL `npm run seed:fixture`
+  and `dev:local` load, twice, with the clock at the R3 `evaluation_date`. In that state it
+  checks every entry in `expected_lifecycle_results.json` (a check per key; the test fails if
+  the file gains a key nothing checks), the R1 `expected_public` / `expected_authenticated`
+  flags and faculty visibility, and the R2 intake, notification and visibility expectations.
+  It then does the evaluator walkthrough (a two-student match on O-303, a partner agreement,
+  confirming R-502), reseeds, and checks everything again.
+- Loading R3 intentionally changes one R2 result: S-201, S-202, S-205 and S-206 are reused as O-301,
+  O-302, O-304 and O-306, which are matched, expired or completed, so none of them is in student
+  discovery any more (R3-19). R2's `student_visible_on_arrival` (none) still holds.
+- Browser pass (2026-10-30): every page, as a visitor, two students, two faculty (one not
+  public) and staff, in headless Chrome at 390px with axe-core: no overflow, no violations, no
+  page or server errors. It found and fixed repeated form names on `lifecycle.html` and
+  `outcomes.html`, and a missing heading on `submissions.html` when access is refused.
