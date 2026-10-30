@@ -5,7 +5,7 @@ Team: Jacob McGuire, Sineru Mahamillage, Paris Lad
 Deployment: https://algoma-opportunity-registry-r1-backend.onrender.com
 Repository: https://github.com/JacobMMMcguire/Algoma-University-Opportunity-Registry-Pathway-Platform
 Release tag: R3-submission
-Commit: recorded here once the tag is made
+Commit: 6be0d40cf16958d9ec1f088128cec35853b05e5b
 Adapter: project2/evaluation_adapter.json (extends our R2 adapter with the clock, lifecycle
 states and actions, match routes, and the outcome and showcase surfaces)
 Known issues:
@@ -119,6 +119,13 @@ S11, S17).
     `/outcomes.html`. Confirming it as `fixture-f-alex@algomau.ca` makes it public.
   - **R-503** (O-306, F-MEI, S02) is confirmed but stays private, because F-MEI doesn't allow
     public display. Its participants are told why at `/outcomes.html`.
+- **Checked logged out on the live deployment** on 2026-10-30, after seeding: the clock reads
+  6 November 2026; of the R3 opportunities, discovery lists only O-303; O-305 and O-307 open by
+  link as withdrawn and archived with their reasons; Completed work shows only R-501, with its
+  repository link, Dr. Jordan Lee named and its student counted; R-501 is on Dr. Jordan Lee's
+  profile; no other outcome opens by id; no email address or F-MEI appears; the four public R1
+  projects and the public faculty directory are unchanged; `/api/matches` and
+  `/api/partner-submissions` return 401.
 - **Public versus private (R3-16, R3-22):** no public response names a match's students, and
   no outcome shows partner contact details or an email address. Students are named to visitors
   only if they made their own profile public.
