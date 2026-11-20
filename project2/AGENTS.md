@@ -236,7 +236,8 @@ the file into the Project 2 Supabase SQL Editor (or `npm run migrate` with `DATA
 `SELECT * FROM schema_migrations`.
 
 `008` (external sources, opportunities, sync runs and items, source events, faculty interest,
-student links and history, readiness guidance) is new in R4: apply it before merging R4.
+student links and history, readiness guidance) is new in R4 and was applied to the live database
+on 2026-11-20, followed by one sync of feed v1.
 
 Applied so far: `000` (initial), `001` (public-profile choice on `users`, guess limit),
 `002` (`fixture_id` on `users` and `projects`; student levels fixed to three values with a
