@@ -8,7 +8,7 @@ Project Option: Project 2 (Opportunity Registry and Pathway Platform)
 Deployment: https://algoma-opportunity-registry-r1-backend.onrender.com
 Repository: https://github.com/JacobMMMcguire/Algoma-University-Opportunity-Registry-Pathway-Platform
 Release tag: R4-submission
-Commit: (recorded after tagging; see the tag)
+Commit: d91f4c015631504f95d92d58ab8c847d8162af87
 Adapter: project2/evaluation_adapter.json (template format: one check per R4 requirement, plus the
 sync trigger, sync health, external opportunity routes and the faculty interest action; the R1 to
 R3 route map is kept under `earlier_releases`)
@@ -58,7 +58,19 @@ All are synthetic, created by the fixture seed, and have no inbox.
 
 - **Deployed assessed URL:** https://algoma-opportunity-registry-r1-backend.onrender.com
   (Render deploys branch `r1-development`; `r4-development` points at the same commit).
-- **Immutable release identifier:** tag `R4-submission`.
+- **Immutable release identifier:** tag `R4-submission`, commit `d91f4c015631504f95d92d58ab8c847d8162af87`.
+- **Checked on the live deployment (2026-11-20, after deploying):**
+  - Headless Chrome at 390px with axe-core, fresh sessions as visitor, staff, faculty
+    (F-ALEX), a student and S01. No violations, overflow, page errors or dialogs.
+  - v2 after v1 classified exactly as `expected_sync_results.json`. MX-1005's script showed as
+    text, under the Mitacs badge.
+  - A simulated failure labelled the data "may be out of date". MX-1003 opened as "No longer
+    listed by Mitacs".
+  - R1 to R3 public endpoints unchanged: 5 public projects, R-501 in Completed work, the clock
+    at 6 November.
+  - Matches, partner submissions, lifecycle and sync health return 401 to visitors.
+  - The demonstration source was then reset and synced with v1, so reviewers start from
+    "last week" (MX-1001 to MX-1004 listed).
 - **Chosen Challenge: R4-07 (external content is untrusted).** MX-1005's description is shown
   exactly as text, including the literal `<script>alert('x')</script>`. No alert runs. It stays
   labelled "Owned by Mitacs, not Algoma University". Its link still points at
