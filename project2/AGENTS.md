@@ -4,8 +4,9 @@ Opportunity Registry and Pathway Platform. Release 1 (R1-01 to R1-26): students 
 Algoma faculty and projects and contact faculty by email. Release 2 (R2-01 to R2-26):
 outside organisations propose projects without an account, and those become student-visible
 industry opportunities once a verified faculty member is willing to supervise. Release 3 (R3-01
-to R3-24, in progress): two-sided matches, term lifecycle and outcomes; its design decisions are
-in [R3_PLAN.md](R3_PLAN.md). The course brief and the release requirements are the spec; this
+to R3-24): two-sided matches, term lifecycle and outcomes; its design decisions are in
+[R3_PLAN.md](R3_PLAN.md). Release 4 (R4-01 to R4-28): externally owned opportunities (Mitacs)
+synchronised from a provider feed; see "External opportunities" below. The course brief and the release requirements are the spec; this
 file is how the codebase works and the rules for changing it.
 
 **Everything for Project 2 is inside `project2/`**: code in `project2/backend/`, docs in
@@ -14,7 +15,7 @@ file is how the codebase works and the rules for changing it.
 ## Hard rules
 
 1. **Branches.** Render deploys **`r1-development`** (the name is historical). Develop on the
-   current release branch (`r3-development` for R3, or a feature branch off it) and merge into
+   current release branch (`r4-development` for R4, or a feature branch off it) and merge into
    `r1-development` only when it should go live. Assessed releases are tags (`R1-submission`,
    `R2-submission`, ...): never move or replace one.
    Never push to or merge into `master`: it holds the graded Phase 0 app (also at tag
@@ -61,6 +62,8 @@ file is how the codebase works and the rules for changing it.
 | Outcomes and showcase | R3-14 to R3-18, R3-20 | Jacob, done (see "Outcomes" below) |
 | Fixture seed, R1 and R2 regression | R3-23 | Jacob, done (see "Regression" below) |
 | Release files, assessed version tag | R3-24 | Done: `release_submission.md`, `evaluation_adapter.json`, tag `R3-submission` |
+| External opportunities, sync, local support, readiness | R4-01 to R4-27 | Done (see "External opportunities" below) |
+| Release files, assessed version tag | R4-28 | `release_submission.md`, `evaluation_adapter.json`, tag `R4-submission` |
 
 ## Layout (`project2/backend/`)
 
@@ -89,6 +92,11 @@ src/lifecycle.js        Term runs: the clock, derived lifecycle states and reaso
 src/routes/lifecycle.js /api/lifecycle: managing terms, deadlines and lifecycle state (R3-08 to R3-13)
 src/routes/matches.js   /api/matches: proposing and answering matches, partner agreement (R3-01 to R3-07, R3-22)
 src/routes/outcomes.js  /api/outcomes: outcomes, confirmation, the showcase; /api/students: student profiles (R3-14 to R3-18, R3-20)
+src/external/sources.js The external source registry and the Mitacs adapter (R4-01, R4-02, R4-07);
+                        demo-feeds/ is a tested copy of ../r4_fixtures feeds, readable on Render
+src/external/sync.js    One sync run: classify, write source fields only, record events (R4-08 to R4-12)
+src/routes/external.js  /api/external-opportunities: discovery, detail, faculty interest, guidance, student record
+src/routes/external-sync.js  /api/external-sync: trigger, health, run detail, evaluation reset (staff)
 migrations/NNN_*.sql    Schema history, applied in order
 public/                 Frontend, served by Express from the same origin as the API
 test/                   node:test suites and helpers (in-memory Postgres)
@@ -227,12 +235,14 @@ the file into the Project 2 Supabase SQL Editor (or `npm run migrate` with `DATA
 **before** merging the code that needs it. Check what's applied with
 `SELECT * FROM schema_migrations`.
 
+`008` (external sources, opportunities, sync runs and items, source events, faculty interest,
+student links and history, readiness guidance) is new in R4: apply it before merging R4.
+
 Applied so far: `000` (initial), `001` (public-profile choice on `users`, guess limit),
 `002` (`fixture_id` on `users` and `projects`; student levels fixed to three values with a
 CHECK constraint), `003` (`partner_submissions`) and `004` (`opportunity_supervisors`,
 engagement columns, `faculty_subscriptions`, `notifications`; drops the unused
-`partner_submissions.status`). Written, **not yet applied to the live database** (apply before
-merging R3): `005` (`opportunity_runs` with triggers that give every new project and partner
+`partner_submissions.status`). Also applied (R3): `005` (`opportunity_runs` with triggers that give every new project and partner
 submission its first run, `run_changes`, `matches`, `match_students`,
 `partner_agreements`), `006` (`student_profiles`) and `007` (`outcomes`,
 `outcome_participants`). The public-profile choice lives on `users`
@@ -582,3 +592,56 @@ Design decision D8 and the step 3 notes in [R3_PLAN.md](R3_PLAN.md).
   public) and staff, in headless Chrome at 390px with axe-core: no overflow, no violations, no
   page or server errors. It found and fixed repeated form names on `lifecycle.html` and
   `outcomes.html`, and a missing heading on `submissions.html` when access is refused.
+
+## External opportunities (R4-01 to R4-27, done)
+
+Chosen Challenge: R4-07. The fixture is `project2/r4_fixtures/`.
+
+- **Model (R4-01, R4-02).** `external_sources` + `external_opportunities` (unique
+  `(source_id, external_id)`). A source is an entry in `SOURCES` (`src/external/sources.js`): owner
+  name, allowed link hosts, `fetchFeed`, and an adapter that produces the common record shape. A
+  second source is a new entry, not a schema change. The owner label comes from `SOURCES`, never
+  from the feed.
+- **Untrusted content (R4-07).** Adapters strip control characters, cap lengths, keep only
+  known areas, and require `authoritative_url` to be http(s) on the provider's host. Pages render
+  imported text only through `h()` / `textContent`. Nothing reads imported text as an instruction.
+- **Sync (`runSync` in `src/external/sync.js`).**
+  - It records a run, then fetches, parses and adapts. A failure at any of these marks the run
+    failed and touches nothing (R4-11).
+  - In one transaction it classifies each record:
+    - `new`, `unchanged`, `changed` (fields `title`, `description`, `areas` compared as a set,
+      `authoritative_url`, `closes`), `reappeared` or `withdrawn`;
+    - stored records missing from the feed become `not_seen`, or `still_not_seen` if they already
+      were (R4-08 to R4-10).
+  - Malformed records go in the run's `malformed` list and are skipped (R4-12).
+  - It writes only source columns; every change, disappearance, reappearance or withdrawal adds
+    an `external_source_events` row (R4-17).
+  - It never deletes anything.
+- **Local data (R4-15, R4-16, R4-18 to R4-24).** Separate tables keyed by the local id, never
+  written by a sync:
+  - `external_interest` (faculty, with an optional local note);
+  - `external_student_links` and `_history` (a student's own private record);
+  - `external_guidance` (readiness).
+
+  No route edits source fields. Readiness lists the student's outcomes with `confirmed_by` set,
+  is computed per viewer, and never gates anything.
+- **Routes.** `/api/external-opportunities`:
+  - `GET /`: listed records only, same filters as `/api/projects`.
+  - `GET /mine` and `GET /:id`: any state.
+  - `PUT` / `DELETE /:id/interest`: `requirePublicProfileChoice` plus a profile.
+  - `PUT /:id/guidance`: faculty or staff.
+  - `PUT /:id/my-status`: students.
+
+  `/api/external-sync` (staff only): `GET /health`, `GET /runs/:id`, `POST /run`
+  (`{ sourceId, feed }`), and `POST /reset` (test mode only, evaluation).
+- **Freshness (R4-13)** uses the real time, not `CLOCK_DATE`. Data is stale if the latest attempt
+  failed or the last success is over 8 days old. External records never take Algoma lifecycle
+  states (R4-25).
+- **Pages.**
+  - `external.html?id=` shows one record; `external.html` alone shows "Your external
+    opportunities".
+  - `sync.html` is the staff health page.
+  - `projects.html` lists external cards (Type: External).
+  - `npm run dev:local` runs feed v1 at startup.
+- **Tests.** `test/external-sync.test.js` (against `expected_sync_results.json`) and
+  `test/external-opportunities.test.js`.

@@ -3,11 +3,13 @@
 Release 1: faculty and project discovery with first contact by email.
 Release 2: accountless partner intake, faculty-supervised industry opportunities, and faculty
 notification subscriptions.
-Release 3 (in progress, branch `r3-development`): matching, term lifecycle and outcomes.
+Release 3: matching, term lifecycle and outcomes.
+Release 4 (branch `r4-development`): externally owned opportunities (Mitacs) synchronised from a
+provider feed, with local faculty support and readiness guidance.
 
 - **Live:** https://algoma-opportunity-registry-r1-backend.onrender.com (auto-deploys the
-  `r1-development` branch). Assessed releases are the tags `R1-submission` and
-  `R2-submission`.
+  `r1-development` branch). Assessed releases are the tags `R1-submission` to
+  `R4-submission`.
 - **Developers and coding agents:** read [AGENTS.md](AGENTS.md) first, for the rules,
   code layout, testing, and how to add features.
 - **Evaluators:** see [release_submission.md](release_submission.md) and

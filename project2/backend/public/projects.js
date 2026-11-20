@@ -6,6 +6,7 @@ const FILTER_KEYS = [...API_FILTER_KEYS, "type"];
 const TYPES = [
   { value: "faculty", label: "Faculty projects" },
   { value: "industry", label: "Industry projects (with an outside organisation)" },
+  { value: "external", label: "External opportunities (owned by another organisation, e.g. Mitacs)" },
 ];
 
 // Keeps a filter that's in the URL selectable even if it has no results right now (an old link).
@@ -64,15 +65,49 @@ function opportunityCard(o) {
   </li>`;
 }
 
+// R4-02, R4-03: an externally owned opportunity, built with h() so its text stays text (R4-07).
+// The owner badge comes first, so nobody has to read the description to know whose it is.
+function externalCard(o) {
+  const supporters = o.interestedFaculty.map((f) => f.displayName).join(", ");
+  const details = [
+    o.closing.closesOn && `${o.source.ownerName} closing date ${formatDay(o.closing.closesOn)}`,
+    supporters ? `Algoma faculty support: ${supporters}` : "No Algoma faculty support offered yet",
+  ].filter(Boolean);
+  return h(
+    "li",
+    { class: "card" },
+    h("p", { class: "kind kind-external" }, h("span", { class: "owner-badge", text: `External · ${o.wording.ownership}` })),
+    h("h2", {}, h("a", { href: `external.html?id=${encodeURIComponent(o.id)}`, text: o.title })),
+    h("p", { text: details.join(" · ") }),
+    h("p", { class: "hint", text: o.researchAreas.join(" · ") }),
+    h(
+      "p",
+      { class: o.freshness.stale ? "hint warning" : "hint freshness" },
+      o.freshness.stale
+        ? `May be out of date. ${o.freshness.staleReason}`
+        : `Copied from ${o.source.ownerName}; last updated ${new Date(o.freshness.lastSuccessfulSyncAt).toLocaleString("en-CA", { timeZone: "America/Toronto", dateStyle: "medium", timeStyle: "short" })}.`,
+    ),
+  );
+}
+
+function htmlToNode(html) {
+  const template = document.createElement("template");
+  template.innerHTML = html.trim();
+  return template.content.firstElementChild;
+}
+
 // R1-19, R1-20, R2-21: faculty projects and supervised industry projects in one list, with
 // filters taken from (and kept in) the URL.
-function renderList(data, industryData, session, query) {
+function renderList(data, industryData, externalData, session, query) {
   const { projects } = data;
   const { opportunities } = industryData;
-  const filters = mergeFilters(data.filters, industryData.filters);
+  const externals = externalData.opportunities;
+  const filters = mergeFilters(mergeFilters(data.filters, industryData.filters), externalData.filters);
   $("list-note").textContent = session.authenticated
     ? "Showing every published faculty project and every industry project a faculty member has agreed to supervise, including those visible only to signed-in users."
     : "Showing faculty projects and supervised industry projects from faculty who have chosen to share them publicly. Sign in to see more.";
+  $("list-note").textContent +=
+    " External opportunities are owned by another organisation, such as Mitacs, and are applied for on that organisation's site.";
 
   const type = query.get("type") || "";
   fillSelect($("filter-type"), TYPES, type, "Any type");
@@ -110,11 +145,13 @@ function renderList(data, industryData, session, query) {
     "Any faculty member",
   );
 
+  const show = (kind) => !type || type === kind;
   const items = [
-    ...(type === "industry" ? [] : projects.map((p) => ({ title: p.title, html: projectCard(p) }))),
-    ...(type === "faculty" ? [] : opportunities.map((o) => ({ title: o.title, html: opportunityCard(o) }))),
+    ...(show("faculty") ? projects.map((p) => ({ title: p.title, node: htmlToNode(projectCard(p)) })) : []),
+    ...(show("industry") ? opportunities.map((o) => ({ title: o.title, node: htmlToNode(opportunityCard(o)) })) : []),
+    ...(show("external") ? externals.map((o) => ({ title: o.title, node: externalCard(o) })) : []),
   ].sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()));
-  $("project-list").innerHTML = items.map((item) => item.html).join("");
+  $("project-list").replaceChildren(...items.map((item) => item.node));
   $("list-view").hidden = false;
   const filtered = FILTER_KEYS.some((key) => query.get(key));
   showResultCount($("result-count"), items.length, { noun: "project", plural: "projects", filtered });
@@ -205,7 +242,11 @@ submitFiltersAsUrl($("filters"), "projects.html");
     const params = new URLSearchParams();
     for (const key of API_FILTER_KEYS) if (query.get(key)) params.set(key, query.get(key));
     const suffix = params.size ? `?${params}` : "";
-    const [res, industryRes] = await Promise.all([api(`/api/projects${suffix}`), api(`/api/opportunities${suffix}`)]);
+    const [res, industryRes, externalRes] = await Promise.all([
+      api(`/api/projects${suffix}`),
+      api(`/api/opportunities${suffix}`),
+      api(`/api/external-opportunities${suffix}`),
+    ]);
     if (res.status === 400) {
       showStatus(statusEl, res.data.error, { error: true });
       const clear = document.createElement("a");
@@ -216,7 +257,10 @@ submitFiltersAsUrl($("filters"), "projects.html");
     if (!res.ok || !industryRes.ok) {
       return showStatus(statusEl, res.data.error || industryRes.data.error || "Could not load projects.", { error: true });
     }
-    renderList(res.data, industryRes.data, session, query);
+    // External opportunities are an extra: if they can't load, local discovery still works.
+    const externalData = externalRes.ok ? externalRes.data : { opportunities: [], filters: { areas: [], levels: [], terms: [], faculty: [] } };
+    renderList(res.data, industryRes.data, externalData, session, query);
+    if (!externalRes.ok) showStatus(statusEl, "External opportunities couldn't be loaded right now; local projects are shown.", { error: true });
     return;
   }
 

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>External opportunity — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <article id="external-view" hidden aria-labelledby="external-title">
+      <p><a href="projects.html?type=external">All external opportunities</a></p>
+      <p class="kind kind-external"><span id="external-owner-badge" class="owner-badge"></span></p>
+      <h1 id="external-title" tabindex="-1"></h1>
+      <div id="external-warnings"></div>
+      <p id="external-authority" class="note"></p>
+      <div class="handoff">
+        <a id="external-apply" class="button-link primary" target="_blank" rel="noopener noreferrer external"></a>
+        <p id="external-apply-note" class="hint"></p>
+      </div>
+      <dl id="external-facts" class="facts"></dl>
+
+      <section aria-labelledby="about-heading">
+        <h2 id="about-heading">Description</h2>
+        <p id="external-description-source" class="hint"></p>
+        <p id="external-description" class="prewrap"></p>
+      </section>
+
+      <section id="areas-section" hidden aria-labelledby="areas-heading">
+        <h2 id="areas-heading">Areas</h2>
+        <ul id="external-areas" class="tags"></ul>
+      </section>
+
+      <section aria-labelledby="support-heading">
+        <h2 id="support-heading">Algoma faculty support</h2>
+        <p id="support-explainer" class="hint"></p>
+        <ul id="support-list"></ul>
+        <div id="support-controls"></div>
+      </section>
+
+      <section id="readiness-section" hidden aria-labelledby="readiness-heading">
+        <h2 id="readiness-heading">Readiness guidance (a suggestion, not a requirement)</h2>
+        <div id="readiness-body"></div>
+      </section>
+      <div id="guidance-controls"></div>
+
+      <section id="tracking-section" hidden aria-labelledby="tracking-heading">
+        <h2 id="tracking-heading">Your own record (private)</h2>
+        <div id="tracking-body"></div>
+      </section>
+
+      <section aria-labelledby="history-heading">
+        <h2 id="history-heading">Changes from the source</h2>
+        <ul id="history-list"></ul>
+      </section>
+    </article>
+
+    <section id="mine-view" hidden aria-labelledby="mine-heading">
+      <h1 id="mine-heading">Your external opportunities</h1>
+      <div id="mine-body"></div>
+      <p><a href="projects.html?type=external">Browse external opportunities</a></p>
+    </section>
+
+    <section id="not-found" hidden>
+      <h1>Opportunity not found</h1>
+      <p id="not-found-text">This external opportunity doesn't exist.</p>
+      <p><a href="projects.html?type=external">See external opportunities</a></p>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="external.js"></script>
+</body>
+</html>

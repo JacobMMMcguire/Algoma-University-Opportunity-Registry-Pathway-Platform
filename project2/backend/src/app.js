@@ -6,6 +6,8 @@ const { createAccountRouter } = require("./routes/account");
 const { createAdminRouter } = require("./routes/admin");
 const { createAuthRouter } = require("./routes/auth");
 const { createFacultyRouter } = require("./routes/faculty");
+const { createExternalRouter } = require("./routes/external");
+const { createExternalSyncRouter } = require("./routes/external-sync");
 const { createLifecycleRouter } = require("./routes/lifecycle");
 const { createMatchesRouter } = require("./routes/matches");
 const { createOutcomesRouter, createStudentsRouter } = require("./routes/outcomes");
@@ -50,6 +52,8 @@ function createApp({ db, config, sendSignInEmail = null }) {
   app.use("/api/matches", createMatchesRouter(deps));
   app.use("/api/outcomes", createOutcomesRouter(deps));
   app.use("/api/students", createStudentsRouter(deps));
+  app.use("/api/external-opportunities", createExternalRouter(deps));
+  app.use("/api/external-sync", createExternalSyncRouter(deps));
   // Mount new feature routers here, e.g. app.use("/api/things", createThingsRouter(deps));
 
   app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));

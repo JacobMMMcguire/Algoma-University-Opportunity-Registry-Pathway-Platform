@@ -18,6 +18,12 @@ function h(tag, props = {}, ...children) {
   return node;
 }
 
+// Replaces an element's children, skipping null/false like h() does (replaceChildren would show
+// them as the text "null").
+function setChildren(element, ...children) {
+  element.replaceChildren(...children.filter((c) => c !== null && c !== undefined && c !== false));
+}
+
 // Moves focus to `selector` after a change, so keyboard and screen-reader users land on what
 // changed. Headings and cards get tabindex="-1" so they can take focus.
 function focusElement(selector) {
@@ -65,7 +71,9 @@ const NAV_LINKS = [
   { href: "outcomes.html", label: "Your outcomes", show: (s) => s.user && (s.user.isVerifiedFaculty || !s.user.isStaff) },
   { href: "showcase.html", label: "Completed work" },
   { href: "student-profile.html", label: "Your student profile", show: (s) => s.user && !s.user.isVerifiedFaculty && !s.user.isStaff },
+  { href: "external.html", label: "Your external opportunities", show: (s) => s.user && (s.user.isVerifiedFaculty || !s.user.isStaff) },
   { href: "admin.html", label: "Staff: faculty verification", show: (s) => s.user?.isStaff },
+  { href: "sync.html", label: "Staff: external sync health", show: (s) => s.user?.isStaff },
   { href: "operator.html", label: "Operator console (test mode)", show: (s) => s.testMode },
 ];
 

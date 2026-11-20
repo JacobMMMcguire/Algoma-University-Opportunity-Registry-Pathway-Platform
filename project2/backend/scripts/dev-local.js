@@ -5,6 +5,8 @@
 const { createApp } = require("../src/app");
 const { loadConfig } = require("../src/config");
 const { createLocalDb } = require("../src/db");
+const { SOURCES } = require("../src/external/sources");
+const { runSync } = require("../src/external/sync");
 const { buildAllFixtureSql, fixtureEmail, loadLifecycleFixture } = require("../src/fixture");
 
 // No email locally, so only the fixture test accounts can sign in.
@@ -12,6 +14,8 @@ const { buildAllFixtureSql, fixtureEmail, loadLifecycleFixture } = require("../s
 (async () => {
   const db = await createLocalDb();
   await db.exec(buildAllFixtureSql());
+  // R4: start from "last week's" successful sync (feed v1); run v2 from /sync.html as staff.
+  if (process.env.SKIP_V1_SYNC !== "true") await runSync(db, SOURCES["mitacs-demo"], "v1");
 
   // A fixed, local-only operator secret; production uses its own private OPERATOR_SECRET.
   const operatorSecret = process.env.OPERATOR_SECRET || "local-dev-operator-secret-not-for-production";

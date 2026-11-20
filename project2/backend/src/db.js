@@ -9,14 +9,34 @@ function createPool(databaseUrl) {
     connectionString: databaseUrl,
     ssl: databaseUrl.includes("localhost") ? false : { rejectUnauthorized: false },
   });
-  return { query: (text, params) => pool.query(text, params), exec: (sql) => pool.query(sql), end: () => pool.end() };
+  // Runs `fn(tx)` on one connection inside BEGIN/COMMIT; any error rolls everything back.
+  async function transaction(fn) {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const result = await fn({ query: (text, params) => client.query(text, params) });
+      await client.query("COMMIT");
+      return result;
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+  return { query: (text, params) => pool.query(text, params), exec: (sql) => pool.query(sql), end: () => pool.end(), transaction };
 }
 
 // An in-memory Postgres (PGlite) for tests and `npm run dev:local`; no credentials needed.
 async function createLocalDb() {
   const { PGlite } = require("@electric-sql/pglite");
   const pg = new PGlite();
-  const db = { query: (text, params) => pg.query(text, params), exec: (sql) => pg.exec(sql), end: () => pg.close() };
+  const db = {
+    query: (text, params) => pg.query(text, params),
+    exec: (sql) => pg.exec(sql),
+    end: () => pg.close(),
+    transaction: (fn) => pg.transaction((tx) => fn({ query: (text, params) => tx.query(text, params) })),
+  };
   await applyMigrations(db);
   return db;
 }
