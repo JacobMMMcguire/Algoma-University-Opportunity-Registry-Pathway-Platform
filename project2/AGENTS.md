@@ -271,7 +271,9 @@ submission its first run, `run_changes`, `matches`, `match_students`,
   from the logo files' CMYK 21/97/90/11), red as an accent below it, Source Serif 4 headings
   over Public Sans (loaded from Google Fonts at the top of `styles.css`). Pages keep an empty
   `<header>`; `renderNav` fills it. Visitors get dropdown menus in the bar; signed-in users
-  get a sidebar beside `<main>` (built by wrapping it in `.shell`). Below 56rem both become a
+  get a charcoal sidebar beside `<main>` (built by wrapping it in `.shell`); that sidebar, and
+  your initials in the bar on phones, is how you can tell you're signed in. A page's opening
+  `<h1>` (or a `.page-band` wrapper) runs full width in red. Below 56rem both become a
   drawer opened by the Menu button. Sign-in is its own page, `signin.html` (`data-nav="plain"`:
   brand and a way back only), and accepts `?next=page.html`; "please sign in" links go there.
   Detail pages put the contact panel in `.detail-aside` beside `.detail-main`. The signed-in

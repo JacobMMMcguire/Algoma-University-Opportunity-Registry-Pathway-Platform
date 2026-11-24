@@ -306,7 +306,8 @@ function renderClockNote(session) {
   note.id = "clock-note";
   note.className = "clock-note";
   note.textContent = `Deadlines are evaluated as of ${session.clock.label} (a simulated date, set for evaluation).`;
-  document.querySelector("body > header")?.after(note);
+  // Above the red bar, so the bar and each page's red title band read as one block.
+  document.querySelector("body > header")?.before(note);
 }
 
 // "2026-10-20" -> "20 October 2026", without letting a time zone shift the day.

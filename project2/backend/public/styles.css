@@ -407,6 +407,86 @@ td { overflow-wrap: anywhere; }
 .row-body a:hover { color: var(--red-dark); text-decoration: underline; }
 .row-body p { margin: 0.2rem 0 0; color: var(--ink-2); }
 
+/* ---------- Signed in: a charcoal sidebar (the at-a-glance "you're signed in" cue) ---------- */
+.signed-in .sidebar { background: var(--ink); border-right-color: var(--ink); color: #e2e2e2; }
+.signed-in .sidebar-group-title { color: #b3b3b3; }
+.signed-in .sidebar a { color: #e2e2e2; }
+.signed-in .sidebar a:hover { background: #2a2a2a; color: #fff; }
+.signed-in .sidebar a[aria-current="page"] { background: var(--red); color: #fff; box-shadow: none; }
+.signed-in .sidebar-account { border-top-color: #3a3a3a; }
+.signed-in .sidebar-account p { color: #cfcfcf; }
+.signed-in .sidebar-account strong { color: #fff; }
+.signed-in .sidebar-account button { background: transparent; color: #fff; border-color: #8a8a8a; }
+.signed-in .sidebar-account button:hover { border-color: #fff; color: #fff; }
+
+/* Focus stays visible on coloured areas: white on red, light blue on charcoal. */
+.site-header :focus-visible, .page-band :focus-visible, .profile-card-head :focus-visible { outline-color: #fff; }
+.signed-in .sidebar :focus-visible, .on-dark :focus-visible, .detail-aside .contact :focus-visible, .signin-prompt :focus-visible, .site-footer :focus-visible { outline-color: #8ab4ff; }
+
+/* The simulated-date notice sits above the red bar, so the bar and the page's red band read as one block. */
+.clock-note { background: var(--ink); color: #e2e2e2; border-bottom: 0; }
+
+/* ---------- Red title bands (from Version 2) ----------
+   A page's opening heading, or a .page-band wrapper, runs full width in red. The background
+   bleeds sideways with a clipped box-shadow, so no markup has to sit outside <main>; in the
+   signed-in layout <main> clips it to the content column beside the sidebar. */
+.page-band, main > h1:first-child, main > section > h1:first-child {
+  background: var(--red); color: #fff;
+  box-shadow: 0 0 0 100vmax var(--red); clip-path: inset(0 -100vmax);
+}
+main > h1:first-child, main > section > h1:first-child { margin: calc(-1.5rem - 1px) 0 1.75rem; padding: 2rem 0 2.25rem; }
+.page-band { margin: calc(-1.5rem - 1px) 0 1.75rem; padding: 1.5rem 0 2rem; }
+.shell > main { overflow-x: clip; }
+.shell > main > h1:first-child, .shell > main > section > h1:first-child,
+.shell > main > .page-band:first-child, .shell > main > article > .page-band:first-child,
+.shell > main > section > .page-band:first-child, .shell > main > section > div > .page-band:first-child { margin-top: calc(-2rem - 1px); }
+.page-band h1 { color: #fff; margin: 0.25rem 0 0.5rem; }
+.page-band p, .page-band .hint, .page-band .lifecycle, .page-band .eyebrow, .page-band .kind { color: var(--on-red-soft); }
+.page-band p { margin: 0.3rem 0; max-width: 48rem; }
+.page-band a:not(.button-link) { color: #fff; }
+.page-band a:not(.button-link):hover { color: #fff; }
+.page-band strong { color: #fff; }
+.page-band .back-link { min-height: 44px; }
+.page-band .button-link.primary { background: #fff; border-color: #fff; color: var(--red-dark); }
+.page-band .button-link.primary:hover { background: var(--red-tint); color: var(--red-dark); }
+.page-band .owner-badge { color: var(--ext); }
+
+/* Home: the hero is the red band; search keeps a charcoal button so it stands out on red. */
+.home-hero.page-band { padding: 2.5rem 0 3rem; margin-bottom: 2.5rem; }
+.page-band .home-search input[type="search"] { border-color: #fff; }
+.page-band .home-search button.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+.page-band .home-search button.primary:hover { background: #333; border-color: #333; }
+.page-band .open-now { border-color: #fff; }
+.page-band .open-now p { color: var(--ink-2); }
+.page-band .open-now .external-line { color: var(--ext); }
+.page-band .open-now a { color: var(--ink); }
+.page-band .open-now .see-all { color: var(--red); }
+
+/* Home: a charcoal sign-in band runs into the charcoal footer. */
+.signin-prompt {
+  background: var(--ink); color: #fff; border: 0; border-radius: 0;
+  box-shadow: 0 0 0 100vmax var(--ink); clip-path: inset(0 -100vmax);
+  margin: 3rem 0 0; padding: 2.5rem 0;
+}
+.signin-prompt h2 { color: #fff; }
+.signin-prompt p { color: #d9d4cc; }
+body:not(.signed-in) main.home { padding-bottom: 0; }
+main.home > .status:empty { min-height: 0; margin: 0; }
+
+/* Detail pages: the contact panel is a charcoal card beside the content. */
+.detail-aside .contact { background: var(--ink); color: #fff; border-color: var(--ink); }
+.detail-aside .contact h2, .detail-aside .contact label { color: #fff; }
+.detail-aside .contact p, .detail-aside .contact .hint { color: #d9d4cc; }
+.detail-aside .contact a:not(.button-link) { color: #fff; }
+.detail-aside .contact input:not([type="radio"]):not([type="checkbox"]), .detail-aside .contact textarea {
+  background: #2b2b2b; color: #fff; border-color: #6b6b6b;
+}
+.detail-aside .contact button:not(.primary), .detail-aside .contact .button-link:not(.primary) {
+  background: transparent; color: #fff; border-color: #8a8a8a;
+}
+.detail-aside .contact button:not(.primary):hover, .detail-aside .contact .button-link:not(.primary):hover { border-color: #fff; color: #fff; }
+.detail-aside .contact .status.error { color: #ffb3bb; }
+
 /* ---------- Main forms sit in a white panel ---------- */
 #intake-form, #profile-form, #project-form, #record-form, #subscription-form, #access-form, #public-profile-form {
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.25rem 1.5rem; max-width: 46rem;
@@ -425,7 +505,18 @@ td { overflow-wrap: anywhere; }
 /* ---------- Phones and narrow windows ---------- */
 @media (max-width: 56rem) {
   .topbar { padding: 0.6rem 1rem; }
-  .topbar-nav, .account-menu { display: none; }
+  .topbar-nav { display: none; }
+  /* Signed in on a phone: the account button shrinks to your initials, so it's still obvious. */
+  .account-trigger { padding: 0 0.3rem; border-color: #fff; }
+  .topbar { gap: 0.5rem; }
+  .brand-name { font-size: 1rem; }
+  .brand-mark { width: 34px; height: 34px; }
+  .menu-toggle { padding: 0 0.65rem; }
+  .account-trigger > span:not(.avatar), .account-trigger .chevron { display: none; }
+  main > h1:first-child, main > section > h1:first-child, .page-band { margin-top: calc(-1.25rem - 1px); }
+  .shell > main > h1:first-child, .shell > main > section > h1:first-child,
+  .shell > main > .page-band:first-child, .shell > main > article > .page-band:first-child,
+  .shell > main > section > .page-band:first-child, .shell > main > section > div > .page-band:first-child { margin-top: calc(-1.5rem - 1px); }
   .menu-toggle { display: inline-flex; }
   .brand-sub { display: none; }
   .shell { display: block; min-height: 0; }
