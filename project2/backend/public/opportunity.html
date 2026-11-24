@@ -10,7 +10,9 @@
   <header><nav id="site-nav" aria-label="Main"></nav></header>
   <main>
     <article id="opportunity-view" hidden aria-labelledby="opportunity-title">
-      <p><a href="projects.html">All projects</a></p>
+      <p><a class="back-link" href="projects.html">All projects</a></p>
+      <div class="detail-layout">
+      <div class="detail-main">
       <p class="kind kind-industry">Industry project · proposed by <span id="opportunity-organisation"></span></p>
       <h1 id="opportunity-title" tabindex="-1"></h1>
       <p id="opportunity-lifecycle" class="lifecycle"></p>
@@ -34,16 +36,20 @@
         <h2 id="areas-heading">Research and project areas</h2>
         <ul id="opportunity-areas" class="tags"></ul>
       </section>
-
-      <div id="contact-choice" class="field" hidden>
-        <label for="contact-faculty">Faculty member to contact</label>
-        <select id="contact-faculty"></select>
       </div>
-      <section id="contact-section" hidden></section>
-      <section id="no-contact" class="note" hidden aria-labelledby="no-contact-heading">
-        <h2 id="no-contact-heading">Contact</h2>
-        <p id="no-contact-text"></p>
-      </section>
+
+      <div class="detail-aside">
+        <div id="contact-choice" class="field" hidden>
+          <label for="contact-faculty">Faculty member to contact</label>
+          <select id="contact-faculty"></select>
+        </div>
+        <section id="contact-section" hidden></section>
+        <section id="no-contact" class="note" hidden aria-labelledby="no-contact-heading">
+          <h2 id="no-contact-heading">Contact</h2>
+          <p id="no-contact-text"></p>
+        </section>
+      </div>
+      </div>
     </article>
 
     <section id="not-found" hidden>

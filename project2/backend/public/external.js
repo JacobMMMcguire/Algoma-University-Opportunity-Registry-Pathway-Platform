@@ -246,7 +246,7 @@ function externalLink(o, extra) {
 async function renderMine(session) {
   $("mine-view").hidden = false;
   if (!session.authenticated) {
-    setChildren($("mine-body"), h("p", {}, "Sign in to see the external opportunities you follow. ", h("a", { href: "index.html", text: "Sign in" })));
+    setChildren($("mine-body"), h("p", {}, "Sign in to see the external opportunities you follow. ", h("a", { href: "signin.html", text: "Sign in" })));
     return;
   }
   const res = await api("/api/external-opportunities/mine");

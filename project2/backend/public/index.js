@@ -1,12 +1,77 @@
 const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
 
-function showSignedOut(session) {
+// Visitors see the landing page; signing in happens on signin.html.
+function showSignedOut() {
   $("signed-out").hidden = false;
   $("signed-in").hidden = true;
-  $("verify-form").hidden = true;
-  $("request-form").hidden = false;
-  $("test-mode-hint").hidden = !session.testMode;
+  showLanding();
+}
+
+// "Open now" and the research-area tiles, from the same public lists Discover uses, so they never
+// show anything a visitor couldn't already find there. Titles and partner names stay text (h()).
+async function showLanding() {
+  const [projects, industry, external] = await Promise.all([
+    api("/api/projects"),
+    api("/api/opportunities"),
+    api("/api/external-opportunities"),
+  ]);
+  const byTitle = (a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase());
+  const local = [
+    ...(projects.ok ? projects.data.projects : []).map((p) => ({
+      title: p.title,
+      href: `projects.html?id=${encodeURIComponent(p.id)}`,
+      line: ["Faculty project", p.faculty.displayName, p.targetTerm].filter(Boolean).join(" · "),
+      areas: p.researchAreas,
+    })),
+    ...(industry.ok ? industry.data.opportunities : []).map((o) => ({
+      title: o.title,
+      href: `opportunity.html?id=${encodeURIComponent(o.id)}`,
+      line: `Industry project · ${o.organisation}`,
+      areas: o.researchAreas,
+    })),
+  ].sort(byTitle);
+  const externals = (external.ok ? external.data.opportunities : [])
+    .map((o) => ({
+      title: o.title,
+      href: `external.html?id=${encodeURIComponent(o.id)}`,
+      line: `External · ${o.wording.ownership}`,
+      external: true,
+      areas: o.researchAreas,
+    }))
+    .sort(byTitle);
+  const all = [...local, ...externals];
+  if (!all.length) return;
+
+  const openNow = [...local.slice(0, externals.length ? 2 : 3), ...externals.slice(0, 1)].slice(0, 3);
+  setChildren(
+    $("open-now-list"),
+    ...openNow.map((item) =>
+      h("li", {}, h("a", { href: item.href, text: item.title }), h("p", { class: item.external ? "external-line" : "", text: item.line })),
+    ),
+  );
+  $("see-all").textContent = all.length === 1 ? "See the 1 project" : `See all ${all.length} projects`;
+  $("open-now").hidden = false;
+
+  const counts = new Map();
+  for (const item of all) for (const area of item.areas) counts.set(area, (counts.get(area) || 0) + 1);
+  const areas = [...counts].sort(([a, x], [b, y]) => y - x || a.localeCompare(b));
+  setChildren(
+    $("area-tiles"),
+    ...areas.map(([area, count]) =>
+      h(
+        "li",
+        {},
+        h(
+          "a",
+          { href: `projects.html?area=${encodeURIComponent(area)}`, "aria-label": `${area}: ${count} ${count === 1 ? "project" : "projects"}` },
+          h("span", { text: area }),
+          h("span", { class: "area-count", "aria-hidden": "true", text: String(count) }),
+        ),
+      ),
+    ),
+  );
+  $("areas").hidden = areas.length === 0;
 }
 
 function showSignedIn(user) {
@@ -68,61 +133,8 @@ async function load() {
   const session = await getSession();
   renderNav(session);
   if (session.authenticated) showSignedIn(session.user);
-  else showSignedOut(session);
+  else showSignedOut();
 }
-
-$("request-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const email = $("email").value.trim();
-  if (!email) {
-    showStatus(statusEl, "Enter your Algoma University email address.", { error: true });
-    $("email").focus();
-    return;
-  }
-  const res = await api("/api/auth/request-challenge", { method: "POST", body: { email } });
-  if (!res.ok) {
-    showStatus(statusEl, res.data.error || "Could not send a sign-in code.", { error: true });
-    $("email").focus();
-    return;
-  }
-  $("code-email").textContent = email;
-  $("request-form").hidden = true;
-  $("verify-form").hidden = false;
-  $("code").value = "";
-  $("code").focus();
-  showStatus(
-    statusEl,
-    res.data.emailSent
-      ? "Check your email for a 6-digit code. It can take a minute to arrive; check junk mail too."
-      : "This is a test account: an authorised tester can read its code on the operator console.",
-  );
-});
-
-$("verify-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const code = $("code").value.trim();
-  if (!/^\d{6}$/.test(code)) {
-    showStatus(statusEl, "Enter the 6-digit code from your email.", { error: true });
-    $("code").focus();
-    return;
-  }
-  const res = await api("/api/auth/verify", { method: "POST", body: { email: $("email").value.trim(), code } });
-  if (!res.ok) {
-    showStatus(statusEl, res.data.error || "Could not verify that code.", { error: true });
-    $("code").focus();
-    return;
-  }
-  showStatus(statusEl, "");
-  await load();
-  $("account-heading").focus();
-});
-
-$("restart").addEventListener("click", () => {
-  $("verify-form").hidden = true;
-  $("request-form").hidden = false;
-  showStatus(statusEl, "");
-  $("email").focus();
-});
 
 $("public-profile-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -150,5 +162,4 @@ $("sign-out").addEventListener("click", async () => {
   await load();
 });
 
-$("account-heading").tabIndex = -1;
 load();

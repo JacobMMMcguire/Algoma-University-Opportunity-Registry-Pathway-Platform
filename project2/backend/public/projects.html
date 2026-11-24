@@ -51,8 +51,11 @@
     </section>
 
     <article id="project-view" hidden aria-labelledby="project-title">
-      <p><a href="projects.html">All projects</a></p>
+      <p><a class="back-link" href="projects.html">All projects</a></p>
       <p id="owner-note" class="note" hidden></p>
+      <div class="detail-layout">
+      <div class="detail-main">
+      <p class="eyebrow">Faculty project</p>
       <h1 id="project-title" tabindex="-1"></h1>
       <p id="project-lifecycle" class="lifecycle"></p>
       <p id="project-faculty" hidden>Faculty: <a href="#"></a></p>
@@ -77,12 +80,16 @@
         <h2 id="prereq-heading">Desired background</h2>
         <p id="project-prereq" class="prewrap"></p>
       </section>
+      </div>
 
-      <section id="contact-section" hidden></section>
-      <section id="no-contact" class="note" hidden aria-labelledby="no-contact-heading">
-        <h2 id="no-contact-heading">Contact</h2>
-        <p id="no-contact-text"></p>
-      </section>
+      <div class="detail-aside">
+        <section id="contact-section" hidden></section>
+        <section id="no-contact" class="note" hidden aria-labelledby="no-contact-heading">
+          <h2 id="no-contact-heading">Contact</h2>
+          <p id="no-contact-text"></p>
+        </section>
+      </div>
+      </div>
     </article>
 
     <section id="not-found" hidden>

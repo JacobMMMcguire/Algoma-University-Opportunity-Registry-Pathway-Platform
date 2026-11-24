@@ -56,7 +56,7 @@ $("rows").addEventListener("click", async (event) => {
   const session = await getSession();
   renderNav(session);
   if (!session.authenticated) {
-    $("denied").innerHTML = 'Please <a href="index.html">sign in</a> first.';
+    $("denied").innerHTML = 'Please <a href="signin.html">sign in</a> first.';
     $("denied").hidden = false;
   } else if (!session.user.isStaff) {
     $("denied").textContent = "Staff access is required to view this page.";

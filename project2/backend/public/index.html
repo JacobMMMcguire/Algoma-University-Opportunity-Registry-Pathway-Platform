@@ -7,49 +7,71 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header><nav id="site-nav" aria-label="Main"></nav></header>
-  <main>
-    <h1>Opportunity Registry and Pathway Platform</h1>
-
-    <section id="signed-out" hidden aria-labelledby="sign-in-heading">
-      <h2 id="sign-in-heading">Sign in</h2>
-      <p>No password needed. We'll email a 6-digit code to your Algoma University address.</p>
-
-      <form id="request-form" novalidate>
-        <div class="field">
-          <label for="email">Algoma University email</label>
-          <input id="email" name="email" type="email" autocomplete="email" required aria-describedby="email-hint">
-          <p id="email-hint" class="hint">Must end in @algomau.ca</p>
+  <header></header>
+  <main class="home">
+    <div id="signed-out" hidden>
+      <section class="home-hero" aria-labelledby="home-heading">
+        <div class="home-hero-text">
+          <p class="eyebrow">Algoma University</p>
+          <h1 id="home-heading">Research and industry projects, all in one place.</h1>
+          <p class="lede">Find a project with Algoma faculty or a partner organisation, see who supervises it, and get in touch.</p>
+          <form class="home-search" action="projects.html" method="get" role="search" aria-label="Search projects">
+            <label for="home-q" class="visually-hidden">Search projects and faculty</label>
+            <input id="home-q" name="q" type="search" maxlength="100" placeholder="Try “accessibility” or “machine learning”">
+            <button type="submit" class="primary">Search</button>
+          </form>
         </div>
-        <button type="submit" class="primary">Send sign-in code</button>
-      </form>
+        <aside class="open-now" aria-labelledby="open-now-heading" hidden id="open-now">
+          <h2 id="open-now-heading">Open now</h2>
+          <ul id="open-now-list"></ul>
+          <a class="see-all" id="see-all" href="projects.html">See all projects</a>
+        </aside>
+      </section>
 
-      <form id="verify-form" hidden novalidate>
-        <div class="field">
-          <label for="code">6-digit code</label>
-          <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required aria-describedby="code-hint">
-          <p id="code-hint" class="hint">Sent to <span id="code-email"></span>. Expires in 10 minutes and works once.</p>
-        </div>
-        <div class="actions">
-          <button type="submit" class="primary">Sign in</button>
-          <button type="button" id="restart">Use a different email</button>
-        </div>
-      </form>
+      <section id="areas" hidden aria-labelledby="areas-heading">
+        <h2 id="areas-heading">Browse by research area</h2>
+        <ul id="area-tiles" class="area-tiles"></ul>
+        <p class="hint">Counts are projects you can see right now. A project can be in more than one area.</p>
+      </section>
 
-      <p id="test-mode-hint" class="hint" hidden>
-        Test mode is on: codes for the synthetic test accounts are available to authorised testers on
-        the <a href="operator.html">operator console</a>.
-      </p>
-    </section>
+      <section aria-labelledby="audiences-heading">
+        <h2 id="audiences-heading">Who it's for</h2>
+        <div class="audiences">
+          <div>
+            <h3>Students</h3>
+            <p>Search projects by area, level and term, then email the supervisor from your own account.</p>
+            <a href="projects.html">Discover projects</a>
+          </div>
+          <div>
+            <h3>Faculty</h3>
+            <p>Publish projects, choose whether your profile is public, and offer to supervise work proposed by organisations.</p>
+            <a href="signin.html">Sign in to your workspace</a>
+          </div>
+          <div>
+            <h3>Organisations</h3>
+            <p>Propose a project with no account. Students see it once an Algoma faculty member agrees to supervise.</p>
+            <a href="partner.html">Propose a project</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="signin-prompt" aria-labelledby="prompt-heading">
+        <div>
+          <h2 id="prompt-heading">Have an @algomau.ca address?</h2>
+          <p>Sign in to see every project, including those from faculty who aren't listed publicly.</p>
+        </div>
+        <a class="button-link primary" href="signin.html">Sign in</a>
+      </section>
+    </div>
 
     <section id="signed-in" hidden aria-labelledby="account-heading">
-      <h2 id="account-heading">Your account</h2>
+      <h1 id="account-heading" tabindex="-1">Your account</h1>
       <p>Signed in as <strong id="who"></strong>.</p>
       <p id="role-note"></p>
       <p id="matches-note" class="note" hidden></p>
 
       <section id="public-profile" hidden aria-labelledby="public-profile-heading">
-        <h3 id="public-profile-heading">Public profile display</h3>
+        <h2 id="public-profile-heading">Public profile display</h2>
         <p id="public-profile-current"></p>
 
         <div class="note">
@@ -86,6 +108,13 @@
 
     <p id="status" class="status" role="status" aria-live="polite"></p>
   </main>
+
+  <footer class="site-footer">
+    <div>
+      <span>Opportunity Registry and Pathway Platform · Algoma University</span>
+      <span>Contact goes to faculty by email. The site never sends messages for you.</span>
+    </div>
+  </footer>
 
   <script src="common.js"></script>
   <script src="index.js"></script>

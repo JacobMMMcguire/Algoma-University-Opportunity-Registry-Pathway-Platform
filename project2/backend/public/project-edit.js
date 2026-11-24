@@ -102,7 +102,7 @@ $("close").addEventListener("click", (event) => changeStatus("close", event.curr
   const session = await getSession();
   renderNav(session);
   if (!session.authenticated) {
-    $("denied").innerHTML = 'Please <a href="index.html">sign in</a> first.';
+    $("denied").innerHTML = 'Please <a href="signin.html">sign in</a> first.';
     $("denied").hidden = false;
     return;
   }
