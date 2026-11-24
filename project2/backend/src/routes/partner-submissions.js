@@ -8,6 +8,7 @@ const {
 } = require("../catalog");
 const { currentRunJoin, describeLifecycle } = require("../lifecycle");
 const { cleanAreas, cleanText, parseId } = require("../validation");
+const { deliverNotifications, SUBSCRIBER_MATCH_SQL } = require("../notify");
 const { isPubliclyVisibleFaculty, visibleSupervisorSql } = require("../visibility");
 
 const LIMITS = {
@@ -25,9 +26,6 @@ const EMAIL_PATTERN =
 
 // R2-18: which subscribers a new submission `s` notifies, with their subscription as `fs` and
 // account as `users`. Revoked faculty are never notified. Shared with the fixture seed.
-const SUBSCRIBER_MATCH_SQL = `users.is_verified_faculty
-  AND (fs.mode = 'all' OR (fs.mode = 'areas' AND fs.research_areas && s.research_areas))`;
-
 // Control characters (other than tab and newlines) have no place in a form field, and Postgres
 // rejects NUL outright.
 function stripControl(value) {
@@ -158,8 +156,9 @@ function createPartnerSubmissionsRouter({ db, config, auth }) {
   const router = express.Router();
 
   // R2-01: public, no sign-in. R2-02: a new submission has no supervisors, so it is awaiting
-  // a supervisor and invisible to students. R2-18: matching subscribers are notified in the
-  // same statement, so a submission and its notifications are saved together or not at all.
+  // a supervisor and invisible to students. R2-18, F-14: matching subscribers are notified
+  // after it is saved, as a separate step; if notifying fails, the submission still stands and
+  // the failure is recorded for operators to retry (src/notify.js).
   router.post("/", async (req, res, next) => {
     try {
       const body = req.body && typeof req.body === "object" && !Array.isArray(req.body) ? req.body : {};
@@ -173,20 +172,10 @@ function createPartnerSubmissionsRouter({ db, config, auth }) {
         });
       }
       const result = await db.query(
-        `WITH s AS (
-           INSERT INTO partner_submissions
-             (organisation, contact_name, contact_email, title, description, research_areas, capacity)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)
-           RETURNING id, title, research_areas, created_at
-         ), notified AS (
-           INSERT INTO notifications (user_id, submission_id)
-           SELECT fs.user_id, s.id FROM s
-           JOIN faculty_subscriptions fs ON true
-           JOIN users ON users.id = fs.user_id
-           WHERE ${SUBSCRIBER_MATCH_SQL}
-           ON CONFLICT DO NOTHING
-         )
-         SELECT id, title, created_at FROM s`,
+        `INSERT INTO partner_submissions
+           (organisation, contact_name, contact_email, title, description, research_areas, capacity)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING id, title, created_at`,
         [
           submission.organisation,
           submission.contactName,
@@ -198,6 +187,7 @@ function createPartnerSubmissionsRouter({ db, config, auth }) {
         ],
       );
       const row = result.rows[0];
+      await deliverNotifications(db, config, row.id);
       res.status(201).json({
         submission: {
           id: row.id,
