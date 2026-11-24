@@ -65,10 +65,41 @@
     </div>
 
     <section id="signed-in" hidden aria-labelledby="account-heading">
-      <h1 id="account-heading" tabindex="-1">Your account</h1>
-      <p>Signed in as <strong id="who"></strong>.</p>
-      <p id="role-note"></p>
+      <div class="workspace-head">
+        <div>
+          <h1 id="account-heading" tabindex="-1">Welcome back</h1>
+          <p class="hint">Signed in as <strong id="who"></strong>.</p>
+          <p id="role-note"></p>
+        </div>
+        <a id="new-project" class="button-link primary" href="project-edit.html" hidden>New project</a>
+      </div>
+
       <p id="matches-note" class="note" hidden></p>
+
+      <section id="todo" class="panel" hidden aria-labelledby="todo-heading">
+        <h2 id="todo-heading">Waiting on you</h2>
+        <ul id="todo-list" class="todo-list"></ul>
+      </section>
+
+      <section id="my-projects-panel" class="panel" hidden aria-labelledby="my-projects-heading">
+        <div class="panel-head">
+          <h2 id="my-projects-heading">Your projects</h2>
+          <a href="my-projects.html">Manage all</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Project</th><th scope="col">Status</th><th scope="col">Term</th><th scope="col">For students</th></tr>
+            </thead>
+            <tbody id="my-projects-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="shortcuts" hidden aria-labelledby="shortcuts-heading">
+        <h2 id="shortcuts-heading">Shortcuts</h2>
+        <ul id="shortcut-list" class="shortcut-list"></ul>
+      </section>
 
       <section id="public-profile" hidden aria-labelledby="public-profile-heading">
         <h2 id="public-profile-heading">Public profile display</h2>

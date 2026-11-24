@@ -274,7 +274,11 @@ submission its first run, `run_changes`, `matches`, `match_students`,
   get a sidebar beside `<main>` (built by wrapping it in `.shell`). Below 56rem both become a
   drawer opened by the Menu button. Sign-in is its own page, `signin.html` (`data-nav="plain"`:
   brand and a way back only), and accepts `?next=page.html`; "please sign in" links go there.
-  Detail pages put the contact panel in `.detail-aside` beside `.detail-main`.
+  Detail pages put the contact panel in `.detail-aside` beside `.detail-main`. The signed-in
+  home page is a workspace built only from existing routes: faculty see "Waiting on you"
+  (partner proposals awaiting a supervisor, matches waiting on students, drafts, expired
+  projects, a missing profile or public-profile choice) and their projects; every role gets
+  shortcuts. `faculty.html?id=` shows a profile card beside the faculty member's projects.
 - Accessibility and phone width (R1-25, R1-26): every input has a `<label>`, errors go to a
   `role="status"` element and focus returns to the field, everything works by keyboard, and
   nothing scrolls sideways at 390px wide.

@@ -350,6 +350,75 @@ td { overflow-wrap: anywhere; }
 .signin-prompt h2 { margin: 0 0 0.25rem; }
 .signin-prompt p { margin: 0; color: var(--ink-2); }
 
+/* ---------- Signed-in home: the workspace ---------- */
+.workspace-head { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; justify-content: space-between; margin: 0 0 1.5rem; }
+.workspace-head h1 { margin: 0.25rem 0 0.4rem; }
+.workspace-head p { margin: 0.2rem 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.4rem 1.4rem 1rem; margin: 0 0 1.5rem; }
+.panel > h2, .panel-head h2 { font-size: 1.35rem; margin: 0.9rem 0 0.5rem; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+.panel-head a { font-weight: 700; }
+.panel .table-wrap { border: 0; border-radius: 0; }
+.todo-list { list-style: none; margin: 0; padding: 0; }
+.todo-list li { display: flex; flex-wrap: wrap; gap: 0.6rem 1.25rem; align-items: center; justify-content: space-between; padding: 0.9rem 0; border-top: 1px solid var(--line-soft); }
+.todo-text { flex: 1 1 18rem; min-width: 0; overflow-wrap: anywhere; }
+.todo-text p { margin: 0; }
+.todo-kind { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--red); }
+.todo-title { font-weight: 700; }
+.todo-detail { font-size: 0.92rem; color: var(--ink-2); }
+.status-pill { display: inline-block; font-size: 0.85rem; font-weight: 600; border-radius: 6px; padding: 0.1rem 0.55rem; background: var(--sand); color: var(--ink-2); }
+.status-published { background: var(--ok-tint); color: var(--ok); }
+.status-draft { border: 1px dashed var(--field-border); }
+.shortcut-list { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); }
+.shortcut-list a {
+  display: flex; flex-direction: column; gap: 0.2rem; height: 100%; padding: 1rem 1.1rem; min-height: 44px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--ink); text-decoration: none;
+}
+.shortcut-list a:hover { border-color: var(--red); color: var(--ink); }
+.shortcut-label { font-weight: 700; }
+.shortcut-desc { font-size: 0.9rem; color: var(--ink-2); }
+#public-profile { margin-top: 2rem; }
+
+/* ---------- Faculty profile: a card beside their projects ---------- */
+.profile-layout { display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start; }
+.profile-card { flex: 1 1 18rem; max-width: 24rem; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.profile-card-head { background: var(--red); color: #fff; padding: 1.75rem 1.5rem 1.5rem; }
+.profile-card-head h1 { margin: 0 0 0.5rem; font-size: 2rem; }
+.profile-card-head p { margin: 0; color: var(--on-red-soft); }
+.profile-initials {
+  width: 80px; height: 80px; border-radius: 20px; background: #fff; color: var(--red);
+  font-family: var(--serif); font-size: 1.9rem; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 0 1.1rem;
+}
+.profile-card-body { padding: 1.1rem 1.5rem 1.5rem; }
+.card-label { font-family: var(--sans); font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 1rem 0 0.4rem; }
+.profile-card-body > :first-child { margin-top: 0; }
+.profile-card .tags { margin: 0; }
+.plain-list { list-style: none; margin: 0; padding: 0; }
+.plain-list li { margin: 0.2rem 0; }
+.profile-card .contact { border: 0; border-top: 1px solid var(--line-soft); border-radius: 0; padding: 0.5rem 0 0; margin-top: 1rem; }
+.profile-main { flex: 999 1 26rem; min-width: 0; }
+.section-title { font-size: 1.9rem; border-bottom: 3px solid var(--ink); padding: 0 0 0.6rem; margin: 0 0 0.5rem; }
+.profile-main section + section { margin-top: 2.5rem; }
+.row-list { list-style: none; margin: 0; padding: 0; }
+.row-list li { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; align-items: baseline; padding: 1.1rem 0; border-bottom: 1px solid var(--line); }
+.row-term { flex: 0 0 7.5rem; font-family: var(--serif); font-weight: 700; color: var(--red); font-size: 1.05rem; }
+.row-body { flex: 1 1 18rem; min-width: 0; }
+.row-body a { font-family: var(--serif); font-size: 1.3rem; font-weight: 700; color: var(--ink); text-decoration: none; line-height: 1.25; }
+.row-body a:hover { color: var(--red-dark); text-decoration: underline; }
+.row-body p { margin: 0.2rem 0 0; color: var(--ink-2); }
+
+/* ---------- Main forms sit in a white panel ---------- */
+#intake-form, #profile-form, #project-form, #record-form, #subscription-form, #access-form, #public-profile-form {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.25rem 1.5rem; max-width: 46rem;
+}
+#intake-form fieldset, #profile-form fieldset, #project-form fieldset, #record-form fieldset, #subscription-form fieldset, #public-profile-form fieldset { background: var(--bg); }
+
+/* ---------- Filter bar (Discover, Faculty directory) ---------- */
+.filters .field:first-child { grid-column: 1 / -1; }
+.filters .field:first-child input { max-width: 40rem; }
+.filters label { font-size: 0.9rem; }
+.filters .filters-note { font-size: 0.85rem; }
+
 .site-footer { background: var(--ink); color: #cfcfcf; font-size: 0.9rem; }
 .site-footer div { max-width: 77.5rem; margin: 0 auto; padding: 1.5rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; }
 
