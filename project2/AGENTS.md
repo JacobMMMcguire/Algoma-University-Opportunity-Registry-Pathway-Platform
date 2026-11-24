@@ -267,7 +267,7 @@ submission its first run, `run_changes`, `matches`, `match_students`,
   `fillSelect`, `fillGroupedSelect`) and the filter-form helpers (`submitFiltersAsUrl`,
   `showResultCount`). `contact.js` has `renderContactPanel` (R1-22).
 - `styles.css` has `.button-link` for links that sit next to buttons (Edit, View).
-- Look and navigation (R5, branch `r5-aesthetic`): Algoma red top bar (`#b3202f`, converted
+- Look and navigation (final release, branch `final-aesthetic`): Algoma red top bar (`#b3202f`, converted
   from the logo files' CMYK 21/97/90/11), red as an accent below it, Source Serif 4 headings
   over Public Sans (loaded from Google Fonts at the top of `styles.css`). Pages keep an empty
   `<header>`; `renderNav` fills it. Visitors get dropdown menus in the bar; signed-in users
