@@ -34,6 +34,9 @@ function renderList(data, session, query) {
 function renderProfile(profile, session) {
   document.title = `${profile.displayName} — Opportunity Registry`;
   $("profile-name").textContent = profile.displayName;
+  // "Dr. Alex Morgan" -> "AM": first and last words, skipping a title such as "Dr." or "Prof.".
+  const words = profile.displayName.split(/\s+/).filter((w) => w && !/\.$/.test(w));
+  $("profile-initials").textContent = (words.length > 1 ? words[0][0] + words[words.length - 1][0] : (words[0] || "?").slice(0, 2)).toUpperCase();
   $("profile-audience").hidden = profile.publiclyVisible;
   $("inquiry-label").textContent = profile.inquiryPreference.label;
   $("inquiry-explanation").textContent = profile.inquiryPreference.explanation;
@@ -87,19 +90,24 @@ function renderProfile(profile, session) {
 // Their published projects, filtered by the same visibility rule as the projects page.
 async function renderProjects(facultyId, contactViaProjects) {
   const res = await api(`/api/projects?facultyId=${encodeURIComponent(facultyId)}`);
-  if (!res.ok || res.data.projects.length === 0) return;
+  const projects = res.ok ? res.data.projects : [];
   $("profile-projects").replaceChildren(
-    ...res.data.projects.map((project) => {
-      const li = document.createElement("li");
-      const a = document.createElement("a");
-      a.href = `projects.html?id=${encodeURIComponent(project.id)}`;
-      a.textContent = project.title;
-      li.append(a, document.createTextNode(` (${project.targetTerm})`));
-      return li;
-    }),
+    ...projects.map((project) =>
+      h(
+        "li",
+        {},
+        h("span", { class: "row-term", text: project.targetTerm || "" }),
+        h(
+          "div",
+          { class: "row-body" },
+          h("a", { href: `projects.html?id=${encodeURIComponent(project.id)}`, text: project.title }),
+          h("p", { text: [project.studentLevel, project.researchAreas.join(", ")].filter(Boolean).join(" · ") }),
+        ),
+      ),
+    ),
   );
-  $("projects-section").hidden = false;
-  $("contact-via-projects").hidden = !contactViaProjects;
+  $("no-projects").hidden = projects.length > 0;
+  $("contact-via-projects").hidden = !contactViaProjects || projects.length === 0;
 }
 
 function renderNotFound(session) {

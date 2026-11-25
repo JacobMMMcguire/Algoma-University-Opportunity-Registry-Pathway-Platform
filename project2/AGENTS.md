@@ -259,14 +259,28 @@ submission its first run, `run_changes`, `matches`, `match_students`,
 - `common.js` has `api(path, { method, body })` (same-origin, never throws),
   `getSession()`, `renderNav(session)`, `showStatus(el, msg, { error })`,
   `showApiError(el, res, fallback)` (adds a link to the fix for known error codes),
-  `escapeHtml()` and `PROJECT_STATUS_LABELS`. Add new pages to `NAV_LINKS` there.
-  It also has `h(tag, props, ...children)`, which builds elements with `textContent` (use it
+  `escapeHtml()` and `PROJECT_STATUS_LABELS`. Add new pages to `NAV_LINKS` there, with a
+  `group` from `NAV_GROUPS`. It also has `h(tag, props, ...children)`, which builds elements with `textContent` (use it
   for anything showing partner text), and `focusElement(selector)`, which moves focus to what
   changed after a save. `outcome-card.js` has `outcomeCard(outcome)`.
 - `form-pickers.js` has the fixed-list inputs (`renderAreaPicker`, `renderTermPicker`,
   `fillSelect`, `fillGroupedSelect`) and the filter-form helpers (`submitFiltersAsUrl`,
   `showResultCount`). `contact.js` has `renderContactPanel` (R1-22).
 - `styles.css` has `.button-link` for links that sit next to buttons (Edit, View).
+- Look and navigation (final release, branch `final-aesthetic`): Algoma red top bar (`#b3202f`, converted
+  from the logo files' CMYK 21/97/90/11), red as an accent below it, Source Serif 4 headings
+  over Public Sans (loaded from Google Fonts at the top of `styles.css`). Pages keep an empty
+  `<header>`; `renderNav` fills it. Visitors get dropdown menus in the bar; signed-in users
+  get a charcoal sidebar beside `<main>` (built by wrapping it in `.shell`); that sidebar, and
+  your initials in the bar on phones, is how you can tell you're signed in. A page's opening
+  `<h1>` (or a `.page-band` wrapper) runs full width in red. Below 56rem both become a
+  drawer opened by the Menu button. Sign-in is its own page, `signin.html` (`data-nav="plain"`:
+  brand and a way back only), and accepts `?next=page.html`; "please sign in" links go there.
+  Detail pages put the contact panel in `.detail-aside` beside `.detail-main`. The signed-in
+  home page is a workspace built only from existing routes: faculty see "Waiting on you"
+  (partner proposals awaiting a supervisor, matches waiting on students, drafts, expired
+  projects, a missing profile or public-profile choice) and their projects; every role gets
+  shortcuts. `faculty.html?id=` shows a profile card beside the faculty member's projects.
 - Accessibility and phone width (R1-25, R1-26): every input has a `<label>`, errors go to a
   `role="status"` element and focus returns to the field, everything works by keyboard, and
   nothing scrolls sideways at 390px wide.

@@ -10,8 +10,10 @@
   <header><nav id="site-nav" aria-label="Main"></nav></header>
   <main>
     <section id="list-view" hidden aria-labelledby="list-heading">
-      <h1 id="list-heading">Faculty</h1>
-      <p id="list-note" class="hint"></p>
+      <div class="page-band">
+        <h1 id="list-heading">Faculty directory</h1>
+        <p id="list-note" class="hint"></p>
+      </div>
 
       <form id="filters" class="filters" action="faculty.html" method="get" role="search" aria-label="Filter faculty">
         <div class="field">
@@ -38,37 +40,47 @@
     </section>
 
     <article id="profile-view" hidden aria-labelledby="profile-name">
-      <p><a href="faculty.html">All faculty</a></p>
-      <h1 id="profile-name" tabindex="-1"></h1>
-      <p id="profile-audience" class="hint" hidden>
-        This profile is visible only to people signed in with an Algoma account.
-      </p>
+      <p><a class="back-link" href="faculty.html">All faculty</a></p>
+      <div class="profile-layout">
+        <div class="profile-card">
+          <div class="profile-card-head">
+            <span id="profile-initials" class="profile-initials" aria-hidden="true"></span>
+            <h1 id="profile-name" tabindex="-1"></h1>
+            <p id="profile-description" class="prewrap"></p>
+          </div>
+          <div class="profile-card-body">
+            <p id="profile-audience" class="hint" hidden>
+              This profile is visible only to people signed in with an Algoma account.
+            </p>
 
-      <h2>Student inquiries</h2>
-      <p><strong id="inquiry-label"></strong><br><span id="inquiry-explanation"></span></p>
-      <p id="contact-via-projects" class="note" hidden>To contact them, open one of their projects below and use its Contact button.</p>
-      <section id="contact-section" hidden></section>
+            <h2 class="card-label">Research and project areas</h2>
+            <ul id="profile-areas" class="tags"></ul>
 
-      <h2>About</h2>
-      <p id="profile-description" class="prewrap"></p>
+            <section id="links-section" hidden aria-labelledby="links-heading">
+              <h2 id="links-heading" class="card-label">Links</h2>
+              <ul id="profile-links" class="plain-list"></ul>
+            </section>
 
-      <h2>Research and project areas</h2>
-      <ul id="profile-areas" class="tags"></ul>
+            <h2 class="card-label">Student inquiries</h2>
+            <p><strong id="inquiry-label"></strong><br><span id="inquiry-explanation"></span></p>
+            <p id="contact-via-projects" class="hint" hidden>To contact them, open one of their projects and use its Contact panel.</p>
+            <section id="contact-section" hidden></section>
+          </div>
+        </div>
 
-      <section id="links-section" hidden aria-labelledby="links-heading">
-        <h2 id="links-heading">Links</h2>
-        <ul id="profile-links"></ul>
-      </section>
+        <div class="profile-main">
+          <section aria-labelledby="projects-heading">
+            <h2 id="projects-heading" class="section-title">Projects</h2>
+            <ul id="profile-projects" class="row-list"></ul>
+            <p id="no-projects" class="hint" hidden>No open projects listed right now.</p>
+          </section>
 
-      <section id="projects-section" hidden aria-labelledby="projects-heading">
-        <h2 id="projects-heading">Projects</h2>
-        <ul id="profile-projects"></ul>
-      </section>
-
-      <section id="outcomes-section" hidden aria-labelledby="outcomes-heading">
-        <h2 id="outcomes-heading">Completed work</h2>
-        <ul id="profile-outcomes" class="cards"></ul>
-      </section>
+          <section id="outcomes-section" hidden aria-labelledby="outcomes-heading">
+            <h2 id="outcomes-heading" class="section-title">Completed work</h2>
+            <ul id="profile-outcomes" class="cards"></ul>
+          </section>
+        </div>
+      </div>
     </article>
 
     <section id="not-found" hidden>

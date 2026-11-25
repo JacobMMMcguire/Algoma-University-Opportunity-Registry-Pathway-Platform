@@ -75,7 +75,7 @@ function externalCard(o) {
   ].filter(Boolean);
   return h(
     "li",
-    { class: "card" },
+    { class: "card card-external" },
     h("p", { class: "kind kind-external" }, h("span", { class: "owner-badge", text: `External · ${o.wording.ownership}` })),
     h("h2", {}, h("a", { href: `external.html?id=${encodeURIComponent(o.id)}`, text: o.title })),
     h("p", { text: details.join(" · ") }),

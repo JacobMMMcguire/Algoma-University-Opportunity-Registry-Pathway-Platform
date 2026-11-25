@@ -248,7 +248,7 @@ document.addEventListener("submit", async (event) => {
   session = await getSession();
   renderNav(session);
   if (!session.authenticated) {
-    $("denied").innerHTML = 'Please <a href="index.html">sign in</a> to see matches proposed to you.';
+    $("denied").innerHTML = 'Please <a href="signin.html">sign in</a> to see matches proposed to you.';
     $("denied").hidden = false;
     return;
   }

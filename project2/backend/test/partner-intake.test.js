@@ -228,7 +228,7 @@ describe("partner intake", () => {
       // The one innerHTML is the fixed "Please sign in" message, which holds no partner text.
       const htmlSinks = script.match(/innerHTML|outerHTML|insertAdjacentHTML|document\.write/g) || [];
       assert.equal(htmlSinks.length, 1);
-      assert.match(script, /\$\("denied"\)\.innerHTML = 'Please <a href="index.html">sign in<\/a> first.';/);
+      assert.match(script, /\$\("denied"\)\.innerHTML = 'Please <a href="signin.html">sign in<\/a> first.';/);
     });
   });
 

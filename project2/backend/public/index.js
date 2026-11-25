@@ -1,12 +1,77 @@
 const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
 
-function showSignedOut(session) {
+// Visitors see the landing page; signing in happens on signin.html.
+function showSignedOut() {
   $("signed-out").hidden = false;
   $("signed-in").hidden = true;
-  $("verify-form").hidden = true;
-  $("request-form").hidden = false;
-  $("test-mode-hint").hidden = !session.testMode;
+  showLanding();
+}
+
+// "Open now" and the research-area tiles, from the same public lists Discover uses, so they never
+// show anything a visitor couldn't already find there. Titles and partner names stay text (h()).
+async function showLanding() {
+  const [projects, industry, external] = await Promise.all([
+    api("/api/projects"),
+    api("/api/opportunities"),
+    api("/api/external-opportunities"),
+  ]);
+  const byTitle = (a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase());
+  const local = [
+    ...(projects.ok ? projects.data.projects : []).map((p) => ({
+      title: p.title,
+      href: `projects.html?id=${encodeURIComponent(p.id)}`,
+      line: ["Faculty project", p.faculty.displayName, p.targetTerm].filter(Boolean).join(" · "),
+      areas: p.researchAreas,
+    })),
+    ...(industry.ok ? industry.data.opportunities : []).map((o) => ({
+      title: o.title,
+      href: `opportunity.html?id=${encodeURIComponent(o.id)}`,
+      line: `Industry project · ${o.organisation}`,
+      areas: o.researchAreas,
+    })),
+  ].sort(byTitle);
+  const externals = (external.ok ? external.data.opportunities : [])
+    .map((o) => ({
+      title: o.title,
+      href: `external.html?id=${encodeURIComponent(o.id)}`,
+      line: `External · ${o.wording.ownership}`,
+      external: true,
+      areas: o.researchAreas,
+    }))
+    .sort(byTitle);
+  const all = [...local, ...externals];
+  if (!all.length) return;
+
+  const openNow = [...local.slice(0, externals.length ? 2 : 3), ...externals.slice(0, 1)].slice(0, 3);
+  setChildren(
+    $("open-now-list"),
+    ...openNow.map((item) =>
+      h("li", {}, h("a", { href: item.href, text: item.title }), h("p", { class: item.external ? "external-line" : "", text: item.line })),
+    ),
+  );
+  $("see-all").textContent = all.length === 1 ? "See the 1 project" : `See all ${all.length} projects`;
+  $("open-now").hidden = false;
+
+  const counts = new Map();
+  for (const item of all) for (const area of item.areas) counts.set(area, (counts.get(area) || 0) + 1);
+  const areas = [...counts].sort(([a, x], [b, y]) => y - x || a.localeCompare(b));
+  setChildren(
+    $("area-tiles"),
+    ...areas.map(([area, count]) =>
+      h(
+        "li",
+        {},
+        h(
+          "a",
+          { href: `projects.html?area=${encodeURIComponent(area)}`, "aria-label": `${area}: ${count} ${count === 1 ? "project" : "projects"}` },
+          h("span", { text: area }),
+          h("span", { class: "area-count", "aria-hidden": "true", text: String(count) }),
+        ),
+      ),
+    ),
+  );
+  $("areas").hidden = areas.length === 0;
 }
 
 function showSignedIn(user) {
@@ -29,6 +94,132 @@ function showSignedIn(user) {
   $("public-profile").hidden = !user.isVerifiedFaculty;
   if (user.isVerifiedFaculty) renderPublicProfileChoice(user);
   if (!user.isVerifiedFaculty && !user.isStaff) showWaitingMatches();
+  if (user.isVerifiedFaculty) showFacultyWorkspace(user);
+  else greet(user.email.split("@")[0]);
+  showShortcuts(user);
+}
+
+function greet(name) {
+  $("account-heading").textContent = name ? `Welcome back, ${name}` : "Welcome back";
+}
+
+// One row of "Waiting on you": what it is, the record's name, a line of detail, and where to act.
+function todoItem({ kind, title, detail, href, action }) {
+  return h(
+    "li",
+    {},
+    h(
+      "div",
+      { class: "todo-text" },
+      h("p", { class: "todo-kind", text: kind }),
+      h("p", { class: "todo-title", text: title }),
+      detail ? h("p", { class: "todo-detail", text: detail }) : null,
+    ),
+    h("a", { class: "button-link", href, text: action }),
+  );
+}
+
+// The faculty workspace: the things that need them, then their projects. Built from the same
+// routes the other pages use, so it can never show more than those pages do. Titles and partner
+// names are always text (h()).
+async function showFacultyWorkspace(user) {
+  $("new-project").hidden = false;
+  const [profileRes, mineRes, subsRes, manageRes] = await Promise.all([
+    api("/api/faculty/me/profile"),
+    api("/api/projects/mine"),
+    api("/api/partner-submissions"),
+    api("/api/matches/manage"),
+  ]);
+  const profile = profileRes.ok ? profileRes.data.profile : null;
+  greet(profile?.displayName || user.email.split("@")[0]);
+
+  const todos = [];
+  if (user.publicProfileChoice === null) {
+    todos.push({ kind: "Before you publish", title: "Choose whether your profile is public", detail: "Either answer is fine; you keep every faculty feature.", href: "#public-profile", action: "Choose" });
+  }
+  if (profileRes.ok && !profile) {
+    todos.push({ kind: "Profile", title: "Write your faculty profile", detail: "Students see it next to your projects.", href: "profile.html", action: "Write profile" });
+  }
+  for (const s of subsRes.ok ? subsRes.data.submissions : []) {
+    if (s.state.value !== "awaiting_supervisor" || !s.lifecycle.available) continue;
+    todos.push({
+      kind: "Industry proposal",
+      title: s.title,
+      detail: `${s.organisation} · no supervisor yet${s.researchAreas.length ? ` · ${s.researchAreas.join(", ")}` : ""}`,
+      href: "submissions.html",
+      action: "Review",
+    });
+  }
+  for (const o of manageRes.ok ? manageRes.data.opportunities : []) {
+    for (const m of o.matches) {
+      if (m.state !== "proposed" && m.state !== "partly_confirmed") continue;
+      const students = m.students || [];
+      const confirmed = students.filter((s) => (s.response || s.status) === "confirmed").length;
+      todos.push({
+        kind: "Match in progress",
+        title: o.title,
+        detail: `${confirmed} of ${students.length} ${students.length === 1 ? "student has" : "students have"} confirmed`,
+        href: "matches.html",
+        action: "View match",
+      });
+    }
+  }
+  const projects = mineRes.ok ? mineRes.data.projects : [];
+  for (const p of projects) {
+    if (p.status === "draft") {
+      todos.push({ kind: "Unpublished draft", title: p.title, detail: "Only you can see it until you publish.", href: `project-edit.html?id=${encodeURIComponent(p.id)}`, action: "Finish draft" });
+    } else if (p.lifecycle.state === "expired") {
+      todos.push({ kind: "Expired", title: p.title, detail: p.lifecycle.reason, href: "lifecycle.html", action: "Renew or close" });
+    }
+  }
+  setChildren($("todo-list"), ...todos.map(todoItem));
+  $("todo").hidden = todos.length === 0;
+
+  setChildren(
+    $("my-projects-rows"),
+    ...projects.map((p) =>
+      h(
+        "tr",
+        {},
+        h("td", {}, h("a", { href: `projects.html?id=${encodeURIComponent(p.id)}`, text: p.title })),
+        h("td", {}, h("span", { class: `status-pill status-${p.status}`, text: PROJECT_STATUS_LABELS[p.status] || p.status })),
+        h("td", { text: p.targetTerm || "" }),
+        h("td", { text: p.status === "published" ? p.lifecycle.label : "Not listed" }),
+      ),
+    ),
+  );
+  $("my-projects-panel").hidden = projects.length === 0;
+}
+
+// The pages each role uses most, as large links. Same visibility rules as the menu.
+function showShortcuts(user) {
+  const links = user.isStaff
+    ? [
+        ["admin.html", "Faculty verification", "Grant or revoke faculty access"],
+        ["sync.html", "External sync health", "Mitacs feed runs and freshness"],
+        ["submissions.html", "Industry opportunities", "Every partner proposal and its supervisors"],
+        ["lifecycle.html", "Terms and deadlines", "Centre deadlines and lifecycle states"],
+      ]
+    : user.isVerifiedFaculty
+      ? [
+          ["submissions.html", "Industry opportunities", "Offer to supervise partner proposals"],
+          ["lifecycle.html", "Terms and deadlines", "Deadlines, renewals and withdrawals"],
+          ["outcomes.html", "Your outcomes", "Record and confirm completed work"],
+          ["notifications.html", "Notifications", "New proposals in your areas"],
+        ]
+      : [
+          ["projects.html", "Discover projects", "Faculty, industry and external opportunities"],
+          ["matches.html", "Matches", "Proposals from faculty to you"],
+          ["external.html", "Your external opportunities", "Your private record of Mitacs and others"],
+          ["student-profile.html", "Your student profile", "The name faculty and visitors see"],
+        ];
+  setChildren(
+    $("shortcut-list"),
+    ...links.map(([href, label, desc]) =>
+      h("li", {}, h("a", { href }, h("span", { class: "shortcut-label", text: label }), h("span", { class: "shortcut-desc", text: desc }))),
+    ),
+  );
+  $("shortcuts").hidden = false;
 }
 
 // R3-05: "Has faculty proposed something to me, and what do I do?" answered on arrival.
@@ -68,61 +259,8 @@ async function load() {
   const session = await getSession();
   renderNav(session);
   if (session.authenticated) showSignedIn(session.user);
-  else showSignedOut(session);
+  else showSignedOut();
 }
-
-$("request-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const email = $("email").value.trim();
-  if (!email) {
-    showStatus(statusEl, "Enter your Algoma University email address.", { error: true });
-    $("email").focus();
-    return;
-  }
-  const res = await api("/api/auth/request-challenge", { method: "POST", body: { email } });
-  if (!res.ok) {
-    showStatus(statusEl, res.data.error || "Could not send a sign-in code.", { error: true });
-    $("email").focus();
-    return;
-  }
-  $("code-email").textContent = email;
-  $("request-form").hidden = true;
-  $("verify-form").hidden = false;
-  $("code").value = "";
-  $("code").focus();
-  showStatus(
-    statusEl,
-    res.data.emailSent
-      ? "Check your email for a 6-digit code. It can take a minute to arrive; check junk mail too."
-      : "This is a test account: an authorised tester can read its code on the operator console.",
-  );
-});
-
-$("verify-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const code = $("code").value.trim();
-  if (!/^\d{6}$/.test(code)) {
-    showStatus(statusEl, "Enter the 6-digit code from your email.", { error: true });
-    $("code").focus();
-    return;
-  }
-  const res = await api("/api/auth/verify", { method: "POST", body: { email: $("email").value.trim(), code } });
-  if (!res.ok) {
-    showStatus(statusEl, res.data.error || "Could not verify that code.", { error: true });
-    $("code").focus();
-    return;
-  }
-  showStatus(statusEl, "");
-  await load();
-  $("account-heading").focus();
-});
-
-$("restart").addEventListener("click", () => {
-  $("verify-form").hidden = true;
-  $("request-form").hidden = false;
-  showStatus(statusEl, "");
-  $("email").focus();
-});
 
 $("public-profile-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -150,5 +288,4 @@ $("sign-out").addEventListener("click", async () => {
   await load();
 });
 
-$("account-heading").tabIndex = -1;
 load();
