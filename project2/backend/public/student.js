@@ -15,6 +15,8 @@
   document.title = `${student.displayName} — Opportunity Registry`;
   document.getElementById("student-name").textContent = student.displayName;
   document.getElementById("audience").hidden = student.publiclyVisible;
+  // F-09: a graduated student's page stays, with their work, marked as an alumnus.
+  if (student.alumni) document.getElementById("student-name").after(h("p", { class: "kind", text: "Alumni: graduated from Algoma University" }));
   const work = await api(`/api/outcomes/showcase?studentId=${encodeURIComponent(student.id)}`);
   const outcomes = work.ok ? work.data.outcomes : [];
   document.getElementById("outcomes").replaceChildren(

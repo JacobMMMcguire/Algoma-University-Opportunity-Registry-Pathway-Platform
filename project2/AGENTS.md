@@ -666,7 +666,28 @@ Chosen Challenge: R4-07. The fixture is `project2/r4_fixtures/`.
 ## Final Release (F-01 to F-27, in progress)
 
 Plan and decisions D1 to D9 in [FINAL_PLAN.md](FINAL_PLAN.md). Migration `009` (`audit_events`,
-`notification_deliveries`, `operational_settings`) is **not yet applied** to the live database.
+`notification_deliveries`, `operational_settings`, and `users.departure`) is **not yet applied** to
+the live database. The fixtures are in `project2/final_fixtures/`.
+
+- **Departure (F-09, F-10, D2).** `users.departure` is `left` (faculty) or `graduated` (students),
+  set by staff with `POST /api/admin/users/:id/departure` `{ departure }` (null takes it back).
+  Nothing is deleted, and `is_verified_faculty` is kept, so past confirmed work still counts.
+  `getSessionUser` sets `is_verified_faculty` to false for someone who has left, so every guard
+  treats them as no longer faculty. `ACTIVE_PERSON_SQL` (`src/visibility.js`) keeps them out of the
+  faculty directory, supervisor lists, faculty interest and notification subscribers. Their
+  profile page stays, with `departed: true` and no contact. Graduated students show as alumni
+  (`/api/students/:id`) and can't be proposed new matches.
+- **Orphans (F-11, D3).** `needs_supervisor` is a derived lifecycle state (`managersDepartedSql`
+  in `src/lifecycle.js`): a run that would be open or expired, whose project owner has left, or
+  whose industry supervisors have all left. It is out of discovery, and its link explains why.
+  Staff fix it with `POST /api/lifecycle/:kind/:id/reassign` `{ facultyUserId, agreed: true }`
+  (on `/lifecycle.html`). A project gets a new owner; an industry opportunity gets a new
+  supervisor. Ids, runs, matches and outcomes are kept.
+- **Fixture.** `buildFinalFixtureSql` (in `buildAllFixtureSql`, after R3) applies
+  `stale_people.json` and puts each `recovery_cases.json` record in its wrong state.
+  `buildThroughR3FixtureSql` is R1 to R3 only, for `test/regression.test.js`.
+  `test/final-regression.test.js` checks every key of `expected_final_results.json`, fixes all
+  five cases through the API, and reseeds.
 
 - **Attribution (F-08, D1).** `recordAudit(tx, { actorId, action, subjectType, subjectId, detail })`
   in `src/audit.js`. Call it with the transaction that makes the change, so the change and its
@@ -684,9 +705,10 @@ Plan and decisions D1 to D9 in [FINAL_PLAN.md](FINAL_PLAN.md). Migration `009` (
   - `POST /api/projects/:id/unpublish` (owner): published or closed back to `draft`. The run is
     left alone, so publishing again restores it.
   - `POST /api/matches/:id/undo-confirmation`: a student undoes their own confirmation; a managing
-    faculty member sends `{ studentEmail }`. The answer goes back to `pending`. Refused (409
-    `not_undoable`) once an outcome is recorded on the match or its run is completed or archived.
-    This deliberately relaxes R3-04; decline after full confirmation is still refused.
+    faculty member sends `{ studentEmail }`. The answer goes back to `pending`.
+    Allowed whenever the match isn't withdrawn, even with outcomes recorded (RC-03). Outcomes
+    stay, but `SHOWCASE_SQL` shows one only while its match is fully confirmed. This deliberately
+    relaxes R3-04; decline after full confirmation is still refused.
   - Engagement: set the right state again; the earlier one is in the log.
   - Staff hide an industry opportunity with the lifecycle Withdraw (R3-13).
 - **Notifications (F-14, D5).** `deliverNotifications` in `src/notify.js` runs after the

@@ -5,7 +5,7 @@
 
 // R2-18: a subscriber matches if they are verified faculty and want everything or share an area.
 // `s` is the submission, `fs` the subscription, joined to `users`.
-const SUBSCRIBER_MATCH_SQL = `users.is_verified_faculty
+const SUBSCRIBER_MATCH_SQL = `users.is_verified_faculty AND users.departure IS NULL
   AND (fs.mode = 'all' OR (fs.mode = 'areas' AND fs.research_areas && s.research_areas))`;
 
 const SIMULATE_FAILURE_KEY = "simulate_notification_failure";

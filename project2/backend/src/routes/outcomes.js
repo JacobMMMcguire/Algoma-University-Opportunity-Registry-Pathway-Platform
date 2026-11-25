@@ -22,6 +22,8 @@ const PUBLIC_PARTICIPANT_SQL = `coalesce(${PUBLIC_FACULTY_SQL} AND fp.user_id IS
 
 // The showcase rule for outcome `o` on run `r`, in one place (D8).
 const SHOWCASE_SQL = `(o.confirmed_by IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM matches sm JOIN match_students sms ON sms.match_id = sm.id
+    WHERE sm.id = o.match_id AND (sm.withdrawn_at IS NOT NULL OR sms.response <> 'confirmed'))
   AND EXISTS (SELECT 1 FROM outcome_participants op JOIN users cu ON cu.email = op.email
     WHERE op.outcome_id = o.id AND op.role = 'faculty' AND cu.id = o.confirmed_by AND cu.is_verified_faculty)
   AND NOT EXISTS (SELECT 1 FROM outcome_participants op
@@ -236,7 +238,7 @@ function createOutcomesRouter({ db, config, auth }) {
       // The opportunity's faculty, offered as participants by name (their emails aren't shown).
       const faculty = await db.query(
         `SELECT u.id, fp.display_name AS name FROM users u JOIN faculty_profiles fp ON fp.user_id = u.id
-         WHERE u.is_verified_faculty AND (u.id = $1 OR u.id IN (SELECT faculty_user_id FROM opportunity_supervisors WHERE submission_id = $2))
+         WHERE u.is_verified_faculty AND u.departure IS NULL AND (u.id = $1 OR u.id IN (SELECT faculty_user_id FROM opportunity_supervisors WHERE submission_id = $2))
          ORDER BY fp.display_name`,
         [row.owner_id, row.submission_id],
       );
@@ -259,7 +261,7 @@ function createOutcomesRouter({ db, config, auth }) {
       : [];
     if (viewer.is_verified_faculty) ids.push(viewer.id);
     const found = await db.query(
-      `SELECT u.id, u.email, u.is_verified_faculty, fp.user_id IS NOT NULL AS has_profile
+      `SELECT u.id, u.email, u.is_verified_faculty AND u.departure IS NULL AS is_verified_faculty, fp.user_id IS NOT NULL AS has_profile
        FROM users u LEFT JOIN faculty_profiles fp ON fp.user_id = u.id
        WHERE u.id = ANY($1::int[]) OR u.email = ANY($2::text[])`,
       [ids, emails],
@@ -486,13 +488,16 @@ function createStudentsRouter({ db, auth }) {
         id === null
           ? { rows: [] }
           : await db.query(
-              `SELECT u.id, sp.display_name, sp.public_profile_choice FROM users u JOIN student_profiles sp ON sp.user_id = u.id
+              `SELECT u.id, sp.display_name, sp.public_profile_choice, u.departure FROM users u JOIN student_profiles sp ON sp.user_id = u.id
                WHERE u.id = $1 AND NOT u.is_verified_faculty ${viewer ? "" : "AND sp.public_profile_choice IS TRUE"}`,
               [id],
             );
       const row = result.rows[0];
       if (!row) return res.status(404).json({ error: "Student not found." });
-      res.json({ student: { id: row.id, displayName: row.display_name, publiclyVisible: row.public_profile_choice === true } });
+      // F-09: a graduated student's page stays, marked as an alumnus.
+      res.json({
+        student: { id: row.id, displayName: row.display_name, publiclyVisible: row.public_profile_choice === true, alumni: row.departure === "graduated" },
+      });
     } catch (error) {
       next(error);
     }

@@ -9,6 +9,7 @@ const { STUDENT_LEVELS, canonicalArea, canonicalTerm } = require("./catalog");
 const FIXTURE_PATH = path.join(__dirname, "..", "..", "r1_fixture.json");
 const R2_FIXTURE_DIR = path.join(__dirname, "..", "..", "r2_fixtures");
 const R3_FIXTURE_DIR = path.join(__dirname, "..", "..", "r3_fixtures");
+const FINAL_FIXTURE_DIR = path.join(__dirname, "..", "..", "final_fixtures");
 
 // The fixture has no email addresses. These are deliberately unlike real Algoma addresses
 // (firstname.lastname@), have no inbox, and are never emailed (see routes/auth.js).
@@ -343,16 +344,129 @@ COMMIT;
 `;
 }
 
-// Everything `npm run seed:fixture` loads, in order: R1, then R2, then R3 (which builds on both).
-function buildAllFixtureSql() {
+function readFinalFixture(name) {
+  return JSON.parse(fs.readFileSync(path.join(FINAL_FIXTURE_DIR, name), "utf8"));
+}
+
+// The Final Release fixtures (project2/final_fixtures/), from the course site.
+function loadFinalFixtures() {
+  return {
+    recovery: readFinalFixture("recovery_cases.json"),
+    stale: readFinalFixture("stale_people.json"),
+    expected: readFinalFixture("expected_final_results.json"),
+  };
+}
+
+// F-06 (FINAL_PLAN.md D4): the deadline an accidentally expired record (RC-01) is given, so it is
+// Expired as of the evaluation date. The fixture says only that it expired before the Centre
+// extended its deadline; this is the day before the R3 evaluation_date (DECISIONS.md).
+function accidentalExpiryDeadline(lifecycle) {
+  const day = new Date(`${lifecycle.evaluation_date}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() - 1);
+  return day.toISOString().slice(0, 10);
+}
+
+const SITUATIONS = ["departed", "graduated", "not-accepting-inquiries", "active"];
+
+// Final Release (F-06 to F-12): puts the R3 records into the states the Final fixtures describe.
+// Needs R1 to R3 loaded first, and changes some of their results on purpose (as R3 did to R2):
+//   - stale_people.json: who has left, graduated or stopped accepting inquiries (D2);
+//   - recovery_cases.json: each case's record in its wrong state, ready to be corrected through
+//     the product by an authorised user (the R3 seed already resets the rest).
+// Rerunning it resets those people and records, so a reseed restores the expected results.
+function buildFinalFixtureSql({ recovery, stale } = loadFinalFixtures(), lifecycle = loadLifecycleFixture()) {
+  const statements = [];
+  const byId = new Map(lifecycle.opportunities.map((o) => [o.fixture_id, o]));
+  const people = stale.people.map((p) => p.person_id);
+
+  statements.push(`UPDATE users SET departure = NULL, departed_at = NULL, departure_recorded_by = NULL
+WHERE fixture_id IN (${people.map(literal).join(", ")});`);
+  for (const person of stale.people) {
+    const where = `person ${person.person_id}`;
+    if (!SITUATIONS.includes(person.situation)) throw new Error(`${where}: unknown situation "${person.situation}".`);
+    const id = literal(person.person_id);
+    if (person.situation === "departed") {
+      if (person.role !== "faculty") throw new Error(`${where}: only faculty depart; students graduate.`);
+      statements.push(`UPDATE users SET departure = 'left', departed_at = now() WHERE fixture_id = ${id} AND is_verified_faculty;`);
+    } else if (person.situation === "graduated") {
+      if (person.role !== "student") throw new Error(`${where}: only students graduate.`);
+      statements.push(`UPDATE users SET departure = 'graduated', departed_at = now() WHERE fixture_id = ${id} AND NOT is_verified_faculty;`);
+    } else if (person.situation === "not-accepting-inquiries") {
+      statements.push(`UPDATE faculty_profiles SET inquiry_preference = 'not_accepting', updated_at = now()
+WHERE user_id = (SELECT id FROM users WHERE fixture_id = ${id});`);
+    }
+  }
+
+  for (const c of recovery.cases) {
+    const where = `recovery case ${c.case_id}`;
+    if (c.kind === "accidental_expiry" || c.kind === "wrong_lifecycle_state") {
+      const o = byId.get(c.record);
+      if (!o) throw new Error(`${where}: ${c.record} isn't an R3 opportunity.`);
+      const runColumn = o.source === "industry" ? "submission_id" : "project_id";
+      if (c.kind === "accidental_expiry") {
+        statements.push(`UPDATE opportunity_runs SET deadline = ${literal(accidentalExpiryDeadline(lifecycle))}, centre_deadline = NULL, state = 'open'
+WHERE ${runColumn} = (${r3RecordSql(o)}) AND run_number = 1;`);
+      } else {
+        if (!RUN_STATES.includes(c.wrong_state)) throw new Error(`${where}: "${c.wrong_state}" isn't a stored state.`);
+        statements.push(`UPDATE opportunity_runs SET state = ${literal(c.wrong_state)} WHERE ${runColumn} = (${r3RecordSql(o)}) AND run_number = 1;`);
+        if (o.source === "faculty") {
+          statements.push(`UPDATE projects SET status = ${literal(c.wrong_state === "withdrawn" ? "closed" : "published")}
+WHERE fixture_id = ${literal(o.fixture_id)};`);
+        }
+      }
+    } else if (c.kind === "mistaken_match_confirmation") {
+      if (c.wrong_state !== "confirmed") throw new Error(`${where}: expected a confirmed match.`);
+      statements.push(`UPDATE match_students SET response = 'confirmed', responded_at = coalesce(responded_at, now())
+WHERE match_id = (SELECT id FROM matches WHERE fixture_id = ${literal(c.record)});`);
+    } else if (c.kind === "mistaken_engagement") {
+      const o = byId.get(c.record);
+      if (!o || o.source !== "industry") throw new Error(`${where}: ${c.record} isn't an R3 industry opportunity.`);
+      const state = c.wrong_state.replace(/-/g, "_");
+      if (!["not_contacted", "discussion_underway", "partner_confirmed", "no_longer_pursuing"].includes(state)) {
+        throw new Error(`${where}: unknown engagement state "${c.wrong_state}".`);
+      }
+      statements.push(`UPDATE partner_submissions SET engagement_state = ${literal(state)}, engagement_user_id = NULL, engagement_updated_at = now()
+WHERE id = (${r3RecordSql(o)});`);
+    } else if (c.kind === "publication_visibility_error") {
+      if (c.wrong_state !== "public") throw new Error(`${where}: expected a public outcome.`);
+      // Public means confirmed by its faculty member (the R3 seed already confirms R-501).
+      statements.push(`UPDATE outcomes SET confirmed_by = coalesce(confirmed_by, created_by), confirmed_at = coalesce(confirmed_at, now())
+WHERE fixture_id = ${literal(c.record)};`);
+    } else {
+      throw new Error(`${where}: unknown kind "${c.kind}".`);
+    }
+  }
+
+  return `-- Final Release fixture ${recovery.fixture_version}: generated from final_fixtures/ by npm run seed:fixture.
+-- Puts the R3 records into the Final fixtures' states (stale people, recovery cases).
+BEGIN;
+${statements.join("\n\n")}
+COMMIT;
+`;
+}
+
+// R1 to R3 only: what the R3 regression checks (the Final layer changes some R3 results on purpose).
+function buildThroughR3FixtureSql() {
   return `${buildFixtureSql(loadFixture())}
 ${buildR2FixtureSql()}
 ${buildR3FixtureSql()}`;
 }
 
+// Everything `npm run seed:fixture` loads, in order: R1, R2, R3 (which builds on both), then the
+// Final Release states.
+function buildAllFixtureSql() {
+  return `${buildThroughR3FixtureSql()}
+${buildFinalFixtureSql()}`;
+}
+
 module.exports = {
   FIXTURE_PATH,
   buildAllFixtureSql,
+  buildThroughR3FixtureSql,
+  buildFinalFixtureSql,
+  loadFinalFixtures,
+  accidentalExpiryDeadline,
+  FINAL_FIXTURE_DIR,
   R2_FIXTURE_DIR,
   R3_FIXTURE_DIR,
   loadLifecycleFixture,

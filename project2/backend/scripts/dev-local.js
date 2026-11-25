@@ -1,4 +1,4 @@
-// Runs the whole app against an in-memory Postgres loaded with the R1 to R3 fixtures: no .env, no
+// Runs the whole app against an in-memory Postgres loaded with the R1 to R3 and Final fixtures: no .env, no
 // Supabase, no email. Data resets on every restart. Sign in as a fixture account and read its
 // code at /operator.html with the operator secret printed below. Dates are evaluated as of the
 // R3 fixture's evaluation_date unless CLOCK_DATE says otherwise (CLOCK_DATE= uses the real date).
@@ -24,9 +24,9 @@ const { buildAllFixtureSql, fixtureEmail, loadLifecycleFixture } = require("../s
   const app = createApp({ db, config });
   const port = process.env.PORT || 3001;
   app.listen(port, () => {
-    console.log(`Local app (in-memory database with the R1 to R3 fixtures) at http://localhost:${port}`);
+    console.log(`Local app (in-memory database with the R1 to R3 and Final fixtures) at http://localhost:${port}`);
     console.log(`Today is ${config.clockDate ? `${config.clockDate} (simulated, CLOCK_DATE)` : "the real date"}.`);
-    console.log(`Staff: ${fixtureEmail("TEST-STAFF")}. Verified faculty: ${fixtureEmail("F-ALEX")}.`);
+    console.log(`Staff: ${fixtureEmail("TEST-STAFF")}. Verified faculty: ${fixtureEmail("F-JORDAN")} (F-ALEX has left Algoma in the Final fixture).`);
     console.log(`Sign-in codes for test accounts: http://localhost:${port}/operator.html (operator secret: ${operatorSecret})`);
   });
 })();

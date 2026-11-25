@@ -1,0 +1,51 @@
+{
+  "fixture_version": "final-v1",
+  "recoverable_case_ids": [
+    "RC-01",
+    "RC-02",
+    "RC-03",
+    "RC-04",
+    "RC-05"
+  ],
+  "recovery_expectations": [
+    "each case is corrected through the product by an authorized user, not by database repair",
+    "the corrected record keeps its original identifier",
+    "it remains possible to see that the state changed, and who changed it (F-08)",
+    "no case is fixed by deleting and recreating the record (F-07)"
+  ],
+  "departed_faculty_ids": [
+    "F-ALEX"
+  ],
+  "not_accepting_faculty_ids": [
+    "F-PRIYA"
+  ],
+  "graduated_student_ids": [
+    "S02"
+  ],
+  "control_faculty_ids": [
+    "F-JORDAN"
+  ],
+  "orphaned_opportunity_ids": [
+    "O-302"
+  ],
+  "orphaned_reason": "O-302's only supervising faculty member (F-ALEX) departed, so it must not remain silently advertised (F-11)",
+  "must_survive_departure": {
+    "F-ALEX": [
+      "R-502"
+    ],
+    "S02": [
+      "R-501"
+    ]
+  },
+  "scale_counts": {
+    "faculty": 60,
+    "students": 180,
+    "people_total": 240,
+    "opportunities": 160
+  },
+  "notes": [
+    "F-17 requires at least 200 people and 150 opportunities; the scale fixture exceeds both.",
+    "F-JORDAN is the control: an active faculty member with attached work, so a team that hides everyone with attachments fails visibly.",
+    "RC-03 reverses a CONFIRMED match, which is the hardest recovery case because R3-02 made confirmation two-sided."
+  ]
+}

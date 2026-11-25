@@ -1,0 +1,3435 @@
+{
+  "fixture_version": "final-v1",
+  "note": "Load through the same code paths ordinary data uses (F-17).",
+  "faculty": [
+    {
+      "fixture_id": "SF-001",
+      "display_name": "Faculty 001",
+      "areas": [
+        "Cybersecurity",
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-002",
+      "display_name": "Faculty 002",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-003",
+      "display_name": "Faculty 003",
+      "areas": [
+        "Software Engineering"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-004",
+      "display_name": "Faculty 004",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-005",
+      "display_name": "Faculty 005",
+      "areas": [
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-006",
+      "display_name": "Faculty 006",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-007",
+      "display_name": "Faculty 007",
+      "areas": [
+        "Human-Computer Interaction",
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-008",
+      "display_name": "Faculty 008",
+      "areas": [
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-009",
+      "display_name": "Faculty 009",
+      "areas": [
+        "Human-Computer Interaction",
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-010",
+      "display_name": "Faculty 010",
+      "areas": [
+        "Human-Computer Interaction",
+        "Cybersecurity"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-011",
+      "display_name": "Faculty 011",
+      "areas": [
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": false
+    },
+    {
+      "fixture_id": "SF-012",
+      "display_name": "Faculty 012",
+      "areas": [
+        "Software Engineering",
+        "Cybersecurity"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-013",
+      "display_name": "Faculty 013",
+      "areas": [
+        "Data Science",
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-014",
+      "display_name": "Faculty 014",
+      "areas": [
+        "Cybersecurity",
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-015",
+      "display_name": "Faculty 015",
+      "areas": [
+        "Human-Computer Interaction",
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-016",
+      "display_name": "Faculty 016",
+      "areas": [
+        "Artificial Intelligence",
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-017",
+      "display_name": "Faculty 017",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-018",
+      "display_name": "Faculty 018",
+      "areas": [
+        "Cybersecurity",
+        "Software Engineering"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-019",
+      "display_name": "Faculty 019",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-020",
+      "display_name": "Faculty 020",
+      "areas": [
+        "Cybersecurity",
+        "Software Engineering"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-021",
+      "display_name": "Faculty 021",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-022",
+      "display_name": "Faculty 022",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": false
+    },
+    {
+      "fixture_id": "SF-023",
+      "display_name": "Faculty 023",
+      "areas": [
+        "Software Engineering"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-024",
+      "display_name": "Faculty 024",
+      "areas": [
+        "Software Engineering"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-025",
+      "display_name": "Faculty 025",
+      "areas": [
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-026",
+      "display_name": "Faculty 026",
+      "areas": [
+        "Software Engineering",
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-027",
+      "display_name": "Faculty 027",
+      "areas": [
+        "Artificial Intelligence",
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-028",
+      "display_name": "Faculty 028",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-029",
+      "display_name": "Faculty 029",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-030",
+      "display_name": "Faculty 030",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-031",
+      "display_name": "Faculty 031",
+      "areas": [
+        "Data Science",
+        "Software Engineering"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-032",
+      "display_name": "Faculty 032",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-033",
+      "display_name": "Faculty 033",
+      "areas": [
+        "Data Science",
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": false
+    },
+    {
+      "fixture_id": "SF-034",
+      "display_name": "Faculty 034",
+      "areas": [
+        "Software Engineering",
+        "Cybersecurity"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-035",
+      "display_name": "Faculty 035",
+      "areas": [
+        "Artificial Intelligence",
+        "Cybersecurity"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-036",
+      "display_name": "Faculty 036",
+      "areas": [
+        "Human-Computer Interaction",
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-037",
+      "display_name": "Faculty 037",
+      "areas": [
+        "Artificial Intelligence",
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-038",
+      "display_name": "Faculty 038",
+      "areas": [
+        "Cybersecurity",
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-039",
+      "display_name": "Faculty 039",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-040",
+      "display_name": "Faculty 040",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-041",
+      "display_name": "Faculty 041",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-042",
+      "display_name": "Faculty 042",
+      "areas": [
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-043",
+      "display_name": "Faculty 043",
+      "areas": [
+        "Software Engineering",
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-044",
+      "display_name": "Faculty 044",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "listed-projects-only",
+      "active": false
+    },
+    {
+      "fixture_id": "SF-045",
+      "display_name": "Faculty 045",
+      "areas": [
+        "Artificial Intelligence",
+        "Cybersecurity"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-046",
+      "display_name": "Faculty 046",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-047",
+      "display_name": "Faculty 047",
+      "areas": [
+        "Software Engineering",
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-048",
+      "display_name": "Faculty 048",
+      "areas": [
+        "Software Engineering",
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-049",
+      "display_name": "Faculty 049",
+      "areas": [
+        "Human-Computer Interaction",
+        "Cybersecurity"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-050",
+      "display_name": "Faculty 050",
+      "areas": [
+        "Software Engineering"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-051",
+      "display_name": "Faculty 051",
+      "areas": [
+        "Human-Computer Interaction",
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-052",
+      "display_name": "Faculty 052",
+      "areas": [
+        "Data Science",
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "general",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-053",
+      "display_name": "Faculty 053",
+      "areas": [
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-054",
+      "display_name": "Faculty 054",
+      "areas": [
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-055",
+      "display_name": "Faculty 055",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "general",
+      "active": false
+    },
+    {
+      "fixture_id": "SF-056",
+      "display_name": "Faculty 056",
+      "areas": [
+        "Data Science"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-057",
+      "display_name": "Faculty 057",
+      "areas": [
+        "Cybersecurity",
+        "Software Engineering"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-058",
+      "display_name": "Faculty 058",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "listed-projects-only",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-059",
+      "display_name": "Faculty 059",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "verified_faculty": true,
+      "public_profile": true,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    },
+    {
+      "fixture_id": "SF-060",
+      "display_name": "Faculty 060",
+      "areas": [
+        "Data Science",
+        "Software Engineering"
+      ],
+      "verified_faculty": true,
+      "public_profile": false,
+      "inquiry_preference": "not-accepting",
+      "active": true
+    }
+  ],
+  "students": [
+    {
+      "fixture_id": "SS-001",
+      "display_name": "Student 001",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-002",
+      "display_name": "Student 002",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-003",
+      "display_name": "Student 003",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-004",
+      "display_name": "Student 004",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-005",
+      "display_name": "Student 005",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-006",
+      "display_name": "Student 006",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-007",
+      "display_name": "Student 007",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-008",
+      "display_name": "Student 008",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-009",
+      "display_name": "Student 009",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-010",
+      "display_name": "Student 010",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-011",
+      "display_name": "Student 011",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-012",
+      "display_name": "Student 012",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-013",
+      "display_name": "Student 013",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-014",
+      "display_name": "Student 014",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-015",
+      "display_name": "Student 015",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-016",
+      "display_name": "Student 016",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-017",
+      "display_name": "Student 017",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-018",
+      "display_name": "Student 018",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-019",
+      "display_name": "Student 019",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-020",
+      "display_name": "Student 020",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-021",
+      "display_name": "Student 021",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-022",
+      "display_name": "Student 022",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-023",
+      "display_name": "Student 023",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-024",
+      "display_name": "Student 024",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-025",
+      "display_name": "Student 025",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-026",
+      "display_name": "Student 026",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-027",
+      "display_name": "Student 027",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-028",
+      "display_name": "Student 028",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-029",
+      "display_name": "Student 029",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-030",
+      "display_name": "Student 030",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-031",
+      "display_name": "Student 031",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-032",
+      "display_name": "Student 032",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-033",
+      "display_name": "Student 033",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-034",
+      "display_name": "Student 034",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-035",
+      "display_name": "Student 035",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-036",
+      "display_name": "Student 036",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-037",
+      "display_name": "Student 037",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-038",
+      "display_name": "Student 038",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-039",
+      "display_name": "Student 039",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-040",
+      "display_name": "Student 040",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-041",
+      "display_name": "Student 041",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-042",
+      "display_name": "Student 042",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-043",
+      "display_name": "Student 043",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-044",
+      "display_name": "Student 044",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-045",
+      "display_name": "Student 045",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-046",
+      "display_name": "Student 046",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-047",
+      "display_name": "Student 047",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-048",
+      "display_name": "Student 048",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-049",
+      "display_name": "Student 049",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-050",
+      "display_name": "Student 050",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-051",
+      "display_name": "Student 051",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-052",
+      "display_name": "Student 052",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-053",
+      "display_name": "Student 053",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-054",
+      "display_name": "Student 054",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-055",
+      "display_name": "Student 055",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-056",
+      "display_name": "Student 056",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-057",
+      "display_name": "Student 057",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-058",
+      "display_name": "Student 058",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-059",
+      "display_name": "Student 059",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-060",
+      "display_name": "Student 060",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-061",
+      "display_name": "Student 061",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-062",
+      "display_name": "Student 062",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-063",
+      "display_name": "Student 063",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-064",
+      "display_name": "Student 064",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-065",
+      "display_name": "Student 065",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-066",
+      "display_name": "Student 066",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-067",
+      "display_name": "Student 067",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-068",
+      "display_name": "Student 068",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-069",
+      "display_name": "Student 069",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-070",
+      "display_name": "Student 070",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-071",
+      "display_name": "Student 071",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-072",
+      "display_name": "Student 072",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-073",
+      "display_name": "Student 073",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-074",
+      "display_name": "Student 074",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-075",
+      "display_name": "Student 075",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-076",
+      "display_name": "Student 076",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-077",
+      "display_name": "Student 077",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-078",
+      "display_name": "Student 078",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-079",
+      "display_name": "Student 079",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-080",
+      "display_name": "Student 080",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-081",
+      "display_name": "Student 081",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-082",
+      "display_name": "Student 082",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-083",
+      "display_name": "Student 083",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-084",
+      "display_name": "Student 084",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-085",
+      "display_name": "Student 085",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-086",
+      "display_name": "Student 086",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-087",
+      "display_name": "Student 087",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-088",
+      "display_name": "Student 088",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-089",
+      "display_name": "Student 089",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-090",
+      "display_name": "Student 090",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-091",
+      "display_name": "Student 091",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-092",
+      "display_name": "Student 092",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-093",
+      "display_name": "Student 093",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-094",
+      "display_name": "Student 094",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-095",
+      "display_name": "Student 095",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-096",
+      "display_name": "Student 096",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-097",
+      "display_name": "Student 097",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-098",
+      "display_name": "Student 098",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-099",
+      "display_name": "Student 099",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-100",
+      "display_name": "Student 100",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-101",
+      "display_name": "Student 101",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-102",
+      "display_name": "Student 102",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-103",
+      "display_name": "Student 103",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-104",
+      "display_name": "Student 104",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-105",
+      "display_name": "Student 105",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-106",
+      "display_name": "Student 106",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-107",
+      "display_name": "Student 107",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-108",
+      "display_name": "Student 108",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-109",
+      "display_name": "Student 109",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-110",
+      "display_name": "Student 110",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-111",
+      "display_name": "Student 111",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-112",
+      "display_name": "Student 112",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-113",
+      "display_name": "Student 113",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-114",
+      "display_name": "Student 114",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-115",
+      "display_name": "Student 115",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-116",
+      "display_name": "Student 116",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-117",
+      "display_name": "Student 117",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-118",
+      "display_name": "Student 118",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-119",
+      "display_name": "Student 119",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-120",
+      "display_name": "Student 120",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-121",
+      "display_name": "Student 121",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-122",
+      "display_name": "Student 122",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-123",
+      "display_name": "Student 123",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-124",
+      "display_name": "Student 124",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-125",
+      "display_name": "Student 125",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-126",
+      "display_name": "Student 126",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-127",
+      "display_name": "Student 127",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-128",
+      "display_name": "Student 128",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-129",
+      "display_name": "Student 129",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-130",
+      "display_name": "Student 130",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-131",
+      "display_name": "Student 131",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-132",
+      "display_name": "Student 132",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-133",
+      "display_name": "Student 133",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-134",
+      "display_name": "Student 134",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-135",
+      "display_name": "Student 135",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-136",
+      "display_name": "Student 136",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-137",
+      "display_name": "Student 137",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-138",
+      "display_name": "Student 138",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-139",
+      "display_name": "Student 139",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-140",
+      "display_name": "Student 140",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-141",
+      "display_name": "Student 141",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-142",
+      "display_name": "Student 142",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-143",
+      "display_name": "Student 143",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-144",
+      "display_name": "Student 144",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-145",
+      "display_name": "Student 145",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-146",
+      "display_name": "Student 146",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-147",
+      "display_name": "Student 147",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-148",
+      "display_name": "Student 148",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-149",
+      "display_name": "Student 149",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-150",
+      "display_name": "Student 150",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-151",
+      "display_name": "Student 151",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-152",
+      "display_name": "Student 152",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-153",
+      "display_name": "Student 153",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-154",
+      "display_name": "Student 154",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-155",
+      "display_name": "Student 155",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-156",
+      "display_name": "Student 156",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-157",
+      "display_name": "Student 157",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-158",
+      "display_name": "Student 158",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-159",
+      "display_name": "Student 159",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-160",
+      "display_name": "Student 160",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-161",
+      "display_name": "Student 161",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-162",
+      "display_name": "Student 162",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-163",
+      "display_name": "Student 163",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-164",
+      "display_name": "Student 164",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-165",
+      "display_name": "Student 165",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-166",
+      "display_name": "Student 166",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-167",
+      "display_name": "Student 167",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-168",
+      "display_name": "Student 168",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-169",
+      "display_name": "Student 169",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-170",
+      "display_name": "Student 170",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-171",
+      "display_name": "Student 171",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-172",
+      "display_name": "Student 172",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-173",
+      "display_name": "Student 173",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-174",
+      "display_name": "Student 174",
+      "status": "alumni"
+    },
+    {
+      "fixture_id": "SS-175",
+      "display_name": "Student 175",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-176",
+      "display_name": "Student 176",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-177",
+      "display_name": "Student 177",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-178",
+      "display_name": "Student 178",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-179",
+      "display_name": "Student 179",
+      "status": "current"
+    },
+    {
+      "fixture_id": "SS-180",
+      "display_name": "Student 180",
+      "status": "alumni"
+    }
+  ],
+  "opportunities": [
+    {
+      "fixture_id": "SO-001",
+      "title": "Scale opportunity 001",
+      "owner": "SF-002",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-002",
+      "title": "Scale opportunity 002",
+      "owner": "SF-003",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-003",
+      "title": "Scale opportunity 003",
+      "owner": "SF-004",
+      "source": "industry",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2026F",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-004",
+      "title": "Scale opportunity 004",
+      "owner": "SF-005",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity",
+        "Artificial Intelligence"
+      ],
+      "term": "2027S",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-005",
+      "title": "Scale opportunity 005",
+      "owner": "SF-006",
+      "source": "external",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027S",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-006",
+      "title": "Scale opportunity 006",
+      "owner": "SF-007",
+      "source": "industry",
+      "areas": [
+        "Software Engineering",
+        "Data Science"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-007",
+      "title": "Scale opportunity 007",
+      "owner": "SF-008",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-008",
+      "title": "Scale opportunity 008",
+      "owner": "SF-009",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-009",
+      "title": "Scale opportunity 009",
+      "owner": "SF-010",
+      "source": "industry",
+      "areas": [
+        "Artificial Intelligence",
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-010",
+      "title": "Scale opportunity 010",
+      "owner": "SF-011",
+      "source": "external",
+      "areas": [
+        "Human-Computer Interaction",
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-011",
+      "title": "Scale opportunity 011",
+      "owner": "SF-012",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-012",
+      "title": "Scale opportunity 012",
+      "owner": "SF-013",
+      "source": "industry",
+      "areas": [
+        "Software Engineering",
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-013",
+      "title": "Scale opportunity 013",
+      "owner": "SF-014",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction",
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-014",
+      "title": "Scale opportunity 014",
+      "owner": "SF-015",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence",
+        "Data Science"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-015",
+      "title": "Scale opportunity 015",
+      "owner": "SF-016",
+      "source": "external",
+      "areas": [
+        "Cybersecurity",
+        "Human-Computer Interaction"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-016",
+      "title": "Scale opportunity 016",
+      "owner": "SF-017",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2027S",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-017",
+      "title": "Scale opportunity 017",
+      "owner": "SF-018",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity",
+        "Human-Computer Interaction"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-018",
+      "title": "Scale opportunity 018",
+      "owner": "SF-019",
+      "source": "industry",
+      "areas": [
+        "Data Science",
+        "Human-Computer Interaction"
+      ],
+      "term": "2027S",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-019",
+      "title": "Scale opportunity 019",
+      "owner": "SF-020",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering",
+        "Artificial Intelligence"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-020",
+      "title": "Scale opportunity 020",
+      "owner": "SF-021",
+      "source": "external",
+      "areas": [
+        "Human-Computer Interaction",
+        "Artificial Intelligence"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-021",
+      "title": "Scale opportunity 021",
+      "owner": "SF-022",
+      "source": "industry",
+      "areas": [
+        "Data Science",
+        "Artificial Intelligence"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-022",
+      "title": "Scale opportunity 022",
+      "owner": "SF-023",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence",
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-023",
+      "title": "Scale opportunity 023",
+      "owner": "SF-024",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-024",
+      "title": "Scale opportunity 024",
+      "owner": "SF-025",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-025",
+      "title": "Scale opportunity 025",
+      "owner": "SF-026",
+      "source": "external",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-026",
+      "title": "Scale opportunity 026",
+      "owner": "SF-027",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-027",
+      "title": "Scale opportunity 027",
+      "owner": "SF-028",
+      "source": "industry",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-028",
+      "title": "Scale opportunity 028",
+      "owner": "SF-029",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence",
+        "Software Engineering"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-029",
+      "title": "Scale opportunity 029",
+      "owner": "SF-030",
+      "source": "faculty",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027S",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-030",
+      "title": "Scale opportunity 030",
+      "owner": "SF-031",
+      "source": "external",
+      "areas": [
+        "Software Engineering",
+        "Data Science"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-031",
+      "title": "Scale opportunity 031",
+      "owner": "SF-032",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence",
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-032",
+      "title": "Scale opportunity 032",
+      "owner": "SF-033",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-033",
+      "title": "Scale opportunity 033",
+      "owner": "SF-034",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity",
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-034",
+      "title": "Scale opportunity 034",
+      "owner": "SF-035",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering",
+        "Data Science"
+      ],
+      "term": "2027S",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-035",
+      "title": "Scale opportunity 035",
+      "owner": "SF-036",
+      "source": "external",
+      "areas": [
+        "Software Engineering",
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-036",
+      "title": "Scale opportunity 036",
+      "owner": "SF-037",
+      "source": "industry",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027S",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-037",
+      "title": "Scale opportunity 037",
+      "owner": "SF-038",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence",
+        "Software Engineering"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-038",
+      "title": "Scale opportunity 038",
+      "owner": "SF-039",
+      "source": "faculty",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-039",
+      "title": "Scale opportunity 039",
+      "owner": "SF-040",
+      "source": "industry",
+      "areas": [
+        "Artificial Intelligence",
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-040",
+      "title": "Scale opportunity 040",
+      "owner": "SF-041",
+      "source": "external",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2027W",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-041",
+      "title": "Scale opportunity 041",
+      "owner": "SF-042",
+      "source": "faculty",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-042",
+      "title": "Scale opportunity 042",
+      "owner": "SF-043",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-043",
+      "title": "Scale opportunity 043",
+      "owner": "SF-044",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering",
+        "Human-Computer Interaction"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-044",
+      "title": "Scale opportunity 044",
+      "owner": "SF-045",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-045",
+      "title": "Scale opportunity 045",
+      "owner": "SF-046",
+      "source": "external",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-046",
+      "title": "Scale opportunity 046",
+      "owner": "SF-047",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-047",
+      "title": "Scale opportunity 047",
+      "owner": "SF-048",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-048",
+      "title": "Scale opportunity 048",
+      "owner": "SF-049",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-049",
+      "title": "Scale opportunity 049",
+      "owner": "SF-050",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-050",
+      "title": "Scale opportunity 050",
+      "owner": "SF-051",
+      "source": "external",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-051",
+      "title": "Scale opportunity 051",
+      "owner": "SF-052",
+      "source": "industry",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-052",
+      "title": "Scale opportunity 052",
+      "owner": "SF-053",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence",
+        "Cybersecurity"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-053",
+      "title": "Scale opportunity 053",
+      "owner": "SF-054",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity",
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-054",
+      "title": "Scale opportunity 054",
+      "owner": "SF-055",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-055",
+      "title": "Scale opportunity 055",
+      "owner": "SF-056",
+      "source": "external",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-056",
+      "title": "Scale opportunity 056",
+      "owner": "SF-057",
+      "source": "faculty",
+      "areas": [
+        "Data Science",
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-057",
+      "title": "Scale opportunity 057",
+      "owner": "SF-058",
+      "source": "industry",
+      "areas": [
+        "Human-Computer Interaction",
+        "Software Engineering"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-058",
+      "title": "Scale opportunity 058",
+      "owner": "SF-059",
+      "source": "faculty",
+      "areas": [
+        "Data Science",
+        "Software Engineering"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-059",
+      "title": "Scale opportunity 059",
+      "owner": "SF-060",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence",
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-060",
+      "title": "Scale opportunity 060",
+      "owner": "SF-001",
+      "source": "external",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-061",
+      "title": "Scale opportunity 061",
+      "owner": "SF-002",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering",
+        "Human-Computer Interaction"
+      ],
+      "term": "2027S",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-062",
+      "title": "Scale opportunity 062",
+      "owner": "SF-003",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-063",
+      "title": "Scale opportunity 063",
+      "owner": "SF-004",
+      "source": "industry",
+      "areas": [
+        "Human-Computer Interaction",
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-064",
+      "title": "Scale opportunity 064",
+      "owner": "SF-005",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering",
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-065",
+      "title": "Scale opportunity 065",
+      "owner": "SF-006",
+      "source": "external",
+      "areas": [
+        "Cybersecurity",
+        "Artificial Intelligence"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-066",
+      "title": "Scale opportunity 066",
+      "owner": "SF-007",
+      "source": "industry",
+      "areas": [
+        "Artificial Intelligence",
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-067",
+      "title": "Scale opportunity 067",
+      "owner": "SF-008",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-068",
+      "title": "Scale opportunity 068",
+      "owner": "SF-009",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering",
+        "Human-Computer Interaction"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-069",
+      "title": "Scale opportunity 069",
+      "owner": "SF-010",
+      "source": "industry",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-070",
+      "title": "Scale opportunity 070",
+      "owner": "SF-011",
+      "source": "external",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-071",
+      "title": "Scale opportunity 071",
+      "owner": "SF-012",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-072",
+      "title": "Scale opportunity 072",
+      "owner": "SF-013",
+      "source": "industry",
+      "areas": [
+        "Artificial Intelligence",
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-073",
+      "title": "Scale opportunity 073",
+      "owner": "SF-014",
+      "source": "faculty",
+      "areas": [
+        "Data Science",
+        "Software Engineering"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-074",
+      "title": "Scale opportunity 074",
+      "owner": "SF-015",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence",
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-075",
+      "title": "Scale opportunity 075",
+      "owner": "SF-016",
+      "source": "external",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2027S",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-076",
+      "title": "Scale opportunity 076",
+      "owner": "SF-017",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-077",
+      "title": "Scale opportunity 077",
+      "owner": "SF-018",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity",
+        "Artificial Intelligence"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-078",
+      "title": "Scale opportunity 078",
+      "owner": "SF-019",
+      "source": "industry",
+      "areas": [
+        "Data Science",
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-079",
+      "title": "Scale opportunity 079",
+      "owner": "SF-020",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2027W",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-080",
+      "title": "Scale opportunity 080",
+      "owner": "SF-021",
+      "source": "external",
+      "areas": [
+        "Human-Computer Interaction",
+        "Data Science"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-081",
+      "title": "Scale opportunity 081",
+      "owner": "SF-022",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity",
+        "Software Engineering"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-082",
+      "title": "Scale opportunity 082",
+      "owner": "SF-023",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-083",
+      "title": "Scale opportunity 083",
+      "owner": "SF-024",
+      "source": "faculty",
+      "areas": [
+        "Data Science",
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-084",
+      "title": "Scale opportunity 084",
+      "owner": "SF-025",
+      "source": "industry",
+      "areas": [
+        "Human-Computer Interaction",
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-085",
+      "title": "Scale opportunity 085",
+      "owner": "SF-026",
+      "source": "external",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-086",
+      "title": "Scale opportunity 086",
+      "owner": "SF-027",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-087",
+      "title": "Scale opportunity 087",
+      "owner": "SF-028",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-088",
+      "title": "Scale opportunity 088",
+      "owner": "SF-029",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-089",
+      "title": "Scale opportunity 089",
+      "owner": "SF-030",
+      "source": "faculty",
+      "areas": [
+        "Data Science",
+        "Artificial Intelligence"
+      ],
+      "term": "2027S",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-090",
+      "title": "Scale opportunity 090",
+      "owner": "SF-031",
+      "source": "external",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-091",
+      "title": "Scale opportunity 091",
+      "owner": "SF-032",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-092",
+      "title": "Scale opportunity 092",
+      "owner": "SF-033",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-093",
+      "title": "Scale opportunity 093",
+      "owner": "SF-034",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-094",
+      "title": "Scale opportunity 094",
+      "owner": "SF-035",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction",
+        "Cybersecurity"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-095",
+      "title": "Scale opportunity 095",
+      "owner": "SF-036",
+      "source": "external",
+      "areas": [
+        "Cybersecurity",
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-096",
+      "title": "Scale opportunity 096",
+      "owner": "SF-037",
+      "source": "industry",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-097",
+      "title": "Scale opportunity 097",
+      "owner": "SF-038",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-098",
+      "title": "Scale opportunity 098",
+      "owner": "SF-039",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction",
+        "Artificial Intelligence"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-099",
+      "title": "Scale opportunity 099",
+      "owner": "SF-040",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-100",
+      "title": "Scale opportunity 100",
+      "owner": "SF-041",
+      "source": "external",
+      "areas": [
+        "Software Engineering",
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-101",
+      "title": "Scale opportunity 101",
+      "owner": "SF-042",
+      "source": "faculty",
+      "areas": [
+        "Data Science",
+        "Artificial Intelligence"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-102",
+      "title": "Scale opportunity 102",
+      "owner": "SF-043",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-103",
+      "title": "Scale opportunity 103",
+      "owner": "SF-044",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence",
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-104",
+      "title": "Scale opportunity 104",
+      "owner": "SF-045",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-105",
+      "title": "Scale opportunity 105",
+      "owner": "SF-046",
+      "source": "external",
+      "areas": [
+        "Data Science",
+        "Cybersecurity"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-106",
+      "title": "Scale opportunity 106",
+      "owner": "SF-047",
+      "source": "faculty",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-107",
+      "title": "Scale opportunity 107",
+      "owner": "SF-048",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering",
+        "Artificial Intelligence"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-108",
+      "title": "Scale opportunity 108",
+      "owner": "SF-049",
+      "source": "industry",
+      "areas": [
+        "Human-Computer Interaction",
+        "Data Science"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-109",
+      "title": "Scale opportunity 109",
+      "owner": "SF-050",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-110",
+      "title": "Scale opportunity 110",
+      "owner": "SF-051",
+      "source": "external",
+      "areas": [
+        "Software Engineering",
+        "Human-Computer Interaction"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-111",
+      "title": "Scale opportunity 111",
+      "owner": "SF-052",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-112",
+      "title": "Scale opportunity 112",
+      "owner": "SF-053",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction",
+        "Cybersecurity"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-113",
+      "title": "Scale opportunity 113",
+      "owner": "SF-054",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence",
+        "Human-Computer Interaction"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-114",
+      "title": "Scale opportunity 114",
+      "owner": "SF-055",
+      "source": "industry",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-115",
+      "title": "Scale opportunity 115",
+      "owner": "SF-056",
+      "source": "external",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-116",
+      "title": "Scale opportunity 116",
+      "owner": "SF-057",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity",
+        "Data Science"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-117",
+      "title": "Scale opportunity 117",
+      "owner": "SF-058",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-118",
+      "title": "Scale opportunity 118",
+      "owner": "SF-059",
+      "source": "faculty",
+      "areas": [
+        "Data Science",
+        "Software Engineering"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-119",
+      "title": "Scale opportunity 119",
+      "owner": "SF-060",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-120",
+      "title": "Scale opportunity 120",
+      "owner": "SF-001",
+      "source": "external",
+      "areas": [
+        "Cybersecurity",
+        "Artificial Intelligence"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-121",
+      "title": "Scale opportunity 121",
+      "owner": "SF-002",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2026F",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-122",
+      "title": "Scale opportunity 122",
+      "owner": "SF-003",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2027S",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-123",
+      "title": "Scale opportunity 123",
+      "owner": "SF-004",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity",
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-124",
+      "title": "Scale opportunity 124",
+      "owner": "SF-005",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering",
+        "Data Science"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-125",
+      "title": "Scale opportunity 125",
+      "owner": "SF-006",
+      "source": "external",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2027S",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-126",
+      "title": "Scale opportunity 126",
+      "owner": "SF-007",
+      "source": "industry",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-127",
+      "title": "Scale opportunity 127",
+      "owner": "SF-008",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-128",
+      "title": "Scale opportunity 128",
+      "owner": "SF-009",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-129",
+      "title": "Scale opportunity 129",
+      "owner": "SF-010",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-130",
+      "title": "Scale opportunity 130",
+      "owner": "SF-011",
+      "source": "external",
+      "areas": [
+        "Human-Computer Interaction",
+        "Software Engineering"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-131",
+      "title": "Scale opportunity 131",
+      "owner": "SF-012",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-132",
+      "title": "Scale opportunity 132",
+      "owner": "SF-013",
+      "source": "industry",
+      "areas": [
+        "Artificial Intelligence",
+        "Software Engineering"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-133",
+      "title": "Scale opportunity 133",
+      "owner": "SF-014",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity",
+        "Software Engineering"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-134",
+      "title": "Scale opportunity 134",
+      "owner": "SF-015",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction",
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-135",
+      "title": "Scale opportunity 135",
+      "owner": "SF-016",
+      "source": "external",
+      "areas": [
+        "Software Engineering",
+        "Artificial Intelligence"
+      ],
+      "term": "2027W",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-136",
+      "title": "Scale opportunity 136",
+      "owner": "SF-017",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence",
+        "Human-Computer Interaction"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-137",
+      "title": "Scale opportunity 137",
+      "owner": "SF-018",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering",
+        "Human-Computer Interaction"
+      ],
+      "term": "2027S",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-138",
+      "title": "Scale opportunity 138",
+      "owner": "SF-019",
+      "source": "industry",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-139",
+      "title": "Scale opportunity 139",
+      "owner": "SF-020",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity",
+        "Human-Computer Interaction"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-140",
+      "title": "Scale opportunity 140",
+      "owner": "SF-021",
+      "source": "external",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2026F",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-141",
+      "title": "Scale opportunity 141",
+      "owner": "SF-022",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity",
+        "Software Engineering"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-142",
+      "title": "Scale opportunity 142",
+      "owner": "SF-023",
+      "source": "faculty",
+      "areas": [
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-143",
+      "title": "Scale opportunity 143",
+      "owner": "SF-024",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2027S",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-144",
+      "title": "Scale opportunity 144",
+      "owner": "SF-025",
+      "source": "industry",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-145",
+      "title": "Scale opportunity 145",
+      "owner": "SF-026",
+      "source": "external",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-146",
+      "title": "Scale opportunity 146",
+      "owner": "SF-027",
+      "source": "faculty",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-147",
+      "title": "Scale opportunity 147",
+      "owner": "SF-028",
+      "source": "industry",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2027W",
+      "state": "completed"
+    },
+    {
+      "fixture_id": "SO-148",
+      "title": "Scale opportunity 148",
+      "owner": "SF-029",
+      "source": "faculty",
+      "areas": [
+        "Data Science"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-149",
+      "title": "Scale opportunity 149",
+      "owner": "SF-030",
+      "source": "faculty",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-150",
+      "title": "Scale opportunity 150",
+      "owner": "SF-031",
+      "source": "external",
+      "areas": [
+        "Software Engineering",
+        "Cybersecurity"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-151",
+      "title": "Scale opportunity 151",
+      "owner": "SF-032",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2027S",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-152",
+      "title": "Scale opportunity 152",
+      "owner": "SF-033",
+      "source": "faculty",
+      "areas": [
+        "Data Science",
+        "Artificial Intelligence"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-153",
+      "title": "Scale opportunity 153",
+      "owner": "SF-034",
+      "source": "industry",
+      "areas": [
+        "Cybersecurity",
+        "Data Science"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-154",
+      "title": "Scale opportunity 154",
+      "owner": "SF-035",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-155",
+      "title": "Scale opportunity 155",
+      "owner": "SF-036",
+      "source": "external",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2027S",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-156",
+      "title": "Scale opportunity 156",
+      "owner": "SF-037",
+      "source": "industry",
+      "areas": [
+        "Software Engineering"
+      ],
+      "term": "2026F",
+      "state": "expired"
+    },
+    {
+      "fixture_id": "SO-157",
+      "title": "Scale opportunity 157",
+      "owner": "SF-038",
+      "source": "faculty",
+      "areas": [
+        "Artificial Intelligence",
+        "Software Engineering"
+      ],
+      "term": "2027W",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-158",
+      "title": "Scale opportunity 158",
+      "owner": "SF-039",
+      "source": "faculty",
+      "areas": [
+        "Human-Computer Interaction"
+      ],
+      "term": "2026F",
+      "state": "open"
+    },
+    {
+      "fixture_id": "SO-159",
+      "title": "Scale opportunity 159",
+      "owner": "SF-040",
+      "source": "industry",
+      "areas": [
+        "Artificial Intelligence"
+      ],
+      "term": "2027S",
+      "state": "matched"
+    },
+    {
+      "fixture_id": "SO-160",
+      "title": "Scale opportunity 160",
+      "owner": "SF-041",
+      "source": "external",
+      "areas": [
+        "Artificial Intelligence",
+        "Data Science"
+      ],
+      "term": "2026F",
+      "state": "open"
+    }
+  ]
+}

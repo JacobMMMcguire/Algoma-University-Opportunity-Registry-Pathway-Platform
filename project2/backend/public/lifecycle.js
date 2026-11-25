@@ -4,6 +4,7 @@
 const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
 
+let facultyChoices = [];
 let options = null; // /api/options, for the term picker
 let openKey = null; // the card whose controls are open, kept across reloads
 
@@ -58,6 +59,18 @@ function controls(item) {
       ${termFields(`${k}-renew`)}
       ${dateField(`${k}-renew-deadline`, "Deadline")}
       <button type="submit">Renew for this term</button>
+    </form>`);
+  }
+  // F-11: everyone managing it has left Algoma, so staff hand it to someone who has agreed.
+  if (item.canReassign) {
+    const choices = facultyChoices
+      .map((f) => `<option value="${escapeHtml(f.id)}">${escapeHtml(f.displayName)}</option>`)
+      .join("");
+    parts.push(`<form class="inline-form" data-form="reassign" aria-label="Find a new supervisor for ${name}">
+      <label for="${k}-reassign">New supervisor</label>
+      <select id="${k}-reassign" name="faculty"><option value="">Choose a faculty member</option>${choices}</select>
+      <label class="check"><input type="checkbox" name="agreed"> They have agreed to take it on</label>
+      <button type="submit">Reassign</button>
     </form>`);
   }
   if (item.canSetCentreDeadline) {
@@ -178,6 +191,18 @@ $("items").addEventListener("submit", (event) => {
     }
     case "renew":
       return send(item, "/renew", "POST", { targetTerm: term(), deadline: deadline() }, "renewed for a new term.", first);
+    case "reassign": {
+      const facultyUserId = Number(form.elements.faculty.value);
+      if (!facultyUserId) {
+        showStatus(statusEl, "Choose the faculty member who will take it on.", { error: true });
+        return form.elements.faculty.focus();
+      }
+      if (!form.elements.agreed.checked) {
+        showStatus(statusEl, "Check that they have agreed to take it on.", { error: true });
+        return form.elements.agreed.focus();
+      }
+      return send(item, "/reassign", "POST", { facultyUserId, agreed: true }, "reassigned.", first);
+    }
     case "centre":
       if (!deadline()) {
         showStatus(statusEl, "Choose a date, or use Remove Centre deadline.", { error: true });
@@ -218,5 +243,11 @@ $("items").addEventListener("click", (event) => {
   const optionsRes = await api("/api/options");
   if (!optionsRes.ok) return showStatus(statusEl, "Could not load the form options.", { error: true });
   options = optionsRes.data;
+  if (session.user.isStaff) {
+    // The faculty directory lists exactly who can take an opportunity on: verified, still at
+    // Algoma and with a profile.
+    const facultyRes = await api("/api/faculty");
+    facultyChoices = facultyRes.ok ? facultyRes.data.faculty : [];
+  }
   if (await load()) $("panel").hidden = false;
 })();

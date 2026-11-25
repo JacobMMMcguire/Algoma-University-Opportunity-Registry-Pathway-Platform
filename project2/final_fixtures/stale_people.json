@@ -1,0 +1,60 @@
+{
+  "fixture_version": "final-v1",
+  "note": "People with work still attached to them. Nothing here may cascade-delete (F-09).",
+  "people": [
+    {
+      "person_id": "F-ALEX",
+      "role": "faculty",
+      "situation": "departed",
+      "still_attached": {
+        "opportunities": [
+          "O-301",
+          "O-302"
+        ],
+        "outcomes": [
+          "R-502"
+        ]
+      },
+      "expected": "past work remains reachable where consent permits; no longer offered to students as someone to approach; O-302 has no other supervisor and must be handled"
+    },
+    {
+      "person_id": "F-PRIYA",
+      "role": "faculty",
+      "situation": "not-accepting-inquiries",
+      "still_attached": {
+        "opportunities": [
+          "O-303",
+          "O-305"
+        ],
+        "outcomes": []
+      },
+      "expected": "profile and past work remain visible; not presented as available to approach"
+    },
+    {
+      "person_id": "S02",
+      "role": "student",
+      "situation": "graduated",
+      "still_attached": {
+        "outcomes": [
+          "R-501"
+        ]
+      },
+      "expected": "confirmed outcome remains meaningful and attributed; profile may become alumni"
+    },
+    {
+      "person_id": "F-JORDAN",
+      "role": "faculty",
+      "situation": "active",
+      "still_attached": {
+        "opportunities": [
+          "O-304",
+          "O-306"
+        ],
+        "outcomes": [
+          "R-501"
+        ]
+      },
+      "expected": "unchanged; present as the control case"
+    }
+  ]
+}

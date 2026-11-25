@@ -170,14 +170,14 @@ function createMatchesRouter({ db, config, auth }) {
       const lifecycle = describeLifecycle(row);
       const mine = own.find((s) => s.student_email === viewer.email);
       const answerable = state === "proposed" || state === "partly_confirmed";
-      // F-06 (FINAL_PLAN.md D4): a mistaken confirmation can be undone until an outcome is recorded
-      // on the match or its run is completed or archived. This deliberately relaxes R3-04.
-      const undoBlockedReason = row.has_outcome
-        ? "An outcome has been recorded on this match, so its confirmations can't be undone."
-        : lifecycle.state === "completed" || lifecycle.state === "archived"
-          ? `This opportunity is ${lifecycle.label.toLowerCase()}, so its confirmations can't be undone. Ask a faculty member who manages it to reopen it first.`
-          : null;
-      const undoable = !row.withdrawn_at && (state === "confirmed" || state === "partly_confirmed") && !undoBlockedReason;
+      // F-06 (FINAL_PLAN.md D4, recovery case RC-03): a mistaken confirmation can always be undone
+      // while the match isn't withdrawn. This deliberately relaxes R3-04. Outcomes recorded on it
+      // are kept, but stay off the public showcase until the match is fully confirmed again
+      // (SHOWCASE_SQL); a completed or archived opportunity keeps its state.
+      const undoable = !row.withdrawn_at && (state === "confirmed" || state === "partly_confirmed");
+      const undoWarning = row.has_outcome
+        ? "An outcome has been recorded on this match. It is kept, but it won't be shown publicly unless every student confirms again."
+        : null;
       // A match can be confirmed only while its run is the current one and still taking
       // students: confirming after the deadline would undo an expiry that already happened.
       const runTakesConfirmations = row.current_run && (lifecycle.state === "open" || lifecycle.state === "matched");
@@ -224,7 +224,7 @@ function createMatchesRouter({ db, config, auth }) {
           // any confirmed student's answer to "not answered yet" (never confirm or decline for them).
           canUndoConfirmation: Boolean(mine && mine.response === "confirmed" && undoable),
           canUndoStudentConfirmations: Boolean(manages && undoable),
-          undoBlockedReason: (mine?.response === "confirmed" || manages) && !row.withdrawn_at ? undoBlockedReason : null,
+          undoWarning: undoable ? undoWarning : null,
         },
       };
     });
@@ -324,6 +324,9 @@ function createMatchesRouter({ db, config, auth }) {
     if (staffOrFaculty.rows.length) {
       return { error: `${staffOrFaculty.rows[0].email} is a faculty or staff account, not a student.` };
     }
+    // F-10: people who have left aren't offered new work.
+    const departed = await db.query("SELECT email FROM users WHERE email = ANY($1::text[]) AND departure IS NOT NULL ORDER BY email", [emails]);
+    if (departed.rows.length) return { error: `${departed.rows[0].email} is no longer at Algoma, so they can't be proposed a new match.` };
     return { emails };
   }
 
@@ -487,9 +490,7 @@ function createMatchesRouter({ db, config, auth }) {
         if (!m.you.isStudent && !m.you.managesOpportunity) return { status: 404, error: "Match not found." };
         if (m.you.isStudent ? m.you.canUndoConfirmation : m.you.canUndoStudentConfirmations) return null;
         return {
-          error:
-            m.you.undoBlockedReason ||
-            (m.you.isStudent ? "You haven't confirmed this match." : `This match is ${m.label.toLowerCase()}, so there is no confirmation to undo.`),
+          error: m.you.isStudent ? "You haven't confirmed this match." : `This match is ${m.label.toLowerCase()}, so there is no confirmation to undo.`,
           code: "not_undoable",
         };
       },

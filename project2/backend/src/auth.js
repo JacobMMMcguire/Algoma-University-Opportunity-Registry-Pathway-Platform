@@ -11,6 +11,7 @@ function toPublicUser(user) {
     isVerifiedFaculty: user.is_verified_faculty,
     publicProfileChoice: user.public_profile_choice,
     publiclyVisible: isPubliclyVisibleFaculty(user),
+    departure: user.departure || null,
   };
 }
 
@@ -24,7 +25,15 @@ function createAuth(db) {
        WHERE sessions.token = $1 AND sessions.expires_at > now()`,
       [token],
     );
-    return result.rows[0] || null;
+    const user = result.rows[0] || null;
+    // F-10 (D2): someone recorded as having left can still sign in and see their own records,
+    // but no longer acts as faculty. Their stored verification is kept, so their past confirmed
+    // work still counts (F-09).
+    if (user?.departure) {
+      user.was_verified_faculty = user.is_verified_faculty;
+      user.is_verified_faculty = false;
+    }
+    return user;
   }
 
   // Sets req.user to the signed-in user's `users` row (snake_case columns), read fresh from

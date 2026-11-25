@@ -1,7 +1,7 @@
 const express = require("express");
 const { INQUIRY_PREFERENCES, RESEARCH_AREA_GROUPS, canonicalArea, describeInquiryPreference } = require("../catalog");
 const { cleanAreas, cleanText, likePattern, parseId } = require("../validation");
-const { PUBLIC_FACULTY_SQL, isPubliclyVisibleFaculty } = require("../visibility");
+const { PUBLIC_FACULTY_SQL, isPubliclyVisibleFaculty, ACTIVE_PERSON_SQL } = require("../visibility");
 
 const LIMITS = {
   displayName: 100,
@@ -35,9 +35,21 @@ function toOwnProfile(row) {
 // faculty member is open to general inquiries; "listed projects only" faculty are contacted
 // from their project pages, and "not accepting" faculty not at all. Only viewers who may see
 // the profile ever reach this.
+// F-09, F-10: a faculty member who has left keeps their profile page, for their past work, but
+// it says so and offers no way to contact them.
 function toFacultyDetail(row) {
+  if (row.departure) {
+    return {
+      ...toFacultyProfile(row),
+      departed: true,
+      departureNote: "No longer at Algoma University. Their completed work is kept here for the record.",
+      contact: null,
+      contactViaProjects: false,
+    };
+  }
   return {
     ...toFacultyProfile(row),
+    departed: false,
     contact: row.inquiry_preference === "open" ? { email: row.email } : null,
     contactViaProjects: row.inquiry_preference === "projects_only",
   };
@@ -147,7 +159,7 @@ function validateProfile(body) {
   return { profile: { displayName, description, researchAreas, inquiryPreference, externalLinks } };
 }
 
-const PROFILE_COLUMNS = `faculty_profiles.*, users.is_verified_faculty, users.public_profile_choice, users.email`;
+const PROFILE_COLUMNS = `faculty_profiles.*, users.is_verified_faculty, users.public_profile_choice, users.email, users.departure`;
 
 // R1-08 to R1-10: faculty maintain their own profile; everyone else reads it subject to the
 // visibility rule.
@@ -221,7 +233,7 @@ function createFacultyRouter({ db, auth }) {
       const viewer = await auth.getSessionUser(req);
       const base = `SELECT ${PROFILE_COLUMNS} FROM faculty_profiles
                     JOIN users ON users.id = faculty_profiles.user_id
-                    WHERE ${visibilityFilter(viewer)}`;
+                    WHERE ${visibilityFilter(viewer)} AND ${ACTIVE_PERSON_SQL}`;
       const visible = await db.query(base);
       const params = [];
       const result = await db.query(

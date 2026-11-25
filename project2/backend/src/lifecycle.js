@@ -47,11 +47,26 @@ function fullyConfirmedMatchSql(runId) {
     AND NOT EXISTS (SELECT 1 FROM match_students ms WHERE ms.match_id = m.id AND ms.response <> 'confirmed'))`;
 }
 
+// F-11 (FINAL_PLAN.md D3): true when everyone managing run `r` has left Algoma: a project whose
+// owner has left, or an industry opportunity that had supervisors, all of whom have left. One
+// with no supervisor yet is "awaiting a supervisor" (R2-08), not this.
+function managersDepartedSql(runId = "r.id") {
+  return `(EXISTS (SELECT 1 FROM opportunity_runs dr JOIN projects dp ON dp.id = dr.project_id
+      JOIN users du ON du.id = dp.faculty_user_id WHERE dr.id = ${runId} AND du.departure IS NOT NULL)
+    OR (EXISTS (SELECT 1 FROM opportunity_runs dr JOIN opportunity_supervisors dos ON dos.submission_id = dr.submission_id
+          WHERE dr.id = ${runId})
+      AND NOT EXISTS (SELECT 1 FROM opportunity_runs dr JOIN opportunity_supervisors dos ON dos.submission_id = dr.submission_id
+          JOIN users du ON du.id = dos.faculty_user_id WHERE dr.id = ${runId} AND du.departure IS NULL)))`;
+}
+
 // The run's lifecycle state, for the run `r` and the stored state expression `stored`.
-// A deadline passes at the end of its day (D4: the Centre deadline wins when set).
+// A deadline passes at the end of its day (D4: the Centre deadline wins when set). A run that
+// would be open or expired, but whose managers have all left, needs a new supervisor (F-11):
+// it is out of discovery until staff reassign it.
 function lifecycleStateSql(config, stored = "r.state") {
   return `CASE WHEN ${stored} <> 'open' THEN ${stored}
     WHEN ${fullyConfirmedMatchSql("r.id")} THEN 'matched'
+    WHEN ${managersDepartedSql("r.id")} THEN 'needs_supervisor'
     WHEN coalesce(r.centre_deadline, r.deadline) < DATE '${today(config)}' THEN 'expired'
     ELSE 'open' END`;
 }
@@ -71,7 +86,8 @@ function currentRunJoin(config, kind, alias) {
         to_char(r.deadline, 'YYYY-MM-DD') AS run_deadline,
         to_char(r.centre_deadline, 'YYYY-MM-DD') AS run_centre_deadline,
         r.state_changed_at AS run_state_changed_at,
-        ${lifecycleStateSql(config, stored)} AS lifecycle_state
+        ${lifecycleStateSql(config, stored)} AS lifecycle_state,
+        ${managersDepartedSql("r.id")} AS managers_departed
       FROM opportunity_runs r WHERE r.${KINDS[kind].runColumn} = ${alias}.id
       ORDER BY r.run_number DESC LIMIT 1
     ) run ON true`;
@@ -84,6 +100,7 @@ const LIFECYCLE_LABELS = {
   withdrawn: "Withdrawn",
   completed: "Completed",
   archived: "Archived",
+  needs_supervisor: "Needs a new supervisor",
 };
 
 // R3-19: a plain-language sentence a student can read to see whether an opportunity is still
@@ -103,6 +120,8 @@ function lifecycleReason(state, { term, effectiveDeadline }) {
       return term ? `Completed: the work for ${term} is finished.` : "Completed: the work is finished.";
     case "archived":
       return "Archived: kept for the record and no longer offered.";
+    case "needs_supervisor":
+      return "Needs a new supervisor: the faculty member who offered it is no longer at Algoma University, so it isn't taking students until Algoma staff find someone to supervise it.";
     default:
       return "";
   }
@@ -138,6 +157,7 @@ function logRunChange(db, runId, change, detail, userId) {
 module.exports = {
   KINDS,
   logRunChange,
+  managersDepartedSql,
   LIFECYCLE_LABELS,
   currentRunJoin,
   describeClock,

@@ -1,0 +1,46 @@
+{
+  "fixture_version": "final-v1",
+  "note": "Each record reached its current state by mistake and must be recoverable through the product (F-06), keeping its identity and history (F-07).",
+  "cases": [
+    {
+      "case_id": "RC-01",
+      "kind": "accidental_expiry",
+      "record": "O-303",
+      "wrong_state": "expired",
+      "intended_state": "open",
+      "why": "the deadline was extended by the Center after the record had already expired"
+    },
+    {
+      "case_id": "RC-02",
+      "kind": "wrong_lifecycle_state",
+      "record": "O-305",
+      "wrong_state": "withdrawn",
+      "intended_state": "open",
+      "why": "withdrawn by the wrong faculty member"
+    },
+    {
+      "case_id": "RC-03",
+      "kind": "mistaken_match_confirmation",
+      "record": "M-404",
+      "wrong_state": "confirmed",
+      "intended_state": "proposed",
+      "why": "the student confirmed the wrong proposal"
+    },
+    {
+      "case_id": "RC-04",
+      "kind": "mistaken_engagement",
+      "record": "O-302",
+      "wrong_state": "partner-confirmed",
+      "intended_state": "not-contacted",
+      "why": "engagement recorded against the wrong opportunity"
+    },
+    {
+      "case_id": "RC-05",
+      "kind": "publication_visibility_error",
+      "record": "R-501",
+      "wrong_state": "public",
+      "intended_state": "participants-only",
+      "why": "an outcome was published before a participant had agreed"
+    }
+  ]
+}

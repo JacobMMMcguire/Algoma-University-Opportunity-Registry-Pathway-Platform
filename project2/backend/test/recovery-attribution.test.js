@@ -209,7 +209,7 @@ describe("F-06 to F-08: recovery and attribution", () => {
       assert.equal((await s2.post(`/api/matches/${matchId}/confirm`)).status, 200);
     });
 
-    test("once an outcome is recorded on the match, its confirmations can't be undone", async () => {
+    test("RC-03: with an outcome recorded, undoing keeps the outcome but takes it off the showcase until reconfirmed", async () => {
       const recorded = await s1.post("/api/outcomes", {
         matchId,
         summary: "Sampled the river mouth over six weeks.",
@@ -219,11 +219,18 @@ describe("F-06 to F-08: recovery and attribution", () => {
         faculty: [robinUser.id],
       });
       assert.equal(recorded.status, 201, JSON.stringify(recorded.data));
-      const res = await undo(s1);
-      assert.equal(res.status, 409);
-      assert.equal(res.data.code, "not_undoable");
-      assert.match(res.data.error, /outcome has been recorded/);
-      assert.equal((await s1.get(`/api/matches/${matchId}`)).data.match.state, "confirmed");
+      const outcomeId = recorded.data.outcome.id;
+      assert.equal((await robin.post(`/api/outcomes/${outcomeId}/confirm`)).status, 200);
+      const showcased = async () => (await visitor.get("/api/outcomes/showcase")).data.outcomes.some((o) => o.id === outcomeId);
+      assert.equal(await showcased(), true);
+
+      const before = (await s1.get(`/api/matches/${matchId}`)).data.match;
+      assert.match(before.you.undoWarning, /outcome has been recorded/);
+      assert.equal((await undo(s1)).status, 200);
+      assert.equal(await showcased(), false, "not public while the match isn't fully confirmed");
+      assert.equal((await s1.get(`/api/outcomes/${outcomeId}`)).status, 200, "the participants still have it");
+      assert.equal((await s1.post(`/api/matches/${matchId}/confirm`)).status, 200);
+      assert.equal(await showcased(), true);
     });
 
     test("F-08: every answer and undo is recorded with who did it", async () => {
@@ -237,6 +244,8 @@ describe("F-06 to F-08: recovery and attribution", () => {
           ["match.undo_confirmation", "student"],
           ["match.confirm", null],
           ["match.undo_confirmation", "faculty"],
+          ["match.confirm", null],
+          ["match.undo_confirmation", "student"],
           ["match.confirm", null],
         ],
       );

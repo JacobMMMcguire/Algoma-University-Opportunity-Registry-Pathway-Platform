@@ -78,8 +78,6 @@ function studentCard(match) {
   // F-06: a confirmation made by mistake can be undone (it goes back to "not answered yet").
   if (match.you.canUndoConfirmation) {
     buttons.push(h("button", { type: "button", "data-action": "undo-confirmation", text: "Undo my confirmation" }));
-  } else if (match.you.undoBlockedReason && match.you.response === "confirmed") {
-    card.append(h("p", { class: "hint", text: match.you.undoBlockedReason }));
   }
   if (buttons.length) card.append(h("div", { class: "actions" }, ...buttons));
   return card;
@@ -237,7 +235,10 @@ document.addEventListener("click", (event) => {
   const studentEmail = button.dataset.student;
   if (action === "undo-confirmation") {
     const whose = studentEmail ? `${match.students.find((s) => s.email === studentEmail)?.name || studentEmail}'s` : "your";
-    const question = `Undo ${whose} confirmation of the match for "${title}"? The answer goes back to "not answered yet", so the match is no longer fully confirmed until it is confirmed again.`;
+    const question = [
+      `Undo ${whose} confirmation of the match for "${title}"? The answer goes back to "not answered yet", so the match is no longer fully confirmed until it is confirmed again.`,
+      match.you.undoWarning,
+    ].filter(Boolean).join("\n\n");
     if (!confirm(question)) return;
   }
   const done = {

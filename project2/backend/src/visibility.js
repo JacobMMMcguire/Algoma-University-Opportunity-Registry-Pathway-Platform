@@ -6,6 +6,9 @@
 // row from `users` joined as `users`. Do not re-implement this condition elsewhere.
 const PUBLIC_FACULTY_SQL = "(users.is_verified_faculty AND users.public_profile_choice IS TRUE)";
 
+// F-09, F-10 (FINAL_PLAN.md D2): a person still at Algoma, with `users` joined as `users`.
+const ACTIVE_PERSON_SQL = "users.departure IS NULL";
+
 function isPubliclyVisibleFaculty(user) {
   return Boolean(user.is_verified_faculty && user.public_profile_choice === true);
 }
@@ -15,8 +18,9 @@ function isPubliclyVisibleFaculty(user) {
 // while they are verified faculty with a profile (so students can see who they are), plus, for
 // logged-out visitors, the rule above. Use with `opportunity_supervisors`, `users` and
 // `faculty_profiles` joined for the supervisor.
+// F-10: someone who has left Algoma is never offered to students as someone to approach.
 function visibleSupervisorSql(viewer) {
-  return `users.is_verified_faculty AND faculty_profiles.user_id IS NOT NULL ${viewer ? "" : `AND ${PUBLIC_FACULTY_SQL}`}`;
+  return `users.is_verified_faculty AND ${ACTIVE_PERSON_SQL} AND faculty_profiles.user_id IS NOT NULL ${viewer ? "" : `AND ${PUBLIC_FACULTY_SQL}`}`;
 }
 
-module.exports = { PUBLIC_FACULTY_SQL, isPubliclyVisibleFaculty, visibleSupervisorSql };
+module.exports = { ACTIVE_PERSON_SQL, PUBLIC_FACULTY_SQL, isPubliclyVisibleFaculty, visibleSupervisorSql };

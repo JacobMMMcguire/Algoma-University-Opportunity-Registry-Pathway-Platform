@@ -7,7 +7,9 @@ const assert = require("node:assert/strict");
 const fs = require("fs");
 const path = require("path");
 const { after, before, describe, test } = require("node:test");
-const { buildAllFixtureSql, fixtureEmail, loadFixture, loadIntakeFixture, loadLifecycleFixture } = require("../src/fixture");
+// The Final layer changes some R3 results on purpose (test/final-regression.test.js), so this
+// checks R1 to R3 as seeded before it.
+const { buildThroughR3FixtureSql: buildAllFixtureSql, fixtureEmail, loadFixture, loadIntakeFixture, loadLifecycleFixture } = require("../src/fixture");
 const { createClient, signIn, startTestApp } = require("./helpers");
 
 const readJson = (...parts) => JSON.parse(fs.readFileSync(path.join(__dirname, "..", "..", ...parts), "utf8"));

@@ -37,6 +37,12 @@ CREATE TABLE IF NOT EXISTS operational_settings (
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- F-09, F-10 (D2): a person who has left keeps their account and everything attached to it.
+-- 'left' is a faculty member no longer at Algoma; 'graduated' a student who is now an alumnus.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS departure TEXT CHECK (departure IN ('left', 'graduated'));
+ALTER TABLE users ADD COLUMN IF NOT EXISTS departed_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS departure_recorded_by INTEGER REFERENCES users(id) ON DELETE SET NULL;
+
 ALTER TABLE audit_events            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_deliveries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE operational_settings    ENABLE ROW LEVEL SECURITY;

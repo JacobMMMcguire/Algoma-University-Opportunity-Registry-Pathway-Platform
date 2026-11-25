@@ -38,8 +38,9 @@ function renderProfile(profile, session) {
   const words = profile.displayName.split(/\s+/).filter((w) => w && !/\.$/.test(w));
   $("profile-initials").textContent = (words.length > 1 ? words[0][0] + words[words.length - 1][0] : (words[0] || "?").slice(0, 2)).toUpperCase();
   $("profile-audience").hidden = profile.publiclyVisible;
-  $("inquiry-label").textContent = profile.inquiryPreference.label;
-  $("inquiry-explanation").textContent = profile.inquiryPreference.explanation;
+  // F-09, F-10: someone who has left keeps their page for their past work, with no way to contact them.
+  $("inquiry-label").textContent = profile.departed ? "No longer at Algoma University" : profile.inquiryPreference.label;
+  $("inquiry-explanation").textContent = profile.departed ? profile.departureNote : profile.inquiryPreference.explanation;
   $("profile-description").textContent = profile.description;
 
   $("profile-areas").replaceChildren(

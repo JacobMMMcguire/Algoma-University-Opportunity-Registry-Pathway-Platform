@@ -1,4 +1,5 @@
 const express = require("express");
+const { recordAudit } = require("../audit");
 const { canonicalTerm } = require("../catalog");
 const {
   KINDS,
@@ -26,6 +27,8 @@ const ACTIONS_BY_STATE = {
   withdrawn: ["reopen", "archive"],
   completed: ["renew", "reopen", "archive"],
   archived: ["reopen"],
+  // F-11: staff reassign it (below); it can also be withdrawn or archived.
+  needs_supervisor: ["withdraw", "archive"],
 };
 
 // The stored state each action sets on the current run.
@@ -68,6 +71,9 @@ function toItem(row, viewer) {
     lifecycle,
     actions: ACTIONS_BY_STATE[lifecycle.state],
     canSetCentreDeadline: Boolean(viewer.is_staff),
+    // F-07, F-11: everyone managing it has left; staff can hand it to another faculty member.
+    managersDeparted: Boolean(row.managers_departed),
+    canReassign: Boolean(viewer.is_staff && row.managers_departed),
   };
 }
 
@@ -290,6 +296,66 @@ function createLifecycleRouter({ db, config, auth }) {
       );
       if (kind === "project") await db.query("UPDATE projects SET target_term = $2, updated_at = now() WHERE id = $1", [id, term]);
       await logRunChange(db, created.rows[0].id, "renewed", `from ${row.run_term || "run " + row.run_number}`, req.user.id);
+    }),
+  );
+
+  // F-07, F-11 (FINAL_PLAN.md D3): staff give an opportunity whose managers have all left to a
+  // verified faculty member who has agreed to take it on. A project gets a new owner; an industry
+  // opportunity gets them as a willing supervisor, and the departed supervisors' rows stay. The
+  // record keeps its id, runs, matches and outcomes. Recorded in run_changes and audit_events.
+  router.post(
+    "/:kind/:id/reassign",
+    auth.requireStaff,
+    withItem(async (req, res, { kind, id, row }) => {
+      if (!row.managers_departed) {
+        return refuse(res, 409, "Someone who manages this opportunity is still at Algoma, so it doesn't need reassigning.", "not_orphaned");
+      }
+      const body = req.body || {};
+      const facultyId = parseId(String(body.facultyUserId ?? ""));
+      if (facultyId === null) return refuse(res, 400, "Choose the faculty member who will take it on.");
+      if (body.agreed !== true) {
+        return refuse(res, 400, "Confirm that the faculty member has agreed to take it on.", "agreement_required");
+      }
+      const found = await db.query(
+        `SELECT u.id, u.email, u.is_verified_faculty, u.departure, u.public_profile_choice, fp.display_name
+         FROM users u LEFT JOIN faculty_profiles fp ON fp.user_id = u.id WHERE u.id = $1`,
+        [facultyId],
+      );
+      const faculty = found.rows[0];
+      if (!faculty || !faculty.is_verified_faculty || faculty.departure) {
+        return refuse(res, 400, "Choose a verified faculty member who is still at Algoma.");
+      }
+      if (!faculty.display_name || faculty.public_profile_choice === null) {
+        return refuse(
+          res,
+          409,
+          `${faculty.display_name || faculty.email} needs a faculty profile and a public-display choice first, so students can see who supervises it.`,
+          "faculty_profile_required",
+        );
+      }
+      await db.transaction(async (tx) => {
+        let from;
+        if (kind === "project") {
+          const before = await tx.query("SELECT faculty_user_id FROM projects WHERE id = $1 FOR UPDATE", [id]);
+          from = [before.rows[0].faculty_user_id];
+          await tx.query("UPDATE projects SET faculty_user_id = $2, updated_at = now() WHERE id = $1", [id, facultyId]);
+        } else {
+          const before = await tx.query("SELECT faculty_user_id FROM opportunity_supervisors WHERE submission_id = $1 ORDER BY faculty_user_id", [id]);
+          from = before.rows.map((r) => r.faculty_user_id);
+          await tx.query("INSERT INTO opportunity_supervisors (submission_id, faculty_user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [
+            id,
+            facultyId,
+          ]);
+        }
+        await logRunChange(tx, row.run_id, "reassigned", `to ${faculty.display_name}`, req.user.id);
+        await recordAudit(tx, {
+          actorId: req.user.id,
+          action: "opportunity.reassign",
+          subjectType: kind === "project" ? "project" : "partner_submission",
+          subjectId: id,
+          detail: { fromUserIds: from, toUserId: facultyId, agreedByNewSupervisor: true },
+        });
+      });
     }),
   );
 

@@ -8,9 +8,9 @@ Acceptance criteria: the Final fixtures' `expected_final_results.json` (F-01 to 
 every Release 1 to 4 requirement, which stays active. Open questions and accepted risks are in
 [DECISIONS.md](DECISIONS.md).
 
-**Waiting on:** the Final Release fixtures (`recovery_cases.json`, `stale_people.json`,
-`scale_fixture.json`, `expected_final_results.json`) and the Final submission templates. D2, D3
-and D7 may change once we have them.
+The Final fixtures are in `project2/final_fixtures/` (received 2026-11-25). What they changed in
+D3 and D4 is recorded in [DECISIONS.md](DECISIONS.md). **Waiting on:** the Final submission
+templates.
 
 ## Where we stand
 
@@ -120,6 +120,8 @@ pages use plain words; the staff sync page may keep "sync", explained once.
    `test/recovery-attribution.test.js`). Staff hiding an industry opportunity is the existing
    lifecycle Withdraw (R3-13), so no new route was needed.
 2. Departure, orphans and reassignment, checked against the fixture (D2, D3). (F-09 to F-12)
+   **Done 2026-11-25** (`test/final-regression.test.js`: every key of
+   `expected_final_results.json`, all five recovery cases fixed through the product, reseed).
 3. Authorization and content sweep: one test file walking every write and private read as the
    wrong user. (F-01 to F-05, F-13, F-15, F-16)
 4. Paging, the discovery endpoint and the scale import (D6, D7). (F-17 to F-19)
