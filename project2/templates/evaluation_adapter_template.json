@@ -1,0 +1,16 @@
+{
+  "release": "<R2 | R3 | R4 | FINAL>",
+  "deployment_url": "<assessed deployment URL>",
+  "checks": [
+    {
+      "requirement_or_scenario": "<ID from the current published requirements or QA test plan>",
+      "entry_point": "<deployed page URL or API path>",
+      "method_or_action": "<request method or user action>",
+      "role": "<public or the role needed for this check>",
+      "setup": "<fixture and preconditions needed for the check>",
+      "expected_behavior": "<observable result required by the current release>"
+    }
+  ],
+  "fixture_setup": "<how the provided current-release data is loaded>",
+  "test_access": "<how authorized reviewers obtain needed test access through the approved private course channel; do not include passwords or tokens>"
+}

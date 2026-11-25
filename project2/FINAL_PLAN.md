@@ -9,8 +9,10 @@ every Release 1 to 4 requirement, which stays active. Open questions and accepte
 [DECISIONS.md](DECISIONS.md).
 
 The Final fixtures are in `project2/final_fixtures/` (received 2026-11-25). What they changed in
-D3 and D4 is recorded in [DECISIONS.md](DECISIONS.md). **Waiting on:** the Final submission
-templates.
+D3 and D4 is recorded in [DECISIONS.md](DECISIONS.md). The submission templates are in
+`templates/`: `release_submission.md` follows `release_submission_template.md` (including the
+Final-only "Operational note") and `evaluation_adapter.json` follows
+`evaluation_adapter_template.json` with `release: "FINAL"`.
 
 ## Where we stand
 

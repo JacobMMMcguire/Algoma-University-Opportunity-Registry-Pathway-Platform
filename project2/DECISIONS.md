@@ -18,8 +18,9 @@ chose to accept, and what we want to confirm with the instructor.
    operator console, which needs a signed-in staff session or the private operator access code. Is
    that acceptable for "Reviewer test access" in the Final, given F-24 (no verification tokens in
    diagnostics)?
-4. **Submission templates.** The Final asks for `evaluation_adapter_template.json` and the
-   release-submission template from the Team Project Bootcamp section. We need the current copies.
+4. **Submission templates. Resolved 2026-11-25:** the course's template ZIP is now in
+   `project2/templates/` (`release_submission_template.md` with the Final-only "Operational
+   note", `evaluation_adapter_template.json` for R2 to Final, and the peer QA templates).
 
 ## Carried from the R4 review (2026-11-24)
 
