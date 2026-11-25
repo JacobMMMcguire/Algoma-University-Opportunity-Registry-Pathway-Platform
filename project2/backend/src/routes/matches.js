@@ -1,4 +1,5 @@
 const express = require("express");
+const { recordAudit } = require("../audit");
 const { KINDS, describeLifecycle, formatDate, lifecycleStateSql } = require("../lifecycle");
 const { parseId } = require("../validation");
 const { managedSql } = require("./lifecycle");
@@ -101,6 +102,7 @@ function createMatchesRouter({ db, config, auth }) {
     const stored = "CASE WHEN p.status = 'closed' THEN 'withdrawn' ELSE r.state END";
     const result = await db.query(
       `SELECT m.id, m.run_id, m.created_at, m.withdrawn_at,
+         EXISTS (SELECT 1 FROM outcomes o WHERE o.match_id = m.id) AS has_outcome,
          coalesce(pfp.display_name, pu.email) AS proposed_by_name,
          coalesce(wfp.display_name, wu.email) AS withdrawn_by_name,
          CASE WHEN r.project_id IS NULL THEN 'industry' ELSE 'project' END AS kind,
@@ -168,6 +170,14 @@ function createMatchesRouter({ db, config, auth }) {
       const lifecycle = describeLifecycle(row);
       const mine = own.find((s) => s.student_email === viewer.email);
       const answerable = state === "proposed" || state === "partly_confirmed";
+      // F-06 (FINAL_PLAN.md D4): a mistaken confirmation can be undone until an outcome is recorded
+      // on the match or its run is completed or archived. This deliberately relaxes R3-04.
+      const undoBlockedReason = row.has_outcome
+        ? "An outcome has been recorded on this match, so its confirmations can't be undone."
+        : lifecycle.state === "completed" || lifecycle.state === "archived"
+          ? `This opportunity is ${lifecycle.label.toLowerCase()}, so its confirmations can't be undone. Ask a faculty member who manages it to reopen it first.`
+          : null;
+      const undoable = !row.withdrawn_at && (state === "confirmed" || state === "partly_confirmed") && !undoBlockedReason;
       // A match can be confirmed only while its run is the current one and still taking
       // students: confirming after the deadline would undo an expiry that already happened.
       const runTakesConfirmations = row.current_run && (lifecycle.state === "open" || lifecycle.state === "matched");
@@ -210,6 +220,11 @@ function createMatchesRouter({ db, config, auth }) {
           // R3-04: before the match is fully confirmed, a student can still say no.
           canDecline: Boolean(mine && mine.response !== "declined" && answerable),
           canWithdraw: manages && answerable,
+          // F-06: the student undoes their own confirmation; a managing faculty member can return
+          // any confirmed student's answer to "not answered yet" (never confirm or decline for them).
+          canUndoConfirmation: Boolean(mine && mine.response === "confirmed" && undoable),
+          canUndoStudentConfirmations: Boolean(manages && undoable),
+          undoBlockedReason: (mine?.response === "confirmed" || manages) && !row.withdrawn_at ? undoBlockedReason : null,
         },
       };
     });
@@ -348,15 +363,22 @@ function createMatchesRouter({ db, config, auth }) {
           field: "students",
         });
       }
-      const created = await db.query("INSERT INTO matches (run_id, proposed_by) VALUES ($1, $2) RETURNING id", [
-        row.run_id,
-        req.user.id,
-      ]);
-      const matchId = created.rows[0].id;
-      await db.query(
-        "INSERT INTO match_students (match_id, student_email) SELECT $1, unnest($2::text[])",
-        [matchId, emails],
-      );
+      const matchId = await db.transaction(async (tx) => {
+        const created = await tx.query("INSERT INTO matches (run_id, proposed_by) VALUES ($1, $2) RETURNING id", [
+          row.run_id,
+          req.user.id,
+        ]);
+        const newId = created.rows[0].id;
+        await tx.query("INSERT INTO match_students (match_id, student_email) SELECT $1, unnest($2::text[])", [newId, emails]);
+        await recordAudit(tx, {
+          actorId: req.user.id,
+          action: "match.propose",
+          subjectType: "match",
+          subjectId: newId,
+          detail: { runId: row.run_id, students: emails },
+        });
+        return newId;
+      });
       sendMatch(res, await loadMatch(req.user, matchId), 201);
     } catch (error) {
       next(error);
@@ -383,7 +405,14 @@ function createMatchesRouter({ db, config, auth }) {
         if (!match) return res.status(404).json({ error: "Match not found." });
         const refusal = allowed(match);
         if (refusal) return res.status(refusal.status || 409).json({ error: refusal.error, code: refusal.code });
-        await change(req, match);
+        // F-08: `change` returns what to record ({ action, detail }), saved with the change itself.
+        const refused = await db.transaction(async (tx) => {
+          const audit = await change(req, match, tx);
+          if (audit?.refusal) return audit.refusal;
+          if (audit) await recordAudit(tx, { actorId: req.user.id, subjectType: "match", subjectId: match.id, ...audit });
+          return null;
+        });
+        if (refused) return res.status(refused.status || 409).json({ error: refused.error, code: refused.code, field: refused.field });
         sendMatch(res, await loadMatch(req.user, id));
       } catch (error) {
         next(error);
@@ -392,12 +421,13 @@ function createMatchesRouter({ db, config, auth }) {
   }
 
   function respond(response) {
-    return async (req, match) => {
+    return async (req, match, tx) => {
       // The session's own email only, so nobody can answer for another student (R3-03).
-      await db.query(
+      await tx.query(
         "UPDATE match_students SET response = $3, responded_at = now() WHERE match_id = $1 AND student_email = $2",
         [match.id, req.user.email, response],
       );
+      return { action: `match.${response === "confirmed" ? "confirm" : "decline"}`, detail: { from: match.you.response, to: response } };
     };
   }
 
@@ -435,11 +465,46 @@ function createMatchesRouter({ db, config, auth }) {
         if (m.you.canWithdraw) return null;
         return { error: `This match is ${m.label.toLowerCase()}, so it can't be withdrawn.`, code: "not_withdrawable" };
       },
-      async (req, match) => {
-        await db.query("UPDATE matches SET withdrawn_at = now(), withdrawn_by = $2 WHERE id = $1 AND withdrawn_at IS NULL", [
+      async (req, match, tx) => {
+        await tx.query("UPDATE matches SET withdrawn_at = now(), withdrawn_by = $2 WHERE id = $1 AND withdrawn_at IS NULL", [
           match.id,
           req.user.id,
         ]);
+        return { action: "match.withdraw", detail: { from: match.state, to: "withdrawn" } };
+      },
+    ),
+  );
+
+  // F-06 (FINAL_PLAN.md D4): undo a mistaken confirmation. A student undoes their own; a faculty
+  // member who manages the opportunity names the student (`studentEmail`). The answer goes back to
+  // "not answered yet", so the match is partly confirmed or proposed again and the run is no longer
+  // Matched. Nothing is deleted, and the change is recorded (F-07, F-08).
+  router.post(
+    "/:id/undo-confirmation",
+    auth.requireAuth,
+    matchAction(
+      (m) => {
+        if (!m.you.isStudent && !m.you.managesOpportunity) return { status: 404, error: "Match not found." };
+        if (m.you.isStudent ? m.you.canUndoConfirmation : m.you.canUndoStudentConfirmations) return null;
+        return {
+          error:
+            m.you.undoBlockedReason ||
+            (m.you.isStudent ? "You haven't confirmed this match." : `This match is ${m.label.toLowerCase()}, so there is no confirmation to undo.`),
+          code: "not_undoable",
+        };
+      },
+      async (req, match, tx) => {
+        const by = match.you.isStudent ? "student" : "faculty";
+        const email = by === "student" ? req.user.email : String(req.body?.studentEmail || "").trim().toLowerCase();
+        const target = match.students.find((s) => s.email === email);
+        if (!target || target.response !== "confirmed") {
+          return { refusal: { status: 400, error: "Choose a student on this match who has confirmed.", field: "studentEmail" } };
+        }
+        await tx.query(
+          "UPDATE match_students SET response = 'pending', responded_at = NULL WHERE match_id = $1 AND student_email = $2 AND response = 'confirmed'",
+          [match.id, email],
+        );
+        return { action: "match.undo_confirmation", detail: { studentEmail: email, by, matchStateBefore: match.state } };
       },
     ),
   );

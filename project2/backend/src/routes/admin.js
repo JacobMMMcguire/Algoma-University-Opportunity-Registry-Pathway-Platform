@@ -1,4 +1,5 @@
 const express = require("express");
+const { recordAudit } = require("../audit");
 const { toPublicUser } = require("../auth");
 const { parseId } = require("../validation");
 
@@ -20,12 +21,22 @@ function createAdminRouter({ db, auth }) {
     try {
       const id = parseId(req.params.id);
       if (id === null) return res.status(400).json({ error: "Invalid user id." });
-      const result = await db.query(
-        "UPDATE users SET is_verified_faculty = $1 WHERE id = $2 RETURNING *",
-        [value, id],
-      );
-      if (!result.rows[0]) return res.status(404).json({ error: "User not found." });
-      res.json({ user: toPublicUser(result.rows[0]) });
+      // F-02, F-08: the grant or revocation and its record are saved together.
+      const user = await db.transaction(async (tx) => {
+        const before = await tx.query("SELECT is_verified_faculty FROM users WHERE id = $1 FOR UPDATE", [id]);
+        if (!before.rows[0]) return null;
+        const result = await tx.query("UPDATE users SET is_verified_faculty = $1 WHERE id = $2 RETURNING *", [value, id]);
+        await recordAudit(tx, {
+          actorId: req.user.id,
+          action: value ? "faculty.verify" : "faculty.revoke",
+          subjectType: "user",
+          subjectId: id,
+          detail: { from: before.rows[0].is_verified_faculty, to: value },
+        });
+        return result.rows[0];
+      });
+      if (!user) return res.status(404).json({ error: "User not found." });
+      res.json({ user: toPublicUser(user) });
     } catch (error) {
       next(error);
     }

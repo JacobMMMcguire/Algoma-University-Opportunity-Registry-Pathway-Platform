@@ -6,6 +6,7 @@
 // here at all (R4-16): only a successful sync changes them. Everything writable is local and lives
 // in its own table, keyed by the local id, for req.user only (R4-26).
 const express = require("express");
+const { recordAudit } = require("../audit");
 const { RESEARCH_AREA_GROUPS } = require("../catalog");
 const { today } = require("../lifecycle");
 const { cleanText, likePattern, parseId } = require("../validation");
@@ -420,11 +421,14 @@ function createExternalRouter({ db, config, auth }) {
           code: "faculty_profile_required",
         });
       }
-      await db.query(
-        `INSERT INTO external_interest (external_opportunity_id, faculty_user_id, note) VALUES ($1, $2, $3)
-         ON CONFLICT (external_opportunity_id, faculty_user_id) DO UPDATE SET note = EXCLUDED.note, updated_at = now()`,
-        [id, req.user.id, note || null],
-      );
+      await db.transaction(async (tx) => {
+        await tx.query(
+          `INSERT INTO external_interest (external_opportunity_id, faculty_user_id, note) VALUES ($1, $2, $3)
+           ON CONFLICT (external_opportunity_id, faculty_user_id) DO UPDATE SET note = EXCLUDED.note, updated_at = now()`,
+          [id, req.user.id, note || null],
+        );
+        await recordAudit(tx, { actorId: req.user.id, action: "external.support_add", subjectType: "external_opportunity", subjectId: id });
+      });
       res.json({ ok: true });
     } catch (error) {
       next(error);
@@ -435,7 +439,15 @@ function createExternalRouter({ db, config, auth }) {
     try {
       const id = parseId(req.params.id);
       if (id === null) return res.status(400).json({ error: "Invalid opportunity id." });
-      await db.query("DELETE FROM external_interest WHERE external_opportunity_id = $1 AND faculty_user_id = $2", [id, req.user.id]);
+      await db.transaction(async (tx) => {
+        const removed = await tx.query(
+          "DELETE FROM external_interest WHERE external_opportunity_id = $1 AND faculty_user_id = $2 RETURNING faculty_user_id",
+          [id, req.user.id],
+        );
+        if (removed.rows[0]) {
+          await recordAudit(tx, { actorId: req.user.id, action: "external.support_remove", subjectType: "external_opportunity", subjectId: id });
+        }
+      });
       res.json({ ok: true });
     } catch (error) {
       next(error);
@@ -452,12 +464,30 @@ function createExternalRouter({ db, config, auth }) {
       const note = req.body?.note === undefined || req.body?.note === null ? "" : cleanText(req.body.note);
       if (note === null || note.length > NOTE_MAX) return res.status(400).json({ error: `Keep the guidance to ${NOTE_MAX} characters or fewer.` });
       if (!(await loadOne(id))) return res.status(404).json({ error: "Opportunity not found." });
-      await db.query(
-        `INSERT INTO external_guidance (external_opportunity_id, suggest_prior_outcome, note, updated_by) VALUES ($1, $2, $3, $4)
-         ON CONFLICT (external_opportunity_id) DO UPDATE
-         SET suggest_prior_outcome = EXCLUDED.suggest_prior_outcome, note = EXCLUDED.note, updated_by = EXCLUDED.updated_by, updated_at = now()`,
-        [id, suggest, note || null, req.user.id],
-      );
+      await db.transaction(async (tx) => {
+        const before = await tx.query(
+          "SELECT suggest_prior_outcome, note, updated_by FROM external_guidance WHERE external_opportunity_id = $1",
+          [id],
+        );
+        await tx.query(
+          `INSERT INTO external_guidance (external_opportunity_id, suggest_prior_outcome, note, updated_by) VALUES ($1, $2, $3, $4)
+           ON CONFLICT (external_opportunity_id) DO UPDATE
+           SET suggest_prior_outcome = EXCLUDED.suggest_prior_outcome, note = EXCLUDED.note, updated_by = EXCLUDED.updated_by, updated_at = now()`,
+          [id, suggest, note || null, req.user.id],
+        );
+        // F-08: the earlier guidance is kept here, since the row holds only the latest.
+        const prev = before.rows[0];
+        await recordAudit(tx, {
+          actorId: req.user.id,
+          action: "external.guidance_set",
+          subjectType: "external_opportunity",
+          subjectId: id,
+          detail: {
+            from: prev ? { suggestPriorOutcome: prev.suggest_prior_outcome, note: prev.note, setBy: prev.updated_by } : null,
+            to: { suggestPriorOutcome: suggest, note: note || null },
+          },
+        });
+      });
       res.json({ ok: true });
     } catch (error) {
       next(error);

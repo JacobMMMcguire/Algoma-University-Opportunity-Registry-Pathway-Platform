@@ -7,8 +7,15 @@ const ACTIONS = {
     { action: "publish", label: "Publish" },
     { action: "close", label: "Close" },
   ],
-  published: [{ action: "close", label: "Close" }],
-  closed: [{ action: "publish", label: "Reopen and publish" }],
+  // F-06: "Move back to draft" undoes a publication made by mistake.
+  published: [
+    { action: "close", label: "Close" },
+    { action: "unpublish", label: "Move back to draft" },
+  ],
+  closed: [
+    { action: "publish", label: "Reopen and publish" },
+    { action: "unpublish", label: "Move back to draft" },
+  ],
 };
 
 function renderVisibilityNote(user) {
@@ -78,10 +85,12 @@ $("project-list").addEventListener("click", async (event) => {
   }
   const { project } = res.data;
   await load();
-  showStatus(
-    statusEl,
-    project.status === "published" ? `"${project.title}" is published.` : `"${project.title}" is closed.`,
-  );
+  const said = {
+    published: "is published",
+    closed: "is closed",
+    draft: "is a draft again. Only you can see it until you publish it",
+  }[project.status];
+  showStatus(statusEl, `"${project.title}" ${said}.`);
   // Keep keyboard users on the same card: its buttons were re-rendered.
   document.querySelector(`[data-project="${CSS.escape(String(project.id))}"] button`)?.focus();
 });

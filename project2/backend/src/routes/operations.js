@@ -98,6 +98,43 @@ function createOperationsRouter({ db, config, auth }) {
     }
   });
 
+  // F-08 (D1): who changed what and when, newest first, optionally for one record
+  // (`?subjectType=match&subjectId=12`). Evidence for disputes, not an editing tool: nothing here
+  // changes or deletes a record.
+  router.get("/history", async (req, res, next) => {
+    try {
+      const { limit, before } = pageParams(req.query);
+      const subjectType = typeof req.query.subjectType === "string" && /^[a-z_]{1,40}$/.test(req.query.subjectType) ? req.query.subjectType : null;
+      const subjectId = req.query.subjectId === undefined ? null : parseId(req.query.subjectId);
+      if (req.query.subjectId !== undefined && subjectId === null) return res.status(400).json({ error: "Invalid record id." });
+      const rows = await db.query(
+        `SELECT a.id, a.action, a.subject_type, a.subject_id, a.detail, a.created_at,
+           coalesce(fp.display_name, u.email) AS actor_name
+         FROM audit_events a
+         LEFT JOIN users u ON u.id = a.actor_id
+         LEFT JOIN faculty_profiles fp ON fp.user_id = u.id
+         WHERE ($1::text IS NULL OR a.subject_type = $1) AND ($2::int IS NULL OR a.subject_id = $2)
+           AND ($3::int IS NULL OR a.id < $3)
+         ORDER BY a.id DESC LIMIT $4`,
+        [subjectType, subjectId, before, limit + 1],
+      );
+      const page = rows.rows.slice(0, limit);
+      res.json({
+        events: page.map((e) => ({
+          id: e.id,
+          action: e.action,
+          subject: { type: e.subject_type, id: e.subject_id },
+          detail: e.detail,
+          by: e.actor_name,
+          at: new Date(e.created_at).toISOString(),
+        })),
+        next: rows.rows.length > limit ? page[page.length - 1].id : null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   async function simulating() {
     const row = await db.query("SELECT value FROM operational_settings WHERE key = $1", [SIMULATE_FAILURE_KEY]);
     return config.testMode && row.rows[0]?.value === true;

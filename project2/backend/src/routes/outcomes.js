@@ -1,4 +1,5 @@
 const express = require("express");
+const { recordAudit } = require("../audit");
 const { formatDate, parseDate, today } = require("../lifecycle");
 const { cleanText, parseId } = require("../validation");
 const { PUBLIC_FACULTY_SQL } = require("../visibility");
@@ -387,7 +388,11 @@ function createOutcomesRouter({ db, config, auth }) {
         if (!outcome) return res.status(404).json({ error: "Outcome not found." });
         const refusal = allowed(outcome, req);
         if (refusal) return res.status(refusal.status || 409).json({ error: refusal.error, field: refusal.field });
-        await change(req, outcome);
+        // F-08: `change` may return what to record ({ action, detail }), saved with the change.
+        await db.transaction(async (tx) => {
+          const audit = await change(req, outcome, tx);
+          if (audit) await recordAudit(tx, { actorId: req.user.id, subjectType: "outcome", subjectId: outcome.id, ...audit });
+        });
         res.json({ outcome: await loadOwn(req.user, id) });
       } catch (error) {
         next(error);
@@ -405,13 +410,14 @@ function createOutcomesRouter({ db, config, auth }) {
         const { error, field } = validateContent(req.body || {}, config);
         return error ? { status: 400, error, field } : null;
       },
-      async (req, o) => {
+      async (req, o, tx) => {
         const { content } = validateContent(req.body, config);
-        await db.query(
+        await tx.query(
           `UPDATE outcomes SET summary = $2, completed_on = $3, links = $4, confirmed_by = NULL, confirmed_at = NULL,
              updated_at = now() WHERE id = $1`,
           [o.id, content.summary, content.completedOn, JSON.stringify(content.links)],
         );
+        return { action: "outcome.edit", detail: { confirmationCleared: o.confirmed } };
       },
     ),
   );
@@ -425,7 +431,10 @@ function createOutcomesRouter({ db, config, auth }) {
     auth.requireVerifiedFaculty,
     ownAction(
       (o) => facultyOnly(o) || (o.you.canConfirm ? null : { error: "It is already confirmed." }),
-      (req, o) => db.query("UPDATE outcomes SET confirmed_by = $2, confirmed_at = now() WHERE id = $1", [o.id, req.user.id]),
+      async (req, o, tx) => {
+        await tx.query("UPDATE outcomes SET confirmed_by = $2, confirmed_at = now() WHERE id = $1", [o.id, req.user.id]);
+        return { action: "outcome.confirm", detail: { from: false, to: true } };
+      },
     ),
   );
 
@@ -434,7 +443,10 @@ function createOutcomesRouter({ db, config, auth }) {
     auth.requireVerifiedFaculty,
     ownAction(
       (o) => facultyOnly(o) || (o.you.canUnconfirm ? null : { error: "It isn't confirmed." }),
-      (req, o) => db.query("UPDATE outcomes SET confirmed_by = NULL, confirmed_at = NULL WHERE id = $1", [o.id]),
+      async (req, o, tx) => {
+        await tx.query("UPDATE outcomes SET confirmed_by = NULL, confirmed_at = NULL WHERE id = $1", [o.id]);
+        return { action: "outcome.unconfirm", detail: { from: true, to: false } };
+      },
     ),
   );
 
@@ -447,12 +459,14 @@ function createOutcomesRouter({ db, config, auth }) {
         if (o.you.role !== "student") return { status: 403, error: "Only students choose this, for their own profile." };
         return typeof req.body?.show === "boolean" ? null : { status: 400, error: "Choose whether to show it on your profile." };
       },
-      (req, o) =>
-        db.query("UPDATE outcome_participants SET show_on_profile = $3 WHERE outcome_id = $1 AND email = $2 AND role = 'student'", [
+      async (req, o, tx) => {
+        await tx.query("UPDATE outcome_participants SET show_on_profile = $3 WHERE outcome_id = $1 AND email = $2 AND role = 'student'", [
           o.id,
           req.user.email,
           req.body.show,
-        ]),
+        ]);
+        return { action: "consent.outcome_on_profile", detail: { to: req.body.show } };
+      },
     ),
   );
 

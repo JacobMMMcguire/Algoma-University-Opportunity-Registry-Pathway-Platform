@@ -1,6 +1,6 @@
 # Final Release plan: production reality and recovery
 
-Status: **draft 2026-11-24**, for the team to approve. Freezes Friday 27 November 2026, 11:59 p.m.
+Status: **approved 2026-11-25** (decisions as written). Freezes Friday 27 November 2026, 11:59 p.m.
 Toronto time. Branch `final-development` (from `r4-development`), merged into `r1-development`
 (which Render deploys) only when ready to go live. Tag `FINAL-submission`.
 
@@ -116,7 +116,9 @@ pages use plain words; the staff sync page may keep "sync", explained once.
 ## Build order
 
 1. Attribution log, recovery actions and notification containment (D1, D4, D5). Migration 009.
-   (F-06 to F-08, F-14)
+   (F-06 to F-08, F-14) **Done 2026-11-25** (`test/notification-failure.test.js`,
+   `test/recovery-attribution.test.js`). Staff hiding an industry opportunity is the existing
+   lifecycle Withdraw (R3-13), so no new route was needed.
 2. Departure, orphans and reassignment, checked against the fixture (D2, D3). (F-09 to F-12)
 3. Authorization and content sweep: one test file walking every write and private read as the
    wrong user. (F-01 to F-05, F-13, F-15, F-16)

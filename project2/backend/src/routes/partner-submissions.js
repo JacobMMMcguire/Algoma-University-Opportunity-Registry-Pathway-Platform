@@ -1,4 +1,5 @@
 const express = require("express");
+const { recordAudit } = require("../audit");
 const {
   ENGAGEMENT_STATES,
   OPPORTUNITY_STATES,
@@ -234,7 +235,11 @@ function createPartnerSubmissionsRouter({ db, config, auth }) {
       if (id === null) return res.status(400).json({ error: "Invalid submission id." });
       const exists = await db.query("SELECT 1 FROM partner_submissions WHERE id = $1", [id]);
       if (exists.rows.length === 0) return res.status(404).json({ error: "Submission not found." });
-      await change(id);
+      // F-08: `change` returns what to record ({ action, detail }), saved with the change itself.
+      await db.transaction(async (tx) => {
+        const audit = await change(id, tx);
+        if (audit) await recordAudit(tx, { actorId: req.user.id, subjectType: "partner_submission", subjectId: id, ...audit });
+      });
       const [submission] = await loadForReviewers(db, config, req.user, id);
       res.json({ submission });
     } catch (error) {
@@ -255,13 +260,14 @@ function createPartnerSubmissionsRouter({ db, config, auth }) {
           code: "faculty_profile_required",
         });
       }
-      await updateOpportunity(req, res, next, (id) =>
-        db.query(
+      await updateOpportunity(req, res, next, async (id, tx) => {
+        const added = await tx.query(
           `INSERT INTO opportunity_supervisors (submission_id, faculty_user_id) VALUES ($1, $2)
-           ON CONFLICT DO NOTHING`,
+           ON CONFLICT DO NOTHING RETURNING submission_id`,
           [id, req.user.id],
-        ),
-      );
+        );
+        return added.rows[0] ? { action: "supervisor.add", detail: { facultyUserId: req.user.id } } : null;
+      });
     } catch (error) {
       next(error);
     }
@@ -270,23 +276,37 @@ function createPartnerSubmissionsRouter({ db, config, auth }) {
   // R2-10: withdraw only your own willingness. Whether the opportunity stays visible follows
   // from whoever else remains.
   router.delete("/:id/willingness", auth.requireVerifiedFaculty, (req, res, next) =>
-    updateOpportunity(req, res, next, (id) =>
-      db.query("DELETE FROM opportunity_supervisors WHERE submission_id = $1 AND faculty_user_id = $2", [id, req.user.id]),
-    ),
+    updateOpportunity(req, res, next, async (id, tx) => {
+      const removed = await tx.query(
+        "DELETE FROM opportunity_supervisors WHERE submission_id = $1 AND faculty_user_id = $2 RETURNING submission_id",
+        [id, req.user.id],
+      );
+      return removed.rows[0] ? { action: "supervisor.remove", detail: { facultyUserId: req.user.id } } : null;
+    }),
   );
 
   // R2-12 to R2-14: any verified faculty member can record the engagement state, and is shown
-  // as the one who recorded it. It locks nothing.
+  // as the one who recorded it. It locks nothing. F-06: a mistaken state is fixed by setting the
+  // right one; the earlier value and who set it are kept in audit_events (F-07, F-08).
   router.put("/:id/engagement", auth.requireVerifiedFaculty, (req, res, next) => {
     const state = ENGAGEMENT_STATES.find((o) => o.value === req.body?.state)?.value;
     if (!state) return res.status(400).json({ error: "Choose an engagement state from the list.", field: "state" });
-    return updateOpportunity(req, res, next, (id) =>
-      db.query(
+    return updateOpportunity(req, res, next, async (id, tx) => {
+      const before = await tx.query(
+        "SELECT engagement_state, engagement_user_id FROM partner_submissions WHERE id = $1 FOR UPDATE",
+        [id],
+      );
+      await tx.query(
         `UPDATE partner_submissions SET engagement_state = $2, engagement_user_id = $3, engagement_updated_at = now()
          WHERE id = $1`,
         [id, state, req.user.id],
-      ),
-    );
+      );
+      const previous = before.rows[0];
+      return {
+        action: "engagement.set",
+        detail: { from: previous.engagement_state, to: state, previousSetBy: previous.engagement_user_id },
+      };
+    });
   });
 
   return router;

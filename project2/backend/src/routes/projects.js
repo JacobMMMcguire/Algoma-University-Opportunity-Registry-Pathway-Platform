@@ -1,4 +1,5 @@
 const express = require("express");
+const { recordAudit } = require("../audit");
 const {
   LEVEL_FILTERS,
   RESEARCH_AREA_GROUPS,
@@ -321,26 +322,39 @@ function createProjectsRouter({ db, config, auth }) {
 
   // Publishing or closing also sets the current run's stored state: closing withdraws it, and
   // publishing a withdrawn project reopens it (R1-15, R3-13). Other states are left alone.
+  // Unpublishing (status "draft", F-06) takes it out of every list and link and leaves the run
+  // alone, so publishing again puts it back as it was. Every change is recorded (F-07, F-08).
   async function setStatus(req, res, next, status) {
     try {
       const id = parseId(req.params.id);
       if (id === null) return res.status(400).json({ error: "Invalid project id." });
-      const result = await db.query(
-        `UPDATE projects SET status = $3, updated_at = now()
-         WHERE id = $1 AND faculty_user_id = $2
-         RETURNING id`,
-        [id, req.user.id, status],
-      );
-      if (!result.rows[0]) return res.status(404).json({ error: "Project not found." });
-      const [from, to] = status === "closed" ? ["open", "withdrawn"] : ["withdrawn", "open"];
-      const run = await db.query(
-        `UPDATE opportunity_runs SET state = $3, state_changed_by = $4, state_changed_at = now()
-         WHERE id = (SELECT id FROM opportunity_runs WHERE project_id = $1 ORDER BY run_number DESC LIMIT 1)
-           AND state = $2
-         RETURNING id`,
-        [id, from, to, req.user.id],
-      );
-      if (run.rows[0]) await logRunChange(db, run.rows[0].id, "state", `${from} to ${to}`, req.user.id);
+      const outcome = await db.transaction(async (tx) => {
+        const before = await tx.query("SELECT status FROM projects WHERE id = $1 AND faculty_user_id = $2 FOR UPDATE", [
+          id,
+          req.user.id,
+        ]);
+        if (!before.rows[0]) return { status: 404, error: "Project not found." };
+        const previous = before.rows[0].status;
+        if (status === "draft" && previous === "draft") {
+          return { status: 409, error: "This project is already a draft.", code: "already_draft" };
+        }
+        await tx.query("UPDATE projects SET status = $2, updated_at = now() WHERE id = $1", [id, status]);
+        if (status !== "draft") {
+          const [from, to] = status === "closed" ? ["open", "withdrawn"] : ["withdrawn", "open"];
+          const run = await tx.query(
+            `UPDATE opportunity_runs SET state = $3, state_changed_by = $4, state_changed_at = now()
+             WHERE id = (SELECT id FROM opportunity_runs WHERE project_id = $1 ORDER BY run_number DESC LIMIT 1)
+               AND state = $2
+             RETURNING id`,
+            [id, from, to, req.user.id],
+          );
+          if (run.rows[0]) await logRunChange(tx, run.rows[0].id, "state", `${from} to ${to}`, req.user.id);
+        }
+        const action = { published: "project.publish", closed: "project.close", draft: "project.unpublish" }[status];
+        await recordAudit(tx, { actorId: req.user.id, action, subjectType: "project", subjectId: id, detail: { from: previous, to: status } });
+        return null;
+      });
+      if (outcome) return res.status(outcome.status).json({ error: outcome.error, code: outcome.code });
       res.json({ project: toProject(await loadOwn(id, req.user.id)) });
     } catch (error) {
       next(error);
@@ -367,6 +381,10 @@ function createProjectsRouter({ db, config, auth }) {
 
   // R1-15: withdraw from discovery. Nothing is deleted, so the record and its history stay.
   router.post("/:id/close", auth.requireVerifiedFaculty, (req, res, next) => setStatus(req, res, next, "closed"));
+
+  // F-06: a project published by mistake goes back to a draft, seen only by its owner. Nothing is
+  // deleted; publishing it again restores it.
+  router.post("/:id/unpublish", auth.requireVerifiedFaculty, (req, res, next) => setStatus(req, res, next, "draft"));
 
   // R1-19, R1-20: published projects this viewer may see, narrowed by ?area=, ?level=
   // (undergraduate|graduate), ?term=, ?facultyId= and ?q= (text search). `filters` lists the

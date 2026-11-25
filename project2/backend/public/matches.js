@@ -52,7 +52,11 @@ function nextStep(match) {
   if (match.state === "partly_confirmed" && you.response === "confirmed") {
     return "You have confirmed. It is waiting for the other students. Until they all confirm, you can still decline.";
   }
-  if (match.state === "confirmed") return "Everyone has confirmed. Contact the faculty member to plan the work.";
+  if (match.state === "confirmed") {
+    return you.canUndoConfirmation
+      ? "Everyone has confirmed. Contact the faculty member to plan the work. If you confirmed by mistake, you can undo your confirmation until an outcome is recorded."
+      : "Everyone has confirmed. Contact the faculty member to plan the work.";
+  }
   return "";
 }
 
@@ -71,6 +75,12 @@ function studentCard(match) {
   const buttons = [];
   if (match.you.canConfirm) buttons.push(h("button", { type: "button", class: "primary", "data-action": "confirm", text: "Confirm" }));
   if (match.you.canDecline) buttons.push(h("button", { type: "button", "data-action": "decline", text: "Decline" }));
+  // F-06: a confirmation made by mistake can be undone (it goes back to "not answered yet").
+  if (match.you.canUndoConfirmation) {
+    buttons.push(h("button", { type: "button", "data-action": "undo-confirmation", text: "Undo my confirmation" }));
+  } else if (match.you.undoBlockedReason && match.you.response === "confirmed") {
+    card.append(h("p", { class: "hint", text: match.you.undoBlockedReason }));
+  }
   if (buttons.length) card.append(h("div", { class: "actions" }, ...buttons));
   return card;
 }
@@ -85,6 +95,20 @@ function facultyMatch(match) {
   if (match.state === "confirmed") item.append(h("p", {}, h("a", { href: `outcomes.html?match=${match.id}`, text: "Record an outcome" })));
   if (match.you.canWithdraw) {
     item.append(h("div", { class: "actions" }, h("button", { type: "button", "data-action": "withdraw", text: "Withdraw proposal" })));
+  }
+  // F-06: return a student's mistaken confirmation to "not answered yet". It never answers for them.
+  if (match.you.canUndoStudentConfirmations) {
+    const undo = match.students
+      .filter((s) => s.response === "confirmed")
+      .map((s) =>
+        h("button", {
+          type: "button",
+          "data-action": "undo-confirmation",
+          "data-student": s.email,
+          text: `Undo ${s.name}'s confirmation`,
+        }),
+      );
+    if (undo.length) item.append(h("div", { class: "actions" }, ...undo));
   }
   return item;
 }
@@ -210,12 +234,19 @@ document.addEventListener("click", (event) => {
   const title = match.opportunity.title;
   if (action === "decline" && !confirm(`Decline the match for "${title}"? The faculty member will see that you declined. This can't be undone.`)) return;
   if (action === "withdraw" && !confirm(`Withdraw this proposal for "${title}"? The students will see that it was withdrawn.`)) return;
+  const studentEmail = button.dataset.student;
+  if (action === "undo-confirmation") {
+    const whose = studentEmail ? `${match.students.find((s) => s.email === studentEmail)?.name || studentEmail}'s` : "your";
+    const question = `Undo ${whose} confirmation of the match for "${title}"? The answer goes back to "not answered yet", so the match is no longer fully confirmed until it is confirmed again.`;
+    if (!confirm(question)) return;
+  }
   const done = {
     confirm: (d) => `You confirmed the match for "${title}". It is now ${d.match.label.toLowerCase()}.`,
     decline: () => `You declined the match for "${title}".`,
     withdraw: () => `Proposal for "${title}" withdrawn.`,
+    "undo-confirmation": (d) => `Confirmation undone for "${title}". The match is now ${d.match.label.toLowerCase()}.`,
   }[action];
-  send(`/api/matches/${id}/${action}`, undefined, done, `[data-match="${id}"]`);
+  send(`/api/matches/${id}/${action}`, studentEmail ? { studentEmail } : undefined, done, `[data-match="${id}"]`);
 });
 
 document.addEventListener("submit", async (event) => {

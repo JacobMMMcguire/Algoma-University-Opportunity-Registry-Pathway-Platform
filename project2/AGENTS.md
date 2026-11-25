@@ -6,7 +6,9 @@ outside organisations propose projects without an account, and those become stud
 industry opportunities once a verified faculty member is willing to supervise. Release 3 (R3-01
 to R3-24): two-sided matches, term lifecycle and outcomes; its design decisions are in
 [R3_PLAN.md](R3_PLAN.md). Release 4 (R4-01 to R4-28): externally owned opportunities (Mitacs)
-synchronised from a provider feed; see "External opportunities" below. The course brief and the release requirements are the spec; this
+synchronised from a provider feed; see "External opportunities" below. Final Release (F-01 to
+F-27): production reality and recovery; plan in [FINAL_PLAN.md](FINAL_PLAN.md), open questions in
+[DECISIONS.md](DECISIONS.md), and "Final Release" below. The course brief and the release requirements are the spec; this
 file is how the codebase works and the rules for changing it.
 
 **Everything for Project 2 is inside `project2/`**: code in `project2/backend/`, docs in
@@ -660,3 +662,36 @@ Chosen Challenge: R4-07. The fixture is `project2/r4_fixtures/`.
   - `npm run dev:local` runs feed v1 at startup.
 - **Tests.** `test/external-sync.test.js` (against `expected_sync_results.json`) and
   `test/external-opportunities.test.js`.
+
+## Final Release (F-01 to F-27, in progress)
+
+Plan and decisions D1 to D9 in [FINAL_PLAN.md](FINAL_PLAN.md). Migration `009` (`audit_events`,
+`notification_deliveries`, `operational_settings`) is **not yet applied** to the live database.
+
+- **Attribution (F-08, D1).** `recordAudit(tx, { actorId, action, subjectType, subjectId, detail })`
+  in `src/audit.js`. Call it with the transaction that makes the change, so the change and its
+  record are saved together. `detail` holds before and after values, never a code, token or
+  partner contact detail. Recorded: `faculty.verify` / `revoke`, `consent.*`,
+  `project.publish` / `close` / `unpublish`, `supervisor.add` / `remove`, `engagement.set`,
+  `match.propose` / `confirm` / `decline` / `withdraw` / `undo_confirmation`,
+  `outcome.confirm` / `unconfirm` / `edit`, `external.support_*`, `external.guidance_set`,
+  `notification.retry`, `setting.*`. Lifecycle changes keep using `run_changes`.
+- **Transactions on PGlite.** Inside `db.transaction(async (tx) => ...)`, every query must use
+  `tx`. A `db.query` there waits forever on the in-memory test database (one connection).
+  `matchAction` (matches) and `ownAction` (outcomes) run their `change(req, record, tx)` in a
+  transaction, and `change` returns `{ action, detail }` to record.
+- **Recovery (F-06, D4).**
+  - `POST /api/projects/:id/unpublish` (owner): published or closed back to `draft`. The run is
+    left alone, so publishing again restores it.
+  - `POST /api/matches/:id/undo-confirmation`: a student undoes their own confirmation; a managing
+    faculty member sends `{ studentEmail }`. The answer goes back to `pending`. Refused (409
+    `not_undoable`) once an outcome is recorded on the match or its run is completed or archived.
+    This deliberately relaxes R3-04; decline after full confirmation is still refused.
+  - Engagement: set the right state again; the earlier one is in the log.
+  - Staff hide an industry opportunity with the lifecycle Withdraw (R3-13).
+- **Notifications (F-14, D5).** `deliverNotifications` in `src/notify.js` runs after the
+  submission is saved and never throws; outcomes go in `notification_deliveries`.
+- **Operations (`/api/operations`, staff only).** `GET /notifications`, `POST
+  /notifications/:submissionId/retry`, `PUT /settings/simulate-notification-failure` (test mode
+  only), and `GET /history?subjectType=&subjectId=` (the attribution log). Lists take `limit`
+  (default 20, max 50) and `before` (the previous page's `next`).

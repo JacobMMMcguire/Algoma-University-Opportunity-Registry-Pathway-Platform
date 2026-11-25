@@ -1,4 +1,5 @@
 const express = require("express");
+const { recordAudit } = require("../audit");
 const { toPublicUser } = require("../auth");
 const { cleanText } = require("../validation");
 
@@ -21,12 +22,24 @@ function createAccountRouter({ db, auth }) {
       if (typeof allowPublicProfile !== "boolean") {
         return res.status(400).json({ error: "Choose whether to allow public display." });
       }
-      const result = await db.query(
-        `UPDATE users SET public_profile_choice = $1, public_profile_choice_at = now()
-         WHERE id = $2 RETURNING *`,
-        [allowPublicProfile, req.user.id],
-      );
-      res.json({ user: toPublicUser(result.rows[0]) });
+      // F-04, F-08: the choice and its record are saved together. Visibility is worked out on
+      // every request, so a withdrawal applies everywhere at once.
+      const user = await db.transaction(async (tx) => {
+        const result = await tx.query(
+          `UPDATE users SET public_profile_choice = $1, public_profile_choice_at = now()
+           WHERE id = $2 RETURNING *`,
+          [allowPublicProfile, req.user.id],
+        );
+        await recordAudit(tx, {
+          actorId: req.user.id,
+          action: "consent.faculty_public_profile",
+          subjectType: "user",
+          subjectId: req.user.id,
+          detail: { from: req.user.public_profile_choice, to: allowPublicProfile },
+        });
+        return result.rows[0];
+      });
+      res.json({ user: toPublicUser(user) });
     } catch (error) {
       next(error);
     }
@@ -61,14 +74,29 @@ function createAccountRouter({ db, auth }) {
       if (typeof choice !== "boolean") {
         return res.status(400).json({ error: "Choose whether your name may be shown publicly.", field: "allowPublicProfile" });
       }
-      const result = await db.query(
-        `INSERT INTO student_profiles (user_id, display_name, public_profile_choice, updated_at) VALUES ($1, $2, $3, now())
-         ON CONFLICT (user_id) DO UPDATE SET display_name = EXCLUDED.display_name,
-           public_profile_choice = EXCLUDED.public_profile_choice, updated_at = now()
-         RETURNING *`,
-        [req.user.id, displayName, choice],
-      );
-      res.json({ profile: toStudentProfile(result.rows[0]) });
+      const profile = await db.transaction(async (tx) => {
+        const before = await tx.query("SELECT public_profile_choice FROM student_profiles WHERE user_id = $1", [req.user.id]);
+        const from = before.rows[0] ? before.rows[0].public_profile_choice : null;
+        const result = await tx.query(
+          `INSERT INTO student_profiles (user_id, display_name, public_profile_choice, updated_at) VALUES ($1, $2, $3, now())
+           ON CONFLICT (user_id) DO UPDATE SET display_name = EXCLUDED.display_name,
+             public_profile_choice = EXCLUDED.public_profile_choice, updated_at = now()
+           RETURNING *`,
+          [req.user.id, displayName, choice],
+        );
+        // F-08: only a change of consent is recorded, not every name edit.
+        if (from !== choice) {
+          await recordAudit(tx, {
+            actorId: req.user.id,
+            action: "consent.student_public_profile",
+            subjectType: "user",
+            subjectId: req.user.id,
+            detail: { from, to: choice },
+          });
+        }
+        return result.rows[0];
+      });
+      res.json({ profile: toStudentProfile(profile) });
     } catch (error) {
       next(error);
     }
