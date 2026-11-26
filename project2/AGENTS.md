@@ -664,11 +664,11 @@ Chosen Challenge: R4-07. The fixture is `project2/r4_fixtures/`.
 - **Tests.** `test/external-sync.test.js` (against `expected_sync_results.json`) and
   `test/external-opportunities.test.js`.
 
-## Final Release (F-01 to F-27, in progress)
+## Final Release (F-01 to F-27, done)
 
 Plan and decisions D1 to D9 in [FINAL_PLAN.md](FINAL_PLAN.md). Migration `009` (`audit_events`,
-`notification_deliveries`, `operational_settings`, and `users.departure`) is **not yet applied** to
-the live database. The fixtures are in `project2/final_fixtures/`.
+`notification_deliveries`, `operational_settings`, and `users.departure`) was applied to
+the live database on 2026-11-26, followed by the Final seed. The fixtures are in `project2/final_fixtures/`.
 
 - **Departure (F-09, F-10, D2).** `users.departure` is `left` (faculty) or `graduated` (students),
   set by staff with `POST /api/admin/users/:id/departure` `{ departure }` (null takes it back).
