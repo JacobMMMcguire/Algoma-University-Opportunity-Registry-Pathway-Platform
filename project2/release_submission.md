@@ -113,7 +113,15 @@ and the operator access code are in Moodle under Reviewer test access**, never i
 - **Phone width and accessibility (F-20, F-21):** 58 page views across seven roles at 390px in
   headless Chrome with axe-core, with no overflow, violations or errors
   (`final_evidence/browser_pass.json`).
-- **Live checks:** recorded in the docs commit after tagging.
+- **Live checks (2026-11-26, after the Final seed and a v1 sync):** 23 read-only, signed-out
+  checks against the launch candidate, all passing. No recovery case was touched.
+  - F-ALEX is out of the directory, and his page is kept, marked "No longer at Algoma
+    University", with no contact. F-PRIYA is listed with no contact; F-JORDAN offers contact.
+  - None of F-ALEX's projects are in discovery; P-101's link shows "Needs a new supervisor".
+  - O-303 starts Expired and O-305 Withdrawn, both out of discovery; R-501 is in Completed work.
+  - External data is listed and fresh; discovery returns at most 20 at a time.
+  - Operations, history, admin, matches, lifecycle and sync health return 401 to visitors.
+  - The clock reads 6 November 2026.
 
 ### Launch readiness (F-26)
 
