@@ -27,7 +27,8 @@ function createBrevoSender(config) {
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) {
-      throw new Error(`Brevo responded ${response.status}: ${await response.text()}`);
+      // F-24: the status and the start of Brevo's reply only; the key and the code are never in it.
+      throw new Error(`Brevo responded ${response.status}: ${(await response.text()).slice(0, 200)}`);
     }
   };
 }

@@ -74,6 +74,11 @@ Fixtures" folder; the files are unchanged).
   offers contact, F-ALEX leaves the faculty directory, and S02 is an alumnus.
   `test/regression.test.js` checks R1 to R3 as seeded before the Final layer, and
   `test/final-regression.test.js` checks the Final expected results.
+- **F-ALEX's R1 projects also need a new supervisor.** P-101 and P-107 are published, open and
+  managed only by F-ALEX, so once he has left they leave discovery ("Needs a new supervisor")
+  like O-302, instead of advertising someone students can't approach (F-10, F-11). The Final
+  fixture's orphan list names only O-302, the R3 opportunity `stale_people.json` lists; this
+  changes the R1 visibility of P-101 and P-107 on purpose. Staff can reassign them.
 - **Someone who has left can still sign in.** A departed faculty member sees their own records but
   no longer acts as faculty. A graduated student can still answer their matches but can't be
   proposed a new one. Staff record either on `/admin.html`, and can take it back.

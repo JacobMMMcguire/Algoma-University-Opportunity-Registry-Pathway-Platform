@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Operations — Opportunity Registry</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><nav id="site-nav" aria-label="Main"></nav></header>
+  <main>
+    <h1>Operations</h1>
+    <p id="denied" hidden></p>
+
+    <div id="panel" hidden>
+      <p class="hint">
+        For staff: whether the services behind the site are working, what needs attention, and who
+        changed what. Nothing here shows sign-in codes, session details or partners' contact details.
+      </p>
+
+      <section aria-labelledby="summary-heading">
+        <h2 id="summary-heading">At a glance</h2>
+        <ul id="summary" class="summary-list"></ul>
+      </section>
+
+      <section aria-labelledby="sync-heading">
+        <h2 id="sync-heading">External opportunities</h2>
+        <div id="sync"></div>
+        <p><a href="sync.html">Open sync health</a> to run a sync or see each run's details.</p>
+      </section>
+
+      <section aria-labelledby="notify-heading">
+        <h2 id="notify-heading">Notifications to faculty</h2>
+        <p class="hint">
+          When an organisation proposes a project, faculty who subscribed are notified. If that fails,
+          the proposal is still saved and listed on Industry opportunities; retry here once the problem
+          is fixed. Nobody is notified twice.
+        </p>
+        <p id="notify-counts"></p>
+        <ul id="notify-list" class="cards"></ul>
+        <button type="button" id="notify-more" hidden>Show more</button>
+        <div id="simulate" hidden>
+          <h3>Evaluation: simulate a notification failure</h3>
+          <p class="hint">Test mode only. While this is on, every new proposal's notifications fail, so you can see the proposal is still saved and retry it here.</p>
+          <p id="simulate-state"></p>
+          <button type="button" id="simulate-toggle"></button>
+        </div>
+      </section>
+
+      <section aria-labelledby="lifecycle-heading">
+        <h2 id="lifecycle-heading">Opportunities that need attention</h2>
+        <p id="lifecycle-counts"></p>
+        <ul id="lifecycle-list" class="cards"></ul>
+        <button type="button" id="lifecycle-more" hidden>Show more</button>
+      </section>
+
+      <section aria-labelledby="history-heading">
+        <h2 id="history-heading">Who changed what</h2>
+        <p class="hint">
+          Changes to faculty status, public-display choices, publication, supervision, engagement,
+          matches, outcomes and departures, newest first. Term and deadline changes are in each
+          opportunity's history on Terms and deadlines.
+        </p>
+        <form id="history-filter" class="inline-form">
+          <label for="history-type">Kind of record</label>
+          <select id="history-type" name="subjectType">
+            <option value="">Everything</option>
+            <option value="user">People</option>
+            <option value="project">Faculty projects</option>
+            <option value="partner_submission">Industry opportunities</option>
+            <option value="match">Matches</option>
+            <option value="outcome">Outcomes</option>
+            <option value="external_opportunity">External opportunities</option>
+          </select>
+          <label for="history-id">Record number (optional)</label>
+          <input id="history-id" name="subjectId" inputmode="numeric" pattern="[0-9]*" maxlength="9">
+          <button type="submit">Show</button>
+        </form>
+        <ol id="history-list" class="history-list"></ol>
+        <button type="button" id="history-more" hidden>Show more</button>
+      </section>
+    </div>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="operations.js"></script>
+</body>
+</html>

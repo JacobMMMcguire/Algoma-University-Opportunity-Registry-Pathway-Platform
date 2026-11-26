@@ -86,6 +86,7 @@ const NAV_LINKS = [
   { href: "profile.html", label: "Your faculty profile", group: "Account", show: (s) => s.user?.isVerifiedFaculty },
   { href: "student-profile.html", label: "Your student profile", group: "Account", show: (s) => s.user && !s.user.isVerifiedFaculty && !s.user.isStaff },
   { href: "admin.html", label: "Faculty verification", group: "Staff", show: (s) => s.user?.isStaff },
+  { href: "operations.html", label: "Operations", group: "Staff", show: (s) => s.user?.isStaff },
   { href: "sync.html", label: "External sync health", group: "Staff", show: (s) => s.user?.isStaff },
   { href: "partner.html", label: "Propose a project", group: "For organisations", description: "No account needed. Faculty review every proposal." },
   { href: "operator.html", label: "Operator console", group: "Test mode", description: "Sign-in codes for the test accounts", show: (s) => s.testMode },
@@ -318,8 +319,9 @@ function renderClockNote(session) {
   note.id = "clock-note";
   note.className = "clock-note";
   note.textContent = `Deadlines are evaluated as of ${session.clock.label} (a simulated date, set for evaluation).`;
-  // Above the red bar, so the bar and each page's red title band read as one block.
-  document.querySelector("body > header")?.before(note);
+  // Above the red bar, so the bar and each page's red title band read as one block. Inside the
+  // header landmark, so screen-reader users find it with the rest of the banner (axe "region").
+  document.querySelector("body > header")?.prepend(note);
 }
 
 // "2026-10-20" -> "20 October 2026", without letting a time zone shift the day.

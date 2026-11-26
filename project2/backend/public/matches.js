@@ -87,7 +87,7 @@ function facultyMatch(match) {
   const item = h(
     "li",
     { "data-match": match.id },
-    match.run.current ? null : h("p", { class: "kind", text: `Earlier run ${match.run.runNumber}${match.run.term ? `, ${match.run.term}` : ""}` }),
+    match.run.current ? null : h("p", { class: "kind", text: `Earlier offering${match.run.term ? `, ${match.run.term}` : ` ${match.run.runNumber}`}` }),
     ...matchHeader(match),
   );
   if (match.state === "confirmed") item.append(h("p", {}, h("a", { href: `outcomes.html?match=${match.id}`, text: "Record an outcome" })));

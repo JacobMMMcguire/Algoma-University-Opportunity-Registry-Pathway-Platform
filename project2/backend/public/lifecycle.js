@@ -90,7 +90,7 @@ function card(item) {
     l.term || "No term set",
     l.deadline ? `Faculty deadline ${formatDay(l.deadline)}` : "No faculty deadline",
     l.centreDeadline && `Centre deadline ${formatDay(l.centreDeadline)}`,
-    l.runNumber > 1 && `Run ${l.runNumber}`,
+    l.runNumber > 1 && `Offering ${l.runNumber}`,
   ].filter(Boolean);
   return `<li class="card" data-key="${escapeHtml(keyOf(item))}">
     <p class="kind">${escapeHtml(kind)}${item.managedBy ? ` · ${escapeHtml(item.managedBy)}` : ""}${item.draft ? " · Draft" : ""}</p>
@@ -106,12 +106,30 @@ function card(item) {
   </li>`;
 }
 
+// F-22: plain words for the stored change records ("state", "open to withdrawn", ...).
+const CHANGE_WORDS = {
+  state: "State changed",
+  schedule: "Term and deadline set",
+  centre_deadline: "Centre deadline set",
+  renewed: "Offered again",
+  reassigned: "Given to a new supervisor",
+};
+const STATE_WORDS = { needs_supervisor: "needs a new supervisor" };
+
+function changeText(c) {
+  const what = CHANGE_WORDS[c.change] || c.change;
+  let detail = String(c.detail || "").replace(/\b[a-z]+(?:_[a-z]+)+\b/g, (code) => STATE_WORDS[code] || code.replace(/_/g, " "));
+  if (c.change === "centre_deadline" && detail === "removed") return "Centre deadline removed";
+  if (c.change === "renewed") detail = detail.replace(/^from run (\d+)/, "after offering $1");
+  return detail ? `${what}: ${detail}` : what;
+}
+
 function renderHistory(list, history) {
   const runs = history.map((run) => {
     const changes = run.changes
-      .map((c) => `<li>${escapeHtml(new Date(c.at).toLocaleDateString())}: ${escapeHtml(c.change)} (${escapeHtml(c.detail)})${c.by ? ` by ${escapeHtml(c.by)}` : ""}${c.byStaff ? " (staff)" : ""}</li>`)
+      .map((c) => `<li>${escapeHtml(new Date(c.at).toLocaleDateString())}: ${escapeHtml(changeText(c))}${c.by ? ` by ${escapeHtml(c.by)}` : ""}${c.byStaff ? " (staff)" : ""}</li>`)
       .join("");
-    return `<li>Run ${run.runNumber}: ${escapeHtml(run.term || "no term")}, ${escapeHtml(run.label)}${changes ? `<ul>${changes}</ul>` : ""}</li>`;
+    return `<li>Offering ${run.runNumber}: ${escapeHtml(run.term || "no term")}, ${escapeHtml(run.label)}${changes ? `<ul>${changes}</ul>` : ""}</li>`;
   });
   list.innerHTML = runs.join("");
 }
@@ -267,5 +285,8 @@ $("items").addEventListener("click", (event) => {
     const facultyRes = await api("/api/faculty");
     facultyChoices = facultyRes.ok ? facultyRes.data.faculty : [];
   }
+  // The operations page links here with ?q= to open one opportunity.
+  search = new URLSearchParams(location.search).get("q") || "";
+  $("search-q").value = search;
   if (await load()) $("panel").hidden = false;
 })();

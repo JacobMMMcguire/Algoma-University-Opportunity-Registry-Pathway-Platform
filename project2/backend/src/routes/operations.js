@@ -5,6 +5,7 @@ const express = require("express");
 const { recordAudit } = require("../audit");
 const { deliverNotifications, SIMULATE_FAILURE_KEY } = require("../notify");
 const { parseId } = require("../validation");
+const { currentRunJoin, describeLifecycle } = require("../lifecycle");
 
 const PAGE = { default: 20, max: 50 };
 
@@ -129,6 +130,57 @@ function createOperationsRouter({ db, config, auth }) {
           at: new Date(e.created_at).toISOString(),
         })),
         next: rows.rows.length > limit ? page[page.length - 1].id : null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // F-11, F-23 (D8): lifecycle problems staff should look at: opportunities whose managers have
+  // all left (they need a new supervisor), and open ones with no deadline (they would never
+  // expire). Plus how many people have left or graduated. Paged like the other lists.
+  router.get("/lifecycle", async (req, res, next) => {
+    try {
+      const { limit, before } = pageParams(req.query);
+      const problems = [];
+      for (const [kind, table, alias] of [
+        ["project", "projects", "p"],
+        ["industry", "partner_submissions", "ps"],
+      ]) {
+        const draft = kind === "project" ? "AND p.status <> 'draft'" : "";
+        const rows = await db.query(
+          `SELECT ${alias}.id, ${alias}.title, run.* FROM ${table} ${alias} ${currentRunJoin(config, kind, alias)}
+           WHERE (run.lifecycle_state = 'needs_supervisor'
+              OR (run.lifecycle_state = 'open' AND run.run_deadline IS NULL AND run.run_centre_deadline IS NULL)) ${draft}`,
+        );
+        for (const row of rows.rows) {
+          const lifecycle = describeLifecycle(row);
+          problems.push({
+            kind,
+            id: row.id,
+            title: row.title,
+            problem: lifecycle.state === "needs_supervisor" ? "needs_supervisor" : "no_deadline",
+            explanation:
+              lifecycle.state === "needs_supervisor"
+                ? "Everyone who managed it has left Algoma. Reassign it on Terms and deadlines, or withdraw it."
+                : "Open with no deadline, so it will never expire. Ask its faculty member to set one, or set a Centre deadline.",
+            lifecycle,
+          });
+        }
+      }
+      problems.sort((a, b) => (a.problem === b.problem ? a.title.localeCompare(b.title) : a.problem === "needs_supervisor" ? -1 : 1));
+      // `before` here is the offset of the next page (the list is small and worked out each time).
+      const offset = before ?? 0;
+      const departures = await db.query("SELECT departure, count(*)::int AS n FROM users WHERE departure IS NOT NULL GROUP BY departure");
+      res.json({
+        counts: {
+          needsSupervisor: problems.filter((p) => p.problem === "needs_supervisor").length,
+          noDeadline: problems.filter((p) => p.problem === "no_deadline").length,
+          left: departures.rows.find((r) => r.departure === "left")?.n || 0,
+          graduated: departures.rows.find((r) => r.departure === "graduated")?.n || 0,
+        },
+        problems: problems.slice(offset, offset + limit),
+        next: offset + limit < problems.length ? offset + limit : null,
       });
     } catch (error) {
       next(error);

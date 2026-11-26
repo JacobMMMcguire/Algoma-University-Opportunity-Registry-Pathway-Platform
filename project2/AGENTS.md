@@ -730,6 +730,10 @@ the live database. The fixtures are in `project2/final_fixtures/`.
 - **Scale (F-17, D7).** `src/scale.js` loads `final_fixtures/scale_fixture.json` through the
   routes; `npm run scale:evidence` writes `final_evidence/scale_evidence.json`, and
   `npm run dev:local -- --scale` adds it to the local app. Never load it into the live database.
+- **Operator page (F-23, F-24, D8).** `/operations.html` (staff, "Operations" in the menu): database
+  and sync health, failed notifications with Retry (and the test-mode simulated failure),
+  opportunities that need a new supervisor or have no deadline (`GET /api/operations/lifecycle`),
+  and who changed what (`/history`) in plain words. Logs record error messages only.
 - **Operations (`/api/operations`, staff only).** `GET /notifications`, `POST
   /notifications/:submissionId/retry`, `PUT /settings/simulate-notification-failure` (test mode
   only), and `GET /history?subjectType=&subjectId=` (the attribution log). Lists take `limit`

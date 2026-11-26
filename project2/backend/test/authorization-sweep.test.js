@@ -73,6 +73,7 @@ const ACCESS = {
   "GET /api/notifications/subscriptions": "faculty",
   "PUT /api/notifications/subscriptions": "faculty",
   "GET /api/operations/history": "staff",
+  "GET /api/operations/lifecycle": "staff",
   "GET /api/operations/notifications": "staff",
   "POST /api/operations/notifications/:submissionId/retry": "staff",
   "PUT /api/operations/settings/simulate-notification-failure": "staff",
@@ -444,7 +445,7 @@ describe("F-01 to F-05: authorization and content sweep", () => {
     // encodeURIComponent). A new one fails here until someone reviews it and updates the count.
     const REVIEWED_HTML_SINKS = {
       "admin.js": 2, "common.js": 1, "contact.js": 1, "faculty.js": 1, "index.js": 4, "lifecycle.js": 4,
-      "matches.js": 1, "my-projects.js": 4, "notifications.js": 1, "operator.js": 1, "outcomes.js": 1,
+      "matches.js": 1, "my-projects.js": 4, "notifications.js": 1, "operations.js": 1, "operator.js": 1, "outcomes.js": 1,
       "profile.js": 4, "project-edit.js": 1, "projects.js": 1, "student-profile.js": 2, "submissions.js": 1,
     };
 

@@ -133,6 +133,9 @@ pages use plain words; the staff sync page may keep "sync", explained once.
    **Done 2026-11-26** (`GET /api/discovery`, paged staff queues, `src/scale.js`,
    `test/scale.test.js`, `test/paging.test.js`, `final_evidence/scale_evidence.json`).
 5. Operator page, wording and accessibility pass at 390px (D8, D9). (F-20 to F-24)
+   **Done 2026-11-26** (`/operations.html`, `GET /api/operations/lifecycle`,
+   `test/operations.test.js`; plain-language lifecycle history; 58 page views at 390px with
+   axe-core, no overflow, violations or errors: `final_evidence/browser_pass.json`).
 6. Full regression, launch-readiness note, release files, deploy, tag `FINAL-submission`.
    (F-25 to F-27)
 
