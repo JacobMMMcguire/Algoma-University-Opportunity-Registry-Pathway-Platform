@@ -1,5 +1,6 @@
--- 009: Final Release hardening (FINAL_PLAN.md D1, D5).
--- Safe to run while the previous code is deployed: it only adds tables.
+-- 009: Final Release hardening (FINAL_PLAN.md D1, D2, D5).
+-- Safe to run while the previous code is deployed: it only adds tables, and nullable columns on
+-- users that the previous code never reads.
 
 -- D1, F-08: who changed what and when, for the changes run_changes doesn't already cover
 -- (privilege grants, publication, engagement, match answers, reassignment, departure). Written in
