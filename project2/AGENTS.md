@@ -740,23 +740,28 @@ the live database on 2026-11-26, followed by the Final seed. The fixtures are in
   only), and `GET /history?subjectType=&subjectId=` (the attribution log). Lists take `limit`
   (default 20, max 50) and `before` (the previous page's `next`).
 
-## Guided tour (branch `demo-tour`, for the presentation; not part of any release)
+## Guided tour (branch `demo-tour`; planned for the Final before the freeze)
 
-Built after the `FINAL-submission` freeze, from that tag. Keep it off `r1-development` while the
-Final is being evaluated: the live site must stay the tagged commit.
+Built 2026-11-26 from `FINAL-submission` (d000415). The team decided to ship it in the Final, so the
+presentation shows the Final build. Plan: merge the teammate's aesthetic changes into `demo-tour`,
+then `demo-tour` into `final-development`, re-run the tests and the 390px pass, deploy, and move
+`FINAL-submission` to the new deployed commit (allowed: nothing has been submitted yet). Until
+then the current tag stays where it is as a fallback.
 
-- **Running it:** `npm run dev:local`, open http://localhost:3001 and choose "Start the tour" (offered
-  on first visit) or "Take the tour" in the menu. One tour, four chapters: visitor, student (S01),
-  faculty (F-JORDAN), staff. Between chapters, "Continue as ..." switches the browser to that
-  fixture account. The in-memory data resets on restart, so every rehearsal starts the same.
+- **One tour, four chapters:** visitor, student, faculty, staff. Offered once per `TOUR_VERSION` and
+  person (browser storage); "Take the tour" in the menu restarts it. The current step is kept in
+  `sessionStorage` across page loads.
+- **On the live site** the tour never changes who you are. A chapter for a role you don't have
+  offers "Read about it here" (descriptions for the rest of that chapter) or "Sign in as ...", which
+  signs out if needed, goes to `signin.html?next=<step page>`, and the tour carries on from that
+  step. Visitor steps run for everyone, since those pages are public.
+- **On `npm run dev:local`** "Continue as ..." switches the browser to the chapter's fixture account
+  (S01, F-JORDAN, test staff) through `POST /api/demo/sign-in-as` `{ role }` (`src/routes/demo.js`).
+  That route answers 404 unless `config.demoTour` and test mode are both on, and `config.demoTour`
+  is never read from the environment: only `scripts/dev-local.js` sets it (`DEMO_TOUR=false` turns
+  it off, which is also how to rehearse the live behaviour locally). Signing in without a code
+  must never be possible on Render. Tests: `test/demo-tour.test.js`, and the sweep's `demoOnly`.
 - **`public/tour.js`:** the steps (`TOUR_STEPS`: role, page, optional `resolve` for a record's
-  `?id=`, a target selector, text) and the card. `common.js` loads it from `renderNav`. It is
-  offered once per `TOUR_VERSION` and person (browser storage), and the current step is kept in
-  `sessionStorage` across page loads. Text goes through `h()`; no raw HTML.
-- **Role switch, `POST /api/demo/sign-in-as` `{ role }` (`src/routes/demo.js`):** signs the browser in
-  as the tour's fixture account for that role, or out for `visitor`. It answers 404 unless
-  `config.demoTour` and test mode are both on. `config.demoTour` is never read from the
-  environment: only `scripts/dev-local.js` sets it (`DEMO_TOUR=false` turns it off there), so no
-  Render setting can enable it. Without it, the tour shows other roles' steps as descriptions and
-  never navigates to a page you can't use. Tests: `test/demo-tour.test.js`, and the sweep's
-  `demoOnly` class.
+  `?id=`, a target selector, text) and the card. `common.js` loads it from `renderNav`. Text goes
+  through `h()`; no raw HTML. Steps point at element ids (e.g. `#open-now`, `#filters`,
+  `#supervisors-heading`); renaming one loses that step's highlight, so keep them or update the step.

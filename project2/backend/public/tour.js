@@ -5,8 +5,10 @@
 //   always starts it.
 // - On a local presentation build (`npm run dev:local`), the server says `demoTour` and the tour
 //   switches the browser between the chapters' fixture accounts itself (src/routes/demo.js).
-//   Anywhere else, a step for a role you don't have is shown as a description, without leaving
-//   the page, so the tour never sends anyone to a page they can't use.
+// - Anywhere else (the live site), the tour never changes who you are. A chapter for a role you
+//   don't have offers "Read about it here" (descriptions, for the rest of that chapter) or
+//   "Sign in as ...": after signing in, the tour carries on from that step. It never sends anyone
+//   to a page they can't use. Visitor steps run for everyone, since those pages are public.
 // - The card is non-modal: you can use the page while it is open. Esc ends the tour, and focus
 //   moves to each step's title so screen readers announce it.
 // - Everything is built with h() and textContent; there is no raw HTML here.
@@ -14,11 +16,22 @@
 const TOUR_VERSION = "final-1";
 const TOUR_STATE_KEY = "tour.state";
 
+// `who` and `account` name the local build's fixture accounts; `audience`, `signInAs` and
+// `accountKind` are the live site's wording.
 const TOUR_CHAPTERS = {
-  visitor: { title: "Visitor", who: "anyone, without signing in", account: null },
-  student: { title: "Student", who: "S01, a student", account: "S01" },
-  faculty: { title: "Faculty", who: "Dr. Jordan Lee (F-JORDAN), verified faculty", account: "F-JORDAN" },
-  staff: { title: "Centre staff", who: "the test staff account", account: "test staff" },
+  visitor: { title: "Visitor", who: "anyone, without signing in", account: null, audience: "visitors" },
+  student: {
+    title: "Student", who: "S01, a student", account: "S01",
+    audience: "students", signInAs: "a student", accountKind: "a student account",
+  },
+  faculty: {
+    title: "Faculty", who: "Dr. Jordan Lee (F-JORDAN), verified faculty", account: "F-JORDAN",
+    audience: "faculty", signInAs: "faculty", accountKind: "a verified faculty account",
+  },
+  staff: {
+    title: "Centre staff", who: "the test staff account", account: "test staff",
+    audience: "Centre staff", signInAs: "staff", accountKind: "a Centre staff account",
+  },
 };
 
 // Finds a record to show on a detail page, through the same routes the pages use.
@@ -349,13 +362,18 @@ function tourHighlight(el) {
 // --- Moving through the tour ---
 
 async function tourGo(index, session) {
-  tourWrite(sessionStorage, TOUR_STATE_KEY, { index });
   const step = TOUR_STEPS[index];
-  const role = tourRole(session);
+  // "Read about it here" lasts for the rest of that chapter.
+  const previous = tourRead(sessionStorage, TOUR_STATE_KEY) || {};
+  const described = previous.described === step.role ? step.role : null;
+  tourWrite(sessionStorage, TOUR_STATE_KEY, { index, described });
 
-  if (step.role !== role) {
-    if (session.demoTour) return tourShowSwitch(index, session);
-    return tourShowStep(index, session, { described: true });
+  // Visitor pages are public, so off the local build they run for everyone. Locally the tour
+  // signs out for them, so the presentation shows exactly what a visitor sees.
+  const matches = step.role === tourRole(session) || (step.role === "visitor" && !session.demoTour);
+  if (!matches) {
+    if (described) return tourShowStep(index, session, { described: true });
+    return session.demoTour ? tourShowSwitch(index, session) : tourShowSignIn(index, session);
   }
   // A detail step needs a record (?id=); a list step needs the plain page.
   const needsMove = !tourOnPage(step.page) || (step.resolve ? !location.search : location.search !== "");
@@ -404,7 +422,7 @@ function tourNavButtons(index, session) {
 async function tourShowStep(index, session, { described }) {
   const step = TOUR_STEPS[index];
   let body = step.body;
-  if (described) body = `What ${TOUR_CHAPTERS[step.role].who} sees: ${body}`;
+  if (described) body = `What ${TOUR_CHAPTERS[step.role].audience} see: ${body}`;
   tourCard({ kicker: tourKicker(index), title: step.title, body, buttons: tourNavButtons(index, session) });
   if (described || !step.target) {
     window.scrollTo({ top: 0 });
@@ -447,6 +465,45 @@ function tourShowSwitch(index, session) {
     },
   });
   tourCard({ kicker: tourKicker(index), title: `Chapter: ${chapter.title}`, body, buttons });
+}
+
+// Anywhere but the local build: the tour can't change who you are, so a chapter for another role
+// can be read here, or seen for real by signing in (sessionStorage carries the tour across).
+function tourShowSignIn(index, session) {
+  const step = TOUR_STEPS[index];
+  const chapter = TOUR_CHAPTERS[step.role];
+  const end = () => {
+    tourWrite(sessionStorage, TOUR_STATE_KEY, null);
+    tourClose();
+  };
+  const buttons = [];
+  if (index > 0) buttons.push({ label: "Back", onClick: () => tourGo(index - 1, session) });
+  buttons.push({
+    label: "Read about it here",
+    primary: true,
+    onClick: () => {
+      tourWrite(sessionStorage, TOUR_STATE_KEY, { index, described: step.role });
+      tourShowStep(index, session, { described: true });
+    },
+  });
+  buttons.push({
+    label: `Sign in as ${chapter.signInAs}`,
+    onClick: async () => {
+      tourWrite(sessionStorage, TOUR_STATE_KEY, { index, described: null });
+      // The sign-in page only offers to sign in to someone signed out.
+      if (session.authenticated) await api("/api/auth/logout", { method: "POST" });
+      location.href = `signin.html?next=${encodeURIComponent(step.page)}`;
+    },
+  });
+  buttons.push({ label: "End tour", onClick: end });
+  tourCard({
+    kicker: tourKicker(index),
+    title: `Chapter: ${chapter.title}`,
+    body:
+      `This part shows what ${chapter.audience} see and do. Read about it here, or, if you have ${chapter.accountKind}, ` +
+      `sign in${session.authenticated ? " (this signs you out of this account first)" : ""} and the tour carries on from this step.`,
+    buttons,
+  });
 }
 
 function tourStart(session) {
