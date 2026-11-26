@@ -6,8 +6,8 @@ Project Option: Project 2 (Opportunity Registry and Pathway Platform)
 Deployment: https://algoma-opportunity-registry-r1-backend.onrender.com
 Repository: https://github.com/JacobMMMcguire/Algoma-University-Opportunity-Registry-Pathway-Platform
 Release tag: FINAL-submission
-Commit: the commit the tag points to (`git rev-parse FINAL-submission`), recorded in the docs
-commit after tagging.
+Commit: d000415f3564cc1652298a6784585b58e0157d56 (`git rev-parse FINAL-submission^{commit}`;
+deployed to `r1-development` on 2026-11-26)
 Adapter: project2/evaluation_adapter.json (`release: "FINAL"`: one check per F-requirement, plus
 `recovery_actions`, `staff_reassignment`, `operator_observability` and `discovery`; the R1 to R4
 maps are kept under `earlier_releases`)
