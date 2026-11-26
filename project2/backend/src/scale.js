@@ -63,8 +63,10 @@ async function expect(promise, ok, what) {
 
 // Loads the scale fixture into `db` (an object from src/db.js) and returns evidence. `config` is
 // the app configuration; test mode and an operator secret are switched on for the load only.
-async function loadScale(db, config, { evaluationDate = "2026-11-06", log = () => {} } = {}) {
+// `opportunityCount` loads only the first N opportunities (for F-18's small-versus-full comparison).
+async function loadScale(db, config, { evaluationDate = "2026-11-06", log = () => {}, opportunityCount } = {}) {
   const fixture = loadScaleFixture();
+  if (opportunityCount !== undefined) fixture.opportunities = fixture.opportunities.slice(0, opportunityCount);
   const operatorSecret = `scale-load-${Date.now()}-${Math.random().toString(36).slice(2)}-secret`;
   const app = createApp({ db, config: { ...config, testMode: true, operatorSecret, clockDate: LOAD_CLOCK } });
   const server = await new Promise((resolve) => {

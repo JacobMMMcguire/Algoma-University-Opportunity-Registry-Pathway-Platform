@@ -17,6 +17,20 @@ const { EXPIRED_DEADLINE, LOAD_CLOCK, OPEN_DEADLINE, loadScale, measureDiscovery
   await db.exec(buildAllFixtureSql());
   await runSync(db, SOURCES["mitacs-demo"], "v1");
   const config = loadConfig({ SIGN_IN_TEST_MODE: "true" });
+  // F-18's observable test: the first load when about 20 opportunities are listed, on a separate
+  // database holding only part of the scale fixture, then with the full set below.
+  const small = await createLocalDb();
+  let smallCount = 30;
+  let beforeScale;
+  for (;;) {
+    await loadScale(small, config, { evaluationDate, opportunityCount: smallCount });
+    beforeScale = await measureDiscovery(small, config, evaluationDate);
+    if (beforeScale.discoveryFirstPage.total >= 20 || smallCount >= 160) break;
+    await small.end();
+    smallCount += 10;
+    Object.assign(small, await createLocalDb());
+  }
+  await small.end();
   const loaded = await loadScale(db, config, { evaluationDate, log: (m) => console.log(`- ${m}`) });
   const discovery = await measureDiscovery(db, config, evaluationDate);
   const n = async (sql) => (await db.query(sql)).rows[0].n;
@@ -38,6 +52,11 @@ const { EXPIRED_DEADLINE, LOAD_CLOCK, OPEN_DEADLINE, loadScale, measureDiscovery
       historyEvents: await n("SELECT count(*)::int AS n FROM audit_events"),
     },
     discovery,
+    f18FirstLoad: {
+      withAbout20Listed: { ...beforeScale.discoveryFirstPage, scaleOpportunitiesLoaded: smallCount },
+      withScaleFixture: discovery.discoveryFirstPage,
+      note: "The first discovery page is at most 20 records whatever the total; it also carries the filter choices with their counts.",
+    },
   };
   const out = path.join(__dirname, "..", "..", "final_evidence", "scale_evidence.json");
   fs.mkdirSync(path.dirname(out), { recursive: true });

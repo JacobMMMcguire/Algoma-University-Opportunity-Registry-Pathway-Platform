@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T14:56:16.073Z",
+  "generatedAt": "2026-11-26T17:09:10.937Z",
   "fixture": {
     "version": "final-v1",
     "faculty": 60,
@@ -13,7 +13,7 @@
     "expiredDeadline": "2026-10-15",
     "evaluatedAt": "2026-11-06"
   },
-  "loadSeconds": 7.019,
+  "loadSeconds": 6.169,
   "databaseTotals": {
     "people": 254,
     "facultyProjects": 96,
@@ -27,18 +27,34 @@
       "items": 20,
       "total": 76,
       "bytes": 26375,
-      "ms": 47.9733
+      "ms": 31.7039
     },
     "unpagedLists": {
       "items": 76,
       "bytes": 83916,
-      "ms": 35.690799999999996
+      "ms": 32.4888
     },
     "facultyFirstPage": {
       "items": 20,
       "total": 43,
       "bytes": 8413,
-      "ms": 6.4599
+      "ms": 5.2051
     }
+  },
+  "f18FirstLoad": {
+    "withAbout20Listed": {
+      "items": 20,
+      "total": 21,
+      "bytes": 23328,
+      "ms": 26.5897,
+      "scaleOpportunitiesLoaded": 50
+    },
+    "withScaleFixture": {
+      "items": 20,
+      "total": 76,
+      "bytes": 26375,
+      "ms": 31.7039
+    },
+    "note": "The first discovery page is at most 20 records whatever the total; it also carries the filter choices with their counts."
   }
 }
