@@ -1,4 +1,5 @@
 const express = require("express");
+const { pageOf, pageRequest } = require("../paging");
 const { INQUIRY_PREFERENCES, RESEARCH_AREA_GROUPS, canonicalArea, describeInquiryPreference } = require("../catalog");
 const { cleanAreas, cleanText, likePattern, parseId } = require("../validation");
 const { PUBLIC_FACULTY_SQL, isPubliclyVisibleFaculty, ACTIVE_PERSON_SQL } = require("../visibility");
@@ -242,7 +243,11 @@ function createFacultyRouter({ db, auth }) {
          ORDER BY lower(faculty_profiles.display_name), faculty_profiles.user_id`,
         params,
       );
-      res.json({ faculty: result.rows.map(toFacultyProfile), filters: facetsFor(visible.rows) });
+      const faculty = result.rows.map(toFacultyProfile);
+      const page = pageRequest(req.query);
+      if (!page) return res.json({ faculty, filters: facetsFor(visible.rows) });
+      const { items, ...paging } = pageOf(faculty, page);
+      res.json({ faculty: items, ...paging, filters: facetsFor(visible.rows) });
     } catch (error) {
       next(error);
     }

@@ -30,8 +30,11 @@ function engagementText(engagement) {
   return `${engagement.label}, recorded by ${engagement.by.displayName} on ${formatDate(engagement.updatedAt)}.`;
 }
 
-function renderList(submissions) {
-  $("submission-list").replaceChildren(
+let shownSubmissions = [];
+
+function renderList(page) {
+  const submissions = page.submissions;
+  $("submission-list").append(
     ...submissions.map((s) => {
       const heading = el("h2");
       const link = el("a", s.title);
@@ -47,11 +50,20 @@ function renderList(submissions) {
       return card;
     }),
   );
-  const n = submissions.length;
-  const awaiting = submissions.filter((s) => s.state.value === "awaiting_supervisor").length;
+  const first = shownSubmissions.length;
+  shownSubmissions = [...shownSubmissions, ...submissions];
+  const n = page.total;
+  const awaiting = page.awaitingCount;
   $("result-count").textContent =
     n === 0 ? "No industry opportunities yet." : `${n} opportunit${n === 1 ? "y" : "ies"}, ${awaiting} awaiting a faculty supervisor.`;
   $("list-view").hidden = false;
+  if (first > 0) $("submission-list").children[first]?.querySelector("a")?.focus();
+  // F-19: 20 at a time, newest first.
+  showMoreButton($("show-more"), $("shown-count"), shownSubmissions.length, page, async (offset) => {
+    const res = await api(`/api/partner-submissions?limit=20&offset=${offset}`);
+    if (!res.ok) return showStatus(statusEl, res.data.error || "Could not load more.", { error: true });
+    renderList(res.data);
+  });
 }
 
 function renderSubmission(s) {
@@ -163,9 +175,9 @@ $("engagement-form").addEventListener("submit", async (event) => {
 
   const id = new URLSearchParams(location.search).get("id");
   if (id === null) {
-    const res = await api("/api/partner-submissions");
+    const res = await api("/api/partner-submissions?limit=20");
     if (!res.ok) return showStatus(statusEl, res.data.error || "Could not load industry opportunities.", { error: true });
-    renderList(res.data.submissions);
+    renderList(res.data);
     return;
   }
   const res = await api(`/api/partner-submissions/${encodeURIComponent(id)}`);

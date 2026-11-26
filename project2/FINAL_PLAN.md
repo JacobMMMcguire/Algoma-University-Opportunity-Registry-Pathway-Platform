@@ -130,6 +130,8 @@ pages use plain words; the staff sync page may keep "sync", explained once.
    wrong caller, wrong-owner 404s, database unchanged, consent withdrawal, untrusted content and
    reviewed HTML sinks; `test/integration-failures.test.js`). No access hole was found.
 4. Paging, the discovery endpoint and the scale import (D6, D7). (F-17 to F-19)
+   **Done 2026-11-26** (`GET /api/discovery`, paged staff queues, `src/scale.js`,
+   `test/scale.test.js`, `test/paging.test.js`, `final_evidence/scale_evidence.json`).
 5. Operator page, wording and accessibility pass at 390px (D8, D9). (F-20 to F-24)
 6. Full regression, launch-readiness note, release files, deploy, tag `FINAL-submission`.
    (F-25 to F-27)

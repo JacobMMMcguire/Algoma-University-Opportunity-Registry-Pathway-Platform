@@ -1,8 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
-// Sent to both APIs. `type` (faculty or industry) is applied here, in the page.
-const API_FILTER_KEYS = ["q", "area", "level", "term", "facultyId"];
-const FILTER_KEYS = [...API_FILTER_KEYS, "type"];
+// Sent to GET /api/discovery (F-18), which pages the combined list 20 at a time.
+const FILTER_KEYS = ["q", "area", "level", "term", "facultyId", "type"];
 const TYPES = [
   { value: "faculty", label: "Faculty projects" },
   { value: "industry", label: "Industry projects (with an outside organisation)" },
@@ -98,11 +97,8 @@ function htmlToNode(html) {
 
 // R1-19, R1-20, R2-21: faculty projects and supervised industry projects in one list, with
 // filters taken from (and kept in) the URL.
-function renderList(data, industryData, externalData, session, query) {
-  const { projects } = data;
-  const { opportunities } = industryData;
-  const externals = externalData.opportunities;
-  const filters = mergeFilters(mergeFilters(data.filters, industryData.filters), externalData.filters);
+function renderList(page, session, query) {
+  const filters = mergeFilters(mergeFilters(page.filters.faculty, page.filters.industry), page.filters.external);
   $("list-note").textContent = session.authenticated
     ? "Showing every published faculty project and every industry project a faculty member has agreed to supervise, including those visible only to signed-in users."
     : "Showing faculty projects and supervised industry projects from faculty who have chosen to share them publicly. Sign in to see more.";
@@ -145,16 +141,43 @@ function renderList(data, industryData, externalData, session, query) {
     "Any faculty member",
   );
 
-  const show = (kind) => !type || type === kind;
-  const items = [
-    ...(show("faculty") ? projects.map((p) => ({ title: p.title, node: htmlToNode(projectCard(p)) })) : []),
-    ...(show("industry") ? opportunities.map((o) => ({ title: o.title, node: htmlToNode(opportunityCard(o)) })) : []),
-    ...(show("external") ? externals.map((o) => ({ title: o.title, node: externalCard(o) })) : []),
-  ].sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()));
-  $("project-list").replaceChildren(...items.map((item) => item.node));
+  $("project-list").replaceChildren(...page.items.map(cardFor));
   $("list-view").hidden = false;
   const filtered = FILTER_KEYS.some((key) => query.get(key));
-  showResultCount($("result-count"), items.length, { noun: "project", plural: "projects", filtered });
+  showResultCount($("result-count"), page.total, { noun: "project", plural: "projects", filtered });
+  showMore(page, query);
+}
+
+function cardFor(item) {
+  if (item.kind === "faculty") return htmlToNode(projectCard(item.record));
+  if (item.kind === "industry") return htmlToNode(opportunityCard(item.record));
+  return externalCard(item.record);
+}
+
+// F-18: the list arrives 20 at a time. "Show more" adds the next page below and moves focus to
+// its first card, so keyboard and screen-reader users carry on from where they were.
+function showMore(page, query) {
+  const shown = $("project-list").children.length;
+  $("shown-count").textContent = page.total > shown ? `Showing ${shown} of ${page.total}.` : "";
+  const button = $("show-more");
+  button.hidden = page.next === null;
+  button.onclick = async () => {
+    button.disabled = true;
+    const res = await api(`/api/discovery?${discoveryParams(query, page.next)}`);
+    button.disabled = false;
+    if (!res.ok) return showStatus(statusEl, res.data.error || "Could not load more projects.", { error: true });
+    const nodes = res.data.items.map(cardFor);
+    $("project-list").append(...nodes);
+    nodes[0]?.querySelector("a")?.focus();
+    showMore(res.data, query);
+  };
+}
+
+function discoveryParams(query, offset = 0) {
+  const params = new URLSearchParams();
+  for (const key of FILTER_KEYS) if (query.get(key)) params.set(key, query.get(key));
+  if (offset) params.set("offset", String(offset));
+  return params;
 }
 
 function renderProject(project, session) {
@@ -239,14 +262,7 @@ submitFiltersAsUrl($("filters"), "projects.html");
   const id = query.get("id");
 
   if (id === null) {
-    const params = new URLSearchParams();
-    for (const key of API_FILTER_KEYS) if (query.get(key)) params.set(key, query.get(key));
-    const suffix = params.size ? `?${params}` : "";
-    const [res, industryRes, externalRes] = await Promise.all([
-      api(`/api/projects${suffix}`),
-      api(`/api/opportunities${suffix}`),
-      api(`/api/external-opportunities${suffix}`),
-    ]);
+    const res = await api(`/api/discovery?${discoveryParams(query)}`);
     if (res.status === 400) {
       showStatus(statusEl, res.data.error, { error: true });
       const clear = document.createElement("a");
@@ -254,13 +270,12 @@ submitFiltersAsUrl($("filters"), "projects.html");
       clear.textContent = "Clear the filters";
       return statusEl.append(" ", clear);
     }
-    if (!res.ok || !industryRes.ok) {
-      return showStatus(statusEl, res.data.error || industryRes.data.error || "Could not load projects.", { error: true });
-    }
+    if (!res.ok) return showStatus(statusEl, res.data.error || "Could not load projects.", { error: true });
+    renderList(res.data, session, query);
     // External opportunities are an extra: if they can't load, local discovery still works.
-    const externalData = externalRes.ok ? externalRes.data : { opportunities: [], filters: { areas: [], levels: [], terms: [], faculty: [] } };
-    renderList(res.data, industryRes.data, externalData, session, query);
-    if (!externalRes.ok) showStatus(statusEl, "External opportunities couldn't be loaded right now; local projects are shown.", { error: true });
+    if (res.data.externalUnavailable) {
+      showStatus(statusEl, "External opportunities couldn't be loaded right now; local projects are shown.", { error: true });
+    }
     return;
   }
 

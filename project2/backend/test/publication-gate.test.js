@@ -301,7 +301,9 @@ describe("faculty publication gate and coordination", () => {
       const html = await (await fetch(`${t.baseUrl}/projects.html`)).text();
       assert.match(html, /id="filter-type"/);
       const script = await (await fetch(`${t.baseUrl}/projects.js`)).text();
-      assert.match(script, /\/api\/opportunities/);
+      // Since the Final (F-18) the page reads one paged list, /api/discovery, which combines faculty
+      // projects with /api/opportunities' records (test/paging.test.js).
+      assert.match(script, /\/api\/discovery/);
       assert.match(script, /Faculty project/);
       assert.match(script, /Industry project/);
     });

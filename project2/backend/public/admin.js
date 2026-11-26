@@ -40,14 +40,33 @@ function renderRows(users) {
     .join("");
 }
 
-async function loadUsers() {
-  const res = await api("/api/admin/users");
+// F-19: 20 at a time, newest first, searchable by email. After a change the rows already shown
+// are reloaded (up to 50), so the person just changed stays on screen.
+let shownUsers = [];
+let search = "";
+
+async function loadUsers({ offset = 0, keep = false } = {}) {
+  const limit = keep ? Math.min(Math.max(shownUsers.length, 20), 50) : 20;
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  if (search) params.set("q", search);
+  const res = await api(`/api/admin/users?${params}`);
   if (!res.ok) {
     showStatus(statusEl, res.data.error || "Could not load users.", { error: true });
     return;
   }
-  renderRows(res.data);
+  const first = offset ? shownUsers.length : 0;
+  shownUsers = offset ? [...shownUsers, ...res.data.users] : res.data.users;
+  renderRows(shownUsers);
+  $("result-count").textContent = res.data.total === 0 ? "No one matches that search." : "";
+  if (offset) $("rows").rows[first]?.querySelector("button")?.focus();
+  showMoreButton($("show-more"), $("shown-count"), shownUsers.length, res.data, (next) => loadUsers({ offset: next }));
 }
+
+$("search").addEventListener("submit", (event) => {
+  event.preventDefault();
+  search = $("search-q").value.trim();
+  loadUsers();
+});
 
 $("rows").addEventListener("click", async (event) => {
   const button = event.target.closest("button[data-action]");
@@ -66,7 +85,7 @@ $("rows").addEventListener("click", async (event) => {
     return;
   }
   showStatus(statusEl, `${email} is ${action === "grant" ? "now verified faculty" : "no longer verified faculty"}.`);
-  await loadUsers();
+  await loadUsers({ keep: true });
   $("rows").querySelector(`button[data-id="${id}"]`)?.focus();
 });
 
@@ -92,7 +111,7 @@ async function recordDeparture(button, id, action, email) {
     return;
   }
   showStatus(statusEl, `${email} ${DEPARTURE_DONE[action]}.`);
-  await loadUsers();
+  await loadUsers({ keep: true });
   $("rows").querySelector(`button[data-id="${id}"]`)?.focus();
 }
 

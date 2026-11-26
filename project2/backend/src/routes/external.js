@@ -255,6 +255,28 @@ async function describeReadiness(db, guidance, viewer, ownerName) {
   return readiness;
 }
 
+// R4-02: the listed external opportunities, narrowed by parsed `filters`, with filter choices and
+// counts. Shared by GET /api/external-opportunities and GET /api/discovery (F-18).
+async function listExternal({ db, config }, viewer, filters) {
+  const FROM = "FROM external_opportunities eo JOIN external_sources s ON s.id = eo.source_id";
+  const LISTED = "eo.source_state = 'listed'";
+  const visible = await db.query(`SELECT ${COLUMNS} ${FROM} WHERE ${LISTED}`);
+  const params = [];
+  const result = await db.query(
+    `SELECT ${COLUMNS} ${FROM} WHERE ${LISTED} ${filterSql(filters, params, viewer)} ORDER BY lower(eo.title), eo.id`,
+    params,
+  );
+  const sources = await loadSourceStatus(db);
+  const interest = await loadInterest(db, viewer, visible.rows.map((r) => r.id));
+  return {
+    opportunities: result.rows.map((row) =>
+      toExternal(row, { source: sources.get(row.source_id), interest: interest.filter((i) => i.external_opportunity_id === row.id), config }),
+    ),
+    sources: [...sources.values()],
+    filters: facetsFor(visible.rows, interest),
+  };
+}
+
 function createExternalRouter({ db, config, auth }) {
   const router = express.Router();
   const FROM = "FROM external_opportunities eo JOIN external_sources s ON s.id = eo.source_id";
@@ -270,23 +292,7 @@ function createExternalRouter({ db, config, auth }) {
     try {
       const { filters, error } = parseFilters(req.query);
       if (error) return res.status(400).json({ error });
-      const viewer = await auth.getSessionUser(req);
-      const LISTED = "eo.source_state = 'listed'";
-      const visible = await db.query(`SELECT ${COLUMNS} ${FROM} WHERE ${LISTED}`);
-      const params = [];
-      const result = await db.query(
-        `SELECT ${COLUMNS} ${FROM} WHERE ${LISTED} ${filterSql(filters, params, viewer)} ORDER BY lower(eo.title), eo.id`,
-        params,
-      );
-      const sources = await loadSourceStatus(db);
-      const interest = await loadInterest(db, viewer, visible.rows.map((r) => r.id));
-      res.json({
-        opportunities: result.rows.map((row) =>
-          toExternal(row, { source: sources.get(row.source_id), interest: interest.filter((i) => i.external_opportunity_id === row.id), config }),
-        ),
-        sources: [...sources.values()],
-        filters: facetsFor(visible.rows, interest),
-      });
+      res.json(await listExternal({ db, config }, await auth.getSessionUser(req), filters));
     } catch (error) {
       next(error);
     }
@@ -520,4 +526,4 @@ function createExternalRouter({ db, config, auth }) {
   return router;
 }
 
-module.exports = { createExternalRouter, loadSourceStatus, STUDENT_STATUSES, wordingFor };
+module.exports = { createExternalRouter, listExternal, loadSourceStatus, STUDENT_STATUSES, wordingFor };

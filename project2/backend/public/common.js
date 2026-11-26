@@ -4,6 +4,18 @@ function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 }
 
+// F-18, F-19: under a paged list, says how many are shown and offers the next page. `page` is
+// the API's { total, next }; `loadNext(offset)` fetches and adds that page.
+function showMoreButton(button, countEl, shown, page, loadNext) {
+  countEl.textContent = page.total > shown ? `Showing ${shown} of ${page.total}.` : "";
+  button.hidden = page.next === null || page.next === undefined;
+  button.onclick = async () => {
+    button.disabled = true;
+    await loadNext(page.next);
+    button.disabled = false;
+  };
+}
+
 // Builds an element without HTML strings, so user and partner text is always text. `props.text`
 // sets textContent; children may be strings or elements, and null/false children are skipped.
 function h(tag, props = {}, ...children) {

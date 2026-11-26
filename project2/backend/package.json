@@ -11,6 +11,7 @@
     "migrate": "node scripts/migrate.js",
     "seed:fixture": "node scripts/seed-fixture.js",
     "seed:fixture:sql": "node scripts/seed-fixture.js --sql",
+    "scale:evidence": "node scripts/scale-evidence.js",
     "test": "node --test \"test/*.test.js\""
   },
   "dependencies": {

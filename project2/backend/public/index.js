@@ -8,41 +8,27 @@ function showSignedOut() {
   showLanding();
 }
 
-// "Open now" and the research-area tiles, from the same public lists Discover uses, so they never
-// show anything a visitor couldn't already find there. Titles and partner names stay text (h()).
-async function showLanding() {
-  const [projects, industry, external] = await Promise.all([
-    api("/api/projects"),
-    api("/api/opportunities"),
-    api("/api/external-opportunities"),
-  ]);
-  const byTitle = (a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase());
-  const local = [
-    ...(projects.ok ? projects.data.projects : []).map((p) => ({
-      title: p.title,
-      href: `projects.html?id=${encodeURIComponent(p.id)}`,
-      line: ["Faculty project", p.faculty.displayName, p.targetTerm].filter(Boolean).join(" · "),
-      areas: p.researchAreas,
-    })),
-    ...(industry.ok ? industry.data.opportunities : []).map((o) => ({
-      title: o.title,
-      href: `opportunity.html?id=${encodeURIComponent(o.id)}`,
-      line: `Industry project · ${o.organisation}`,
-      areas: o.researchAreas,
-    })),
-  ].sort(byTitle);
-  const externals = (external.ok ? external.data.opportunities : [])
-    .map((o) => ({
-      title: o.title,
-      href: `external.html?id=${encodeURIComponent(o.id)}`,
-      line: `External · ${o.wording.ownership}`,
-      external: true,
-      areas: o.researchAreas,
-    }))
-    .sort(byTitle);
-  const all = [...local, ...externals];
-  if (!all.length) return;
+// "Open now" and the research-area tiles, from the same discovery list the Projects page uses, so
+// they never show anything a visitor couldn't already find there. Titles and partner names stay
+// text (h()). F-18: only a few cards and the area counts are fetched, never every record.
+const LANDING_LINE = {
+  faculty: (p) => ["Faculty project", p.faculty.displayName, p.targetTerm].filter(Boolean).join(" · "),
+  industry: (o) => `Industry project · ${o.organisation}`,
+  external: (o) => `External · ${o.wording.ownership}`,
+};
+const LANDING_PAGE = { faculty: "projects.html", industry: "opportunity.html", external: "external.html" };
 
+async function showLanding() {
+  const [first, external] = await Promise.all([api("/api/discovery?limit=6"), api("/api/discovery?type=external&limit=1")]);
+  if (!first.ok || first.data.total === 0) return;
+  const toItem = ({ kind, record }) => ({
+    title: record.title,
+    href: `${LANDING_PAGE[kind]}?id=${encodeURIComponent(record.id)}`,
+    line: LANDING_LINE[kind](record),
+    external: kind === "external",
+  });
+  const local = first.data.items.filter((i) => i.kind !== "external").map(toItem);
+  const externals = (external.ok ? external.data.items : []).map(toItem);
   const openNow = [...local.slice(0, externals.length ? 2 : 3), ...externals.slice(0, 1)].slice(0, 3);
   setChildren(
     $("open-now-list"),
@@ -50,11 +36,14 @@ async function showLanding() {
       h("li", {}, h("a", { href: item.href, text: item.title }), h("p", { class: item.external ? "external-line" : "", text: item.line })),
     ),
   );
-  $("see-all").textContent = all.length === 1 ? "See the 1 project" : `See all ${all.length} projects`;
+  const total = first.data.total;
+  $("see-all").textContent = total === 1 ? "See the 1 project" : `See all ${total} projects`;
   $("open-now").hidden = false;
 
   const counts = new Map();
-  for (const item of all) for (const area of item.areas) counts.set(area, (counts.get(area) || 0) + 1);
+  for (const facets of Object.values(first.data.filters)) {
+    for (const group of facets.areas) for (const a of group.areas) counts.set(a.value, (counts.get(a.value) || 0) + a.count);
+  }
   const areas = [...counts].sort(([a, x], [b, y]) => y - x || a.localeCompare(b));
   setChildren(
     $("area-tiles"),

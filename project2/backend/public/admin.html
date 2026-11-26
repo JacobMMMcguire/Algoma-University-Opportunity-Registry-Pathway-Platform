@@ -18,15 +18,23 @@
         Revoking removes faculty features and hides their profile and projects from the public.
         It does not delete their account.
       </p>
+      <form id="search" class="inline-form" role="search">
+        <label for="search-q">Search by email</label>
+        <input id="search-q" name="q" type="search" maxlength="100" autocomplete="off">
+        <button type="submit">Search</button>
+      </form>
+      <p id="result-count" class="result-count" aria-live="polite"></p>
       <div class="table-wrap">
         <table>
-          <caption class="hint">Everyone who has signed in, newest first.</caption>
+          <caption class="hint">Everyone who has signed in, newest first, 20 at a time.</caption>
           <thead>
             <tr><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Action</th></tr>
           </thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
+      <p id="shown-count" class="hint" aria-live="polite"></p>
+      <button type="button" id="show-more" hidden>Show more</button>
     </section>
 
     <p id="status" class="status" role="status" aria-live="polite"></p>

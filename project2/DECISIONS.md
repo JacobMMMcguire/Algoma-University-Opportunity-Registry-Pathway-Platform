@@ -77,3 +77,30 @@ Fixtures" folder; the files are unchanged).
 - **Someone who has left can still sign in.** A departed faculty member sees their own records but
   no longer acts as faculty. A graduated student can still answer their matches but can't be
   proposed a new one. Staff record either on `/admin.html`, and can take it back.
+
+## Scale and paging (2026-11-26)
+
+- **How the scale fixture is loaded (F-17).** `src/scale.js` creates the 240 accounts the way
+  every fixture account is made (a `users` row with a fixture id), then does everything else
+  through the app's HTTP routes as each person: sign-in through the operator console, staff
+  verification, profiles, projects, partner submissions, willingness, deadlines, matches and
+  confirmations, completions, faculty support and students' own external statuses, and staff
+  recording departures and graduations. The 32 external records arrive through the ordinary sync.
+  `npm run scale:evidence` does this in memory and writes `final_evidence/scale_evidence.json`;
+  `npm run dev:local -- --scale` does it for browsing. **It is not loaded into the live
+  database**, where 240 synthetic people would crowd the evaluation fixtures.
+- **What the scale fixture doesn't say, and what we chose.** It gives states, not dates,
+  students or descriptions. The loader runs the app with its clock at 1 September 2026; open
+  runs get a 15 December deadline and expired ones 15 October, so on the evaluation date (6
+  November) each is in the fixture's state. A matched or completed run gets a match with one
+  current student, taken in turn. Inactive faculty are recorded as having left, so their open or
+  expired opportunities need a new supervisor (F-11). Alumni are recorded as graduated. External
+  records don't take Algoma lifecycle states (R4-25): "expired" is a passed closing date, and
+  "matched" or "completed" is a student's own record ("offered a place", "completed").
+- **Paging (F-18, F-19).** `/projects.html`, the home page, the faculty directory, faculty
+  verification, Terms and deadlines, and the industry opportunities queue ask for 20 at a time,
+  with "Show more" (and search on the two staff queues). The server still reads the filtered
+  rows and cuts the page in Node, which is fine at this size (the first discovery page is
+  about a third of the bytes of every record); moving the cut into SQL is the next step if the
+  data grows by orders of magnitude. Without `limit`, the older list endpoints return everything
+  as before, for the evaluation adapter and earlier clients.

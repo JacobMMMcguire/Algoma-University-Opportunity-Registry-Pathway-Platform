@@ -393,17 +393,7 @@ function createProjectsRouter({ db, config, auth }) {
     try {
       const { filters, error } = parseFilters(req.query);
       if (error) return res.status(400).json({ error });
-      const viewer = await auth.getSessionUser(req);
-      const visible = await db.query(`${projectQuery(config)} WHERE ${discoverableFilter(viewer)}`);
-      const params = [];
-      const result = await db.query(
-        `${projectQuery(config)}
-         WHERE ${discoverableFilter(viewer)}
-         ${filterSql(filters, params)}
-         ORDER BY lower(p.title), p.id`,
-        params,
-      );
-      res.json({ projects: result.rows.map(toProject), filters: facetsFor(visible.rows) });
+      res.json(await listProjects({ db, config }, await auth.getSessionUser(req), filters));
     } catch (error) {
       next(error);
     }
@@ -439,10 +429,25 @@ function createProjectsRouter({ db, config, auth }) {
   return router;
 }
 
+// R1-19, R1-20: the discoverable projects `viewer` may see, narrowed by parsed `filters`, with the
+// filter choices and counts. Shared by GET /api/projects and GET /api/discovery (F-18).
+async function listProjects({ db, config }, viewer, filters) {
+  const visible = await db.query(`${projectQuery(config)} WHERE ${discoverableFilter(viewer)}`);
+  const params = [];
+  const result = await db.query(
+    `${projectQuery(config)}
+     WHERE ${discoverableFilter(viewer)}
+     ${filterSql(filters, params)}
+     ORDER BY lower(p.title), p.id`,
+    params,
+  );
+  return { projects: result.rows.map(toProject), filters: facetsFor(visible.rows) };
+}
+
 // What a 404 for an unavailable record says (R3-19): enough to recognise it and know why.
 function removedSummary(row) {
   const lifecycle = describeLifecycle(row);
   return { id: row.id, title: row.title, lifecycle };
 }
 
-module.exports = { createProjectsRouter, parseFilters, removedSummary };
+module.exports = { createProjectsRouter, listProjects, parseFilters, removedSummary };

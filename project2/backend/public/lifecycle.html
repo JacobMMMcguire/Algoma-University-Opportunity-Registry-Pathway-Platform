@@ -26,7 +26,15 @@
         </ul>
         <p>Students who open an opportunity that is no longer listed are told which of these applies.</p>
       </div>
+      <form id="search" class="inline-form" role="search">
+        <label for="search-q">Search by title</label>
+        <input id="search-q" name="q" type="search" maxlength="100" autocomplete="off">
+        <button type="submit">Search</button>
+      </form>
+      <p id="result-count" class="result-count" aria-live="polite"></p>
       <ul id="items" class="cards"></ul>
+      <p id="shown-count" class="hint" aria-live="polite"></p>
+      <button type="button" id="show-more" hidden>Show more</button>
     </section>
 
     <p id="status" class="status" role="status" aria-live="polite"></p>

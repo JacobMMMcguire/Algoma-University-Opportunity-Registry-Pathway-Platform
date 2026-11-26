@@ -5,6 +5,7 @@ const { createAuth } = require("./auth");
 const { createAccountRouter } = require("./routes/account");
 const { createAdminRouter } = require("./routes/admin");
 const { createAuthRouter } = require("./routes/auth");
+const { createDiscoveryRouter } = require("./routes/discovery");
 const { createFacultyRouter } = require("./routes/faculty");
 const { createExternalRouter } = require("./routes/external");
 const { createExternalSyncRouter } = require("./routes/external-sync");
@@ -30,6 +31,7 @@ const MOUNTS = [
   ["/api/options", createOptionsRouter],
   ["/api/partner-submissions", createPartnerSubmissionsRouter],
   ["/api/opportunities", createOpportunitiesRouter],
+  ["/api/discovery", createDiscoveryRouter],
   ["/api/notifications", createNotificationsRouter],
   ["/api/lifecycle", createLifecycleRouter],
   ["/api/matches", createMatchesRouter],

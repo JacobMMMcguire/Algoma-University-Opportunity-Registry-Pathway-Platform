@@ -150,16 +150,34 @@ function render() {
   }
 }
 
-async function load() {
-  const res = await api("/api/lifecycle");
+// F-19: 20 at a time (staff manage every opportunity), searchable by title. After a change the
+// cards already shown are reloaded (up to 50), so the one just changed stays on screen.
+let search = "";
+
+async function load({ offset = 0, keep = false } = {}) {
+  const limit = keep ? Math.min(Math.max(items.length, 20), 50) : 20;
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  if (search) params.set("q", search);
+  const res = await api(`/api/lifecycle?${params}`);
   if (!res.ok) {
     showStatus(statusEl, res.data.error || "Could not load your opportunities.", { error: true });
     return false;
   }
-  items = res.data.items;
+  const first = offset ? items.length : 0;
+  items = offset ? [...items, ...res.data.items] : res.data.items;
   render();
+  if (offset) $("items").children[first]?.querySelector("h2 a")?.focus();
+  showMoreButton($("show-more"), $("shown-count"), items.length, res.data, (next) => load({ offset: next }));
   return true;
 }
+
+$("search").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  search = $("search-q").value.trim();
+  openKey = null;
+  await load();
+  $("result-count").textContent = items.length ? "" : "Nothing matches that search.";
+});
 
 async function send(item, path, method, body, done, focusEl) {
   const res = await api(`${pathOf(item)}${path}`, { method, body });
@@ -169,7 +187,7 @@ async function send(item, path, method, body, done, focusEl) {
     return;
   }
   openKey = keyOf(item);
-  await load();
+  await load({ keep: true });
   showStatus(statusEl, `"${item.title}": ${done} Now ${res.data.item.lifecycle.label.toLowerCase()}.`);
   document.querySelector(`[data-key="${CSS.escape(openKey)}"] summary`)?.focus();
 }

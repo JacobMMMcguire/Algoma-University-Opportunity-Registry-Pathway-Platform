@@ -1,5 +1,6 @@
 const express = require("express");
 const { recordAudit } = require("../audit");
+const { pageOf, pageRequest, searchText } = require("../paging");
 const { canonicalTerm } = require("../catalog");
 const {
   KINDS,
@@ -186,13 +187,20 @@ function createLifecycleRouter({ db, config, auth }) {
     return term ? { term } : { error: "Choose the target term's season and year." };
   }
 
+  // F-19: with ?limit= (and ?offset=, ?q= to search titles) it is one page; staff see every
+  // opportunity, so their list is paged on the page.
   router.get("/", auth.requireVerifiedFacultyOrStaff, async (req, res, next) => {
     try {
+      const q = searchText(req.query);
       const rows = [];
       for (const kind of Object.keys(KINDS)) {
         rows.push(...(await db.query(`${managedSql(config, req.user, kind)} ORDER BY lower(title)`, [req.user.id])).rows);
       }
-      res.json({ items: rows.map((row) => toItem(row, req.user)), clock: describeClock(config) });
+      const items = rows.filter((row) => !q || row.title.toLowerCase().includes(q)).map((row) => toItem(row, req.user));
+      const page = pageRequest(req.query);
+      if (!page) return res.json({ items, clock: describeClock(config) });
+      const { items: shown, ...paging } = pageOf(items, page);
+      res.json({ items: shown, ...paging, clock: describeClock(config) });
     } catch (error) {
       next(error);
     }

@@ -1,5 +1,6 @@
 const express = require("express");
 const { recordAudit } = require("../audit");
+const { pageOf, pageRequest, searchText } = require("../paging");
 const { toPublicUser } = require("../auth");
 const { parseId } = require("../validation");
 
@@ -8,10 +9,19 @@ const { parseId } = require("../validation");
 function createAdminRouter({ db, auth }) {
   const router = express.Router();
 
-  router.get("/users", auth.requireStaff, async (_req, res, next) => {
+  // F-19: with ?limit= (and ?offset=, ?q= to search by email) it is one page of the queue.
+  router.get("/users", auth.requireStaff, async (req, res, next) => {
     try {
-      const result = await db.query("SELECT * FROM users ORDER BY created_at DESC");
-      res.json(result.rows.map((user) => ({ ...toPublicUser(user), createdAt: user.created_at, departedAt: user.departed_at })));
+      const q = searchText(req.query);
+      const result = await db.query(
+        "SELECT * FROM users WHERE ($1::text IS NULL OR position($1 in lower(email)) > 0) ORDER BY created_at DESC, id DESC",
+        [q],
+      );
+      const users = result.rows.map((user) => ({ ...toPublicUser(user), createdAt: user.created_at, departedAt: user.departed_at }));
+      const page = pageRequest(req.query);
+      if (!page) return res.json(users);
+      const { items, ...paging } = pageOf(users, page);
+      res.json({ users: items, ...paging });
     } catch (error) {
       next(error);
     }

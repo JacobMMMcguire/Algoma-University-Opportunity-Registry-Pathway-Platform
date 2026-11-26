@@ -719,6 +719,17 @@ the live database. The fixtures are in `project2/final_fixtures/`.
   counts every `innerHTML`/`insertAdjacentHTML`/`outerHTML` in `public/*.js`
   (`REVIEWED_HTML_SINKS`): a new one fails until it is reviewed (record values through
   `escapeHtml()`, or use `h()`).
+- **Discovery and paging (F-18, F-19, D6).** `GET /api/discovery` (public) is one page of
+  faculty projects, industry and external opportunities together, sorted by title: the R1-20
+  filters plus `type`, `limit` (default 20, max 50) and `offset` (the previous page's `next`). It
+  reuses `listProjects`, `listOpportunities` and `listExternal`, so visibility is the same.
+  `/api/faculty`, `/api/admin/users` (`q` searches emails), `/api/lifecycle` (`q` searches
+  titles) and `/api/partner-submissions` page the same way when given `limit` or `offset`
+  (`src/paging.js`); without them they return everything, as before. Pages use
+  `showMoreButton()` from `common.js`.
+- **Scale (F-17, D7).** `src/scale.js` loads `final_fixtures/scale_fixture.json` through the
+  routes; `npm run scale:evidence` writes `final_evidence/scale_evidence.json`, and
+  `npm run dev:local -- --scale` adds it to the local app. Never load it into the live database.
 - **Operations (`/api/operations`, staff only).** `GET /notifications`, `POST
   /notifications/:submissionId/retry`, `PUT /settings/simulate-notification-failure` (test mode
   only), and `GET /history?subjectType=&subjectId=` (the attribution log). Lists take `limit`

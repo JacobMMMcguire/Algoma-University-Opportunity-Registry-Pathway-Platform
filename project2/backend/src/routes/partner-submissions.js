@@ -1,5 +1,6 @@
 const express = require("express");
 const { recordAudit } = require("../audit");
+const { pageOf, pageRequest } = require("../paging");
 const {
   ENGAGEMENT_STATES,
   OPPORTUNITY_STATES,
@@ -205,8 +206,13 @@ function createPartnerSubmissionsRouter({ db, config, auth }) {
   // R2-19: every opportunity, newest first, whether or not the viewer was notified about it.
   router.get("/", auth.requireVerifiedFacultyOrStaff, async (req, res, next) => {
     try {
+      const all = await loadForReviewers(db, config, req.user);
+      const page = pageRequest(req.query);
+      const paging = page ? pageOf(all, page) : null;
       res.json({
-        submissions: await loadForReviewers(db, config, req.user),
+        submissions: paging ? paging.items : all,
+        ...(paging && { total: paging.total, offset: paging.offset, limit: paging.limit, next: paging.next }),
+        awaitingCount: all.filter((s) => s.state.value === "awaiting_supervisor").length,
         capacities: PARTNER_CAPACITIES,
         engagementStates: ENGAGEMENT_STATES,
         limits: LIMITS,

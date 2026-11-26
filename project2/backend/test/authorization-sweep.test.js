@@ -37,6 +37,7 @@ const ACCESS = {
   "GET /api/auth/pending-challenges": "operator",
   "POST /api/auth/request-challenge": "public",
   "POST /api/auth/verify": "public",
+  "GET /api/discovery": "public",
   "GET /api/external-opportunities": "public",
   "GET /api/external-opportunities/:id": "public",
   "PUT /api/external-opportunities/:id/guidance": "facultyOrStaff",

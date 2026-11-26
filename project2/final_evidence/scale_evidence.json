@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-11-26T14:56:16.073Z",
+  "fixture": {
+    "version": "final-v1",
+    "faculty": 60,
+    "students": 180,
+    "opportunities": 160
+  },
+  "method": "Accounts created as fixture accounts; every profile, project, submission, willingness, deadline, match, confirmation, completion, external support, student status, departure and graduation made through the app's HTTP routes as that person (src/scale.js). External records arrived through the ordinary sync (runSync).",
+  "dates": {
+    "loadedWithClock": "2026-09-01",
+    "openDeadline": "2026-12-15",
+    "expiredDeadline": "2026-10-15",
+    "evaluatedAt": "2026-11-06"
+  },
+  "loadSeconds": 7.019,
+  "databaseTotals": {
+    "people": 254,
+    "facultyProjects": 96,
+    "industryOpportunities": 48,
+    "externalOpportunities": 36,
+    "matches": 46,
+    "historyEvents": 579
+  },
+  "discovery": {
+    "discoveryFirstPage": {
+      "items": 20,
+      "total": 76,
+      "bytes": 26375,
+      "ms": 47.9733
+    },
+    "unpagedLists": {
+      "items": 76,
+      "bytes": 83916,
+      "ms": 35.690799999999996
+    },
+    "facultyFirstPage": {
+      "items": 20,
+      "total": 43,
+      "bytes": 8413,
+      "ms": 6.4599
+    }
+  }
+}

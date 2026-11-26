@@ -110,31 +110,38 @@ const COLUMNS = "ps.id, ps.title, ps.description, ps.research_areas, ps.organisa
 
 // R2-21, R2-22: student discovery of industry opportunities with faculty support. Takes the
 // same query parameters as GET /api/projects (R1-20). R3-19: only currently available ones.
+const AVAILABLE = "run.lifecycle_state = 'open'";
+
+// R2-21, R2-22: the available industry opportunities `viewer` may see, narrowed by parsed
+// `filters`, with filter choices and counts. Shared by GET /api/opportunities and /api/discovery.
+async function listOpportunities({ db, config }, viewer, filters) {
+  const FROM = `FROM partner_submissions ps ${currentRunJoin(config, "industry", "ps")}`;
+  const visible = await db.query(`SELECT ${COLUMNS} ${FROM} WHERE ${AVAILABLE} AND ${hasVisibleSupervisor(viewer)}`);
+  const params = [];
+  const result = await db.query(
+    `SELECT ${COLUMNS} ${FROM}
+     WHERE ${AVAILABLE} AND ${hasVisibleSupervisor(viewer)}
+     ${filterSql(filters, params, viewer)}
+     ORDER BY lower(ps.title), ps.id`,
+    params,
+  );
+  const supervisors = await loadSupervisors(db, viewer, visible.rows.map((row) => row.id));
+  const supervisorsOf = (row) => supervisors.filter((s) => s.submission_id === row.id);
+  return {
+    opportunities: result.rows.map((row) => toOpportunity(row, supervisorsOf(row))),
+    filters: facetsFor(visible.rows, supervisors),
+  };
+}
+
 function createOpportunitiesRouter({ db, config, auth }) {
   const router = express.Router();
   const FROM = `FROM partner_submissions ps ${currentRunJoin(config, "industry", "ps")}`;
-  const AVAILABLE = "run.lifecycle_state = 'open'";
 
   router.get("/", async (req, res, next) => {
     try {
       const { filters, error } = parseFilters(req.query);
       if (error) return res.status(400).json({ error });
-      const viewer = await auth.getSessionUser(req);
-      const visible = await db.query(`SELECT ${COLUMNS} ${FROM} WHERE ${AVAILABLE} AND ${hasVisibleSupervisor(viewer)}`);
-      const params = [];
-      const result = await db.query(
-        `SELECT ${COLUMNS} ${FROM}
-         WHERE ${AVAILABLE} AND ${hasVisibleSupervisor(viewer)}
-         ${filterSql(filters, params, viewer)}
-         ORDER BY lower(ps.title), ps.id`,
-        params,
-      );
-      const supervisors = await loadSupervisors(db, viewer, visible.rows.map((row) => row.id));
-      const supervisorsOf = (row) => supervisors.filter((s) => s.submission_id === row.id);
-      res.json({
-        opportunities: result.rows.map((row) => toOpportunity(row, supervisorsOf(row))),
-        filters: facetsFor(visible.rows, supervisors),
-      });
+      res.json(await listOpportunities({ db, config }, await auth.getSessionUser(req), filters));
     } catch (error) {
       next(error);
     }
@@ -162,4 +169,4 @@ function createOpportunitiesRouter({ db, config, auth }) {
   return router;
 }
 
-module.exports = { createOpportunitiesRouter };
+module.exports = { createOpportunitiesRouter, listOpportunities };

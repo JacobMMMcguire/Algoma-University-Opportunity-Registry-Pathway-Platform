@@ -2,8 +2,12 @@ const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
 
 // R1-17, R1-18, R1-20: the faculty list, with filters taken from (and kept in) the URL.
+let shownFaculty = [];
+
 function renderList(data, session, query) {
-  const { faculty, filters } = data;
+  const { filters } = data;
+  shownFaculty = data.faculty;
+  const faculty = shownFaculty;
   $("list-note").textContent = session.authenticated
     ? "Showing every faculty member with a profile, including those visible only to signed-in users."
     : "Showing faculty who have chosen to share their profile publicly. Sign in to see more.";
@@ -17,7 +21,15 @@ function renderList(data, session, query) {
     "Any inquiry preference",
   );
 
-  $("faculty-list").innerHTML = faculty
+  renderFacultyCards();
+  $("list-view").hidden = false;
+  const filtered = ["q", "area", "inquiry"].some((key) => query.get(key));
+  showResultCount($("result-count"), data.total ?? faculty.length, { noun: "faculty member", plural: "faculty members", filtered });
+  pageControls(data, query);
+}
+
+function renderFacultyCards() {
+  $("faculty-list").innerHTML = shownFaculty
     .map(
       (p) => `<li class="card">
         <h2><a href="faculty.html?id=${encodeURIComponent(p.id)}">${escapeHtml(p.displayName)}</a></h2>
@@ -26,9 +38,27 @@ function renderList(data, session, query) {
       </li>`,
     )
     .join("");
-  $("list-view").hidden = false;
-  const filtered = ["q", "area", "inquiry"].some((key) => query.get(key));
-  showResultCount($("result-count"), faculty.length, { noun: "faculty member", plural: "faculty members", filtered });
+}
+
+// F-18: 20 at a time; "Show more" adds the next page and moves focus to its first name.
+function pageControls(page, query) {
+  showMoreButton($("show-more"), $("shown-count"), shownFaculty.length, page, async (offset) => {
+    const res = await api(`/api/faculty?${facultyParams(query, offset)}`);
+    if (!res.ok) return showStatus(statusEl, res.data.error || "Could not load more faculty.", { error: true });
+    const first = shownFaculty.length;
+    shownFaculty = [...shownFaculty, ...res.data.faculty];
+    renderFacultyCards();
+    $("faculty-list").children[first]?.querySelector("a")?.focus();
+    pageControls(res.data, query);
+  });
+}
+
+function facultyParams(query, offset = 0) {
+  const params = new URLSearchParams();
+  for (const key of ["q", "area", "inquiry"]) if (query.get(key)) params.set(key, query.get(key));
+  params.set("limit", "20");
+  if (offset) params.set("offset", String(offset));
+  return params;
 }
 
 function renderProfile(profile, session) {
@@ -127,9 +157,7 @@ submitFiltersAsUrl($("filters"), "faculty.html");
   const id = query.get("id");
 
   if (id === null) {
-    const params = new URLSearchParams();
-    for (const key of ["q", "area", "inquiry"]) if (query.get(key)) params.set(key, query.get(key));
-    const res = await api(`/api/faculty${params.size ? `?${params}` : ""}`);
+    const res = await api(`/api/faculty?${facultyParams(query)}`);
     if (res.status === 400) {
       showStatus(statusEl, res.data.error, { error: true });
       const clear = document.createElement("a");
