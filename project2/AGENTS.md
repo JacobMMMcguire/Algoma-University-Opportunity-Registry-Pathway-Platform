@@ -739,3 +739,24 @@ the live database on 2026-11-26, followed by the Final seed. The fixtures are in
   /notifications/:submissionId/retry`, `PUT /settings/simulate-notification-failure` (test mode
   only), and `GET /history?subjectType=&subjectId=` (the attribution log). Lists take `limit`
   (default 20, max 50) and `before` (the previous page's `next`).
+
+## Guided tour (branch `demo-tour`, for the presentation; not part of any release)
+
+Built after the `FINAL-submission` freeze, from that tag. Keep it off `r1-development` while the
+Final is being evaluated: the live site must stay the tagged commit.
+
+- **Running it:** `npm run dev:local`, open http://localhost:3001 and choose "Start the tour" (offered
+  on first visit) or "Take the tour" in the menu. One tour, four chapters: visitor, student (S01),
+  faculty (F-JORDAN), staff. Between chapters, "Continue as ..." switches the browser to that
+  fixture account. The in-memory data resets on restart, so every rehearsal starts the same.
+- **`public/tour.js`:** the steps (`TOUR_STEPS`: role, page, optional `resolve` for a record's
+  `?id=`, a target selector, text) and the card. `common.js` loads it from `renderNav`. It is
+  offered once per `TOUR_VERSION` and person (browser storage), and the current step is kept in
+  `sessionStorage` across page loads. Text goes through `h()`; no raw HTML.
+- **Role switch, `POST /api/demo/sign-in-as` `{ role }` (`src/routes/demo.js`):** signs the browser in
+  as the tour's fixture account for that role, or out for `visitor`. It answers 404 unless
+  `config.demoTour` and test mode are both on. `config.demoTour` is never read from the
+  environment: only `scripts/dev-local.js` sets it (`DEMO_TOUR=false` turns it off there), so no
+  Render setting can enable it. Without it, the tour shows other roles' steps as descriptions and
+  never navigates to a page you can't use. Tests: `test/demo-tour.test.js`, and the sweep's
+  `demoOnly` class.

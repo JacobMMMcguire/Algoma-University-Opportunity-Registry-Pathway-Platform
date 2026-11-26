@@ -5,6 +5,7 @@ const { createAuth } = require("./auth");
 const { createAccountRouter } = require("./routes/account");
 const { createAdminRouter } = require("./routes/admin");
 const { createAuthRouter } = require("./routes/auth");
+const { createDemoRouter } = require("./routes/demo");
 const { createDiscoveryRouter } = require("./routes/discovery");
 const { createFacultyRouter } = require("./routes/faculty");
 const { createExternalRouter } = require("./routes/external");
@@ -40,6 +41,8 @@ const MOUNTS = [
   ["/api/external-opportunities", createExternalRouter],
   ["/api/external-sync", createExternalSyncRouter],
   ["/api/operations", createOperationsRouter],
+  // Local presentations only: 404 everywhere unless scripts/dev-local.js turns it on (routes/demo.js).
+  ["/api/demo", createDemoRouter],
 ];
 
 // `db` needs query(text, params) returning { rows }. `sendSignInEmail` is optional.

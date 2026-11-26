@@ -23,7 +23,9 @@ const { createClient, signIn, startTestApp, uniqueEmail } = require("./helpers")
 // faculty or staff (the handler refuses the others). notFaculty: any account except verified
 // faculty, who have a faculty profile instead (R3_PLAN.md D5). faculty: verified faculty still at
 // Algoma.
-// facultyOrStaff, staff: as named. operator: staff session or the operator secret.
+// facultyOrStaff, staff: as named. operator: staff session or the operator secret. demoOnly: the
+// guided tour's role switch, which exists only on a local presentation build (routes/demo.js), so
+// everyone gets 404 here, as on Render.
 const ACCESS = {
   "PUT /api/account/public-profile": "faculty",
   "GET /api/account/student-profile": "notFaculty",
@@ -37,6 +39,7 @@ const ACCESS = {
   "GET /api/auth/pending-challenges": "operator",
   "POST /api/auth/request-challenge": "public",
   "POST /api/auth/verify": "public",
+  "POST /api/demo/sign-in-as": "demoOnly",
   "GET /api/discovery": "public",
   "GET /api/external-opportunities": "public",
   "GET /api/external-opportunities/:id": "public",
@@ -107,12 +110,12 @@ const ACCESS = {
 
 // What each kind of caller must get from a route of each access class. Absent means allowed.
 const REFUSED = {
-  visitor: { signedIn: 401, student: 401, notFaculty: 401, faculty: 401, facultyOrStaff: 401, staff: 401, operator: 401 },
-  student: { faculty: 403, facultyOrStaff: 403, staff: 403, operator: 403 },
-  unverified: { faculty: 403, facultyOrStaff: 403, staff: 403, operator: 403 },
-  departed: { faculty: 403, facultyOrStaff: 403, staff: 403, operator: 403 },
-  faculty: { student: 403, notFaculty: 403, staff: 403, operator: 403 },
-  staff: { student: 403, faculty: 403 },
+  visitor: { demoOnly: 404, signedIn: 401, student: 401, notFaculty: 401, faculty: 401, facultyOrStaff: 401, staff: 401, operator: 401 },
+  student: { demoOnly: 404, faculty: 403, facultyOrStaff: 403, staff: 403, operator: 403 },
+  unverified: { demoOnly: 404, faculty: 403, facultyOrStaff: 403, staff: 403, operator: 403 },
+  departed: { demoOnly: 404, faculty: 403, facultyOrStaff: 403, staff: 403, operator: 403 },
+  faculty: { demoOnly: 404, student: 403, notFaculty: 403, staff: 403, operator: 403 },
+  staff: { demoOnly: 404, student: 403, faculty: 403 },
 };
 
 function listRoutes() {

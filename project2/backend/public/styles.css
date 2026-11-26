@@ -545,3 +545,23 @@ main.home > .status:empty { min-height: 0; margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   .sidebar { transition: none !important; }
 }
+
+/* Guided tour (tour.js): a card fixed to the bottom of the screen, and a ring around what it describes.
+   Room is added at the end of the page so even the last section can scroll clear of the card. */
+.tour-card {
+  position: fixed; right: 16px; bottom: 16px; z-index: 60;
+  width: min(26rem, calc(100vw - 32px)); max-height: 60vh; overflow-y: auto;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-top: 4px solid var(--red);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.1rem 1.1rem;
+}
+.tour-card h2 { font-size: 1.3rem; margin: 0.2rem 0 0.4rem; }
+.tour-card h2:focus { outline: none; }
+.tour-card h2:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.tour-card p { margin: 0 0 0.75rem; }
+.tour-kicker { color: var(--red-dark); font-size: 0.85rem; font-weight: 600; }
+.tour-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.tour-target { outline: 3px solid var(--red); outline-offset: 6px; border-radius: 6px; scroll-margin: 6rem; }
+body.tour-open { padding-bottom: 45vh; }
+@media (max-width: 30rem) {
+  .tour-card { right: 8px; left: 8px; bottom: 8px; width: auto; }
+}
