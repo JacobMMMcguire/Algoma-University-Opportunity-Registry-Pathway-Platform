@@ -18,6 +18,28 @@ const { createOptionsRouter } = require("./routes/options");
 const { createPartnerSubmissionsRouter } = require("./routes/partner-submissions");
 const { createProjectsRouter } = require("./routes/projects");
 
+// Every API router and where it is mounted. Add new feature routers here. The F-01 to F-03
+// authorization sweep (test/authorization-sweep.test.js) lists every route from this table, so a
+// route nobody has checked fails the tests.
+const MOUNTS = [
+  ["/api/auth", createAuthRouter],
+  ["/api/admin", createAdminRouter],
+  ["/api/account", createAccountRouter],
+  ["/api/faculty", createFacultyRouter],
+  ["/api/projects", createProjectsRouter],
+  ["/api/options", createOptionsRouter],
+  ["/api/partner-submissions", createPartnerSubmissionsRouter],
+  ["/api/opportunities", createOpportunitiesRouter],
+  ["/api/notifications", createNotificationsRouter],
+  ["/api/lifecycle", createLifecycleRouter],
+  ["/api/matches", createMatchesRouter],
+  ["/api/outcomes", createOutcomesRouter],
+  ["/api/students", createStudentsRouter],
+  ["/api/external-opportunities", createExternalRouter],
+  ["/api/external-sync", createExternalSyncRouter],
+  ["/api/operations", createOperationsRouter],
+];
+
 // `db` needs query(text, params) returning { rows }. `sendSignInEmail` is optional.
 function createApp({ db, config, sendSignInEmail = null }) {
   const app = express();
@@ -40,23 +62,7 @@ function createApp({ db, config, sendSignInEmail = null }) {
     }
   });
 
-  app.use("/api/auth", createAuthRouter({ ...deps, sendSignInEmail }));
-  app.use("/api/admin", createAdminRouter(deps));
-  app.use("/api/account", createAccountRouter(deps));
-  app.use("/api/faculty", createFacultyRouter(deps));
-  app.use("/api/projects", createProjectsRouter(deps));
-  app.use("/api/options", createOptionsRouter());
-  app.use("/api/partner-submissions", createPartnerSubmissionsRouter(deps));
-  app.use("/api/opportunities", createOpportunitiesRouter(deps));
-  app.use("/api/notifications", createNotificationsRouter(deps));
-  app.use("/api/lifecycle", createLifecycleRouter(deps));
-  app.use("/api/matches", createMatchesRouter(deps));
-  app.use("/api/outcomes", createOutcomesRouter(deps));
-  app.use("/api/students", createStudentsRouter(deps));
-  app.use("/api/external-opportunities", createExternalRouter(deps));
-  app.use("/api/external-sync", createExternalSyncRouter(deps));
-  app.use("/api/operations", createOperationsRouter(deps));
-  // Mount new feature routers here, e.g. app.use("/api/things", createThingsRouter(deps));
+  for (const [prefix, createRouter] of MOUNTS) app.use(prefix, createRouter({ ...deps, sendSignInEmail }));
 
   app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
@@ -71,4 +77,4 @@ function createApp({ db, config, sendSignInEmail = null }) {
   return app;
 }
 
-module.exports = { createApp };
+module.exports = { createApp, MOUNTS };

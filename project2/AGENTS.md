@@ -713,6 +713,12 @@ the live database. The fixtures are in `project2/final_fixtures/`.
   - Staff hide an industry opportunity with the lifecycle Withdraw (R3-13).
 - **Notifications (F-14, D5).** `deliverNotifications` in `src/notify.js` runs after the
   submission is saved and never throws; outcomes go in `notification_deliveries`.
+- **Authorization sweep (F-01 to F-05).** Routers are mounted from the `MOUNTS` table in
+  `src/app.js`. `test/authorization-sweep.test.js` lists every route from it and needs an access
+  class for each in `ACCESS`, so **a new route fails the tests until you add it there**. It also
+  counts every `innerHTML`/`insertAdjacentHTML`/`outerHTML` in `public/*.js`
+  (`REVIEWED_HTML_SINKS`): a new one fails until it is reviewed (record values through
+  `escapeHtml()`, or use `h()`).
 - **Operations (`/api/operations`, staff only).** `GET /notifications`, `POST
   /notifications/:submissionId/retry`, `PUT /settings/simulate-notification-failure` (test mode
   only), and `GET /history?subjectType=&subjectId=` (the attribution log). Lists take `limit`
