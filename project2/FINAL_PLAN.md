@@ -137,6 +137,8 @@ pages use plain words; the staff sync page may keep "sync", explained once.
    `test/operations.test.js`; plain-language lifecycle history; 58 page views at 390px with
    axe-core, no overflow, violations or errors: `final_evidence/browser_pass.json`).
 6. Full regression, launch-readiness note, release files, deploy, tag `FINAL-submission`.
-   (F-25 to F-27)
+   (F-25 to F-27) Code deployed 2026-11-26 (c05fa87, migration 009 applied). Release files:
+   `release_submission.md` (with the launch-readiness note and operational note),
+   `evaluation_adapter.json` (FINAL), `final_evidence/regression_checklist.md`.
 
 Every step keeps `npm test` green and adds tests named after its requirements.

@@ -1,307 +1,321 @@
 {
-  "release": "R4",
+  "release": "FINAL",
   "deployment_url": "https://algoma-opportunity-registry-r1-backend.onrender.com",
-  "chosen_challenge": "R4-07 — External content is untrusted",
   "checks": [
     {
-      "requirement_or_scenario": "R4-01",
-      "entry_point": "src/external/sources.js (SOURCES); migration 008 external_sources",
-      "method_or_action": "Inspect: a source is a row plus an adapter entry",
+      "requirement_or_scenario": "F-01",
+      "entry_point": "Every write route, e.g. PUT /api/projects/{id}, POST /api/lifecycle/{kind}/{id}/state, POST /api/matches/{id}/confirm, PUT /api/outcomes/{id}, PUT /api/external-opportunities/{id}/interest",
+      "method_or_action": "Send the request for a record you don't own or take part in, changing the id, the body or the URL",
+      "role": "a signed-in user who is not the owner (e.g. F-JORDAN on F-PRIYA's O-303)",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
+      "expected_behavior": "404 (or 403 for the wrong role) and nothing changes. Ownership is in the SQL; names or ids in the body only ever affect the caller. Swept for all 76 routes in test/authorization-sweep.test.js."
+    },
+    {
+      "requirement_or_scenario": "F-02",
+      "entry_point": "POST /api/auth/request-challenge, /api/auth/verify, PUT /api/account/*; POST /api/admin/users/{id}/verify-faculty",
+      "method_or_action": "Add isStaff / isVerifiedFaculty / role to any request; then try the admin routes",
+      "role": "any signed-in non-staff user",
+      "setup": "none",
+      "expected_behavior": "New accounts are never staff or faculty; admin routes return 403. Only staff grant faculty status (/admin.html), and a revocation applies on the next request."
+    },
+    {
+      "requirement_or_scenario": "F-03",
+      "entry_point": "GET /api/faculty/{id}, /api/projects/{id}, /api/opportunities/{id}, /api/partner-submissions, /api/matches/{id}, /api/notifications/subscriptions",
+      "method_or_action": "Request directly",
+      "role": "a visitor, and a signed-in user who is not the owner",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
+      "expected_behavior": "Signed-in-only profiles and opportunities: 404 to visitors. Partner contact details, engagement and subscriptions: only in the faculty and staff views. Matches (proposed or declined): 404 to anyone not on them, staff included."
+    },
+    {
+      "requirement_or_scenario": "F-04",
+      "entry_point": "PUT /api/account/public-profile { allowPublicProfile: false } (profile.html / home page)",
+      "method_or_action": "As F-JORDAN, withdraw public display, then look as a visitor",
+      "role": "verified faculty, then public",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
+      "expected_behavior": "At once: his profile, the industry opportunities he supervises, his external support and showcase outcome R-501 stop being public. Signed-in users still see what is signed-in-only. Turning it back on restores them."
+    },
+    {
+      "requirement_or_scenario": "F-05",
+      "entry_point": "POST /api/partner-submissions, PUT /api/faculty/me/profile, PUT /api/outcomes/{id}, PUT /api/account/student-profile, external feed v2 (MX-1005)",
+      "method_or_action": "Submit text with <script> / <img onerror> and 'ignore previous instructions'; submit javascript: and data: links",
+      "role": "public / signed in",
+      "setup": "none",
+      "expected_behavior": "Text is stored and shown as text (textContent / escapeHtml); no script runs; nothing changes state. Non-http(s) links are refused with a 400."
+    },
+    {
+      "requirement_or_scenario": "F-06 (RC-01 accidental expiry)",
+      "entry_point": "/lifecycle.html (Terms and deadlines); PUT /api/lifecycle/project/{O-303 id}/centre-deadline { centreDeadline: '2026-12-15' }",
+      "method_or_action": "Set a later Centre deadline",
+      "role": "staff (the fixture staff account)",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06. O-303 starts Expired.",
+      "expected_behavior": "O-303 is Open again, back in discovery, same id; the change is in its history (by staff)."
+    },
+    {
+      "requirement_or_scenario": "F-06 (RC-02 wrong lifecycle state)",
+      "entry_point": "/lifecycle.html; POST /api/lifecycle/project/{O-305 id}/state { action: 'reopen', deadline: 'YYYY-MM-DD' }",
+      "method_or_action": "Reopen with a new deadline",
+      "role": "F-PRIYA (owner) or staff",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06. O-305 starts Withdrawn.",
+      "expected_behavior": "O-305 is Open, same id; 'State changed: withdrawn to open' by the person in its history."
+    },
+    {
+      "requirement_or_scenario": "F-06 (RC-03 mistaken match confirmation)",
+      "entry_point": "/matches.html ('Undo my confirmation', or 'Undo {student}'s confirmation'); POST /api/matches/{M-404 id}/undo-confirmation",
+      "method_or_action": "Student S02 undoes their own, or F-JORDAN sends { studentEmail: S02's address }",
+      "role": "S02, or F-JORDAN (managing faculty)",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06. M-404 starts Confirmed.",
+      "expected_behavior": "M-404 is Proposed again; S02's answer is 'not answered yet'. Outcomes on it are kept but leave the showcase until everyone confirms again. Deliberately relaxes R3-04 (decline after full confirmation is still refused)."
+    },
+    {
+      "requirement_or_scenario": "F-06 (RC-04 mistaken engagement)",
+      "entry_point": "/submissions.html?id={O-302 id}; PUT /api/partner-submissions/{id}/engagement { state: 'not_contacted' }",
+      "method_or_action": "Set the right engagement state",
+      "role": "any verified faculty (e.g. F-JORDAN)",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06. O-302's engagement starts 'Partner agreed in principle'.",
+      "expected_behavior": "Engagement is 'Not contacted'; the mistaken value and who set it are kept in the history (Operations page)."
+    },
+    {
+      "requirement_or_scenario": "F-06 (RC-05 publication-visibility error)",
+      "entry_point": "/outcomes.html; POST /api/outcomes/{R-501 id}/unconfirm",
+      "method_or_action": "Take the confirmation back",
+      "role": "F-JORDAN (participating faculty)",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06. R-501 starts public in Completed work.",
+      "expected_behavior": "R-501 leaves the showcase (404 to visitors) and stays visible to its participants. Also: projects can be moved back to draft (POST /api/projects/{id}/unpublish)."
+    },
+    {
+      "requirement_or_scenario": "F-07",
+      "entry_point": "Same as F-06",
+      "method_or_action": "After each fix, compare ids and history",
+      "role": "staff",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
+      "expected_behavior": "Every corrected record keeps its id; nothing is deleted and recreated; Terms and deadlines history and the Operations page 'Who changed what' show the change."
+    },
+    {
+      "requirement_or_scenario": "F-08",
+      "entry_point": "/operations.html 'Who changed what'; GET /api/operations/history?subjectType=&subjectId=; lifecycle history on /lifecycle.html",
+      "method_or_action": "Look up a record",
+      "role": "staff (the fixture staff account)",
+      "setup": "Make any change first",
+      "expected_behavior": "Who, what, when, and before/after values for privilege grants, departures, consent, publication, supervision, engagement, match answers and undo, outcome confirmation, reassignment; lifecycle changes in run history."
+    },
+    {
+      "requirement_or_scenario": "F-09",
+      "entry_point": "/faculty.html?id={F-ALEX id}; /api/outcomes/{R-502 id} as S01; /student.html?id={S02 id}",
+      "method_or_action": "Open the departed person's page and their work",
+      "role": "public / participants",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
+      "expected_behavior": "F-ALEX's page stays, says 'No longer at Algoma University', no contact. R-502 and R-501 still exist and are attributed; R-501 stays in Completed work. S02 shows as Alumni. Nothing was deleted."
+    },
+    {
+      "requirement_or_scenario": "F-10",
+      "entry_point": "/faculty.html, /projects.html, /opportunity.html?id=, contact panels",
+      "method_or_action": "Browse as a student",
+      "role": "student (S01)",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
+      "expected_behavior": "F-ALEX is not in the directory, not named as a supervisor, and can't act as faculty (403). F-PRIYA stays listed with her work but offers no contact ('Not currently accepting new inquiries'). F-JORDAN (control) is unchanged."
+    },
+    {
+      "requirement_or_scenario": "F-11",
+      "entry_point": "/lifecycle.html (staff: 'New supervisor' form); POST /api/lifecycle/industry/{O-302 id}/reassign { facultyUserId, agreed: true }",
+      "method_or_action": "Find O-302 (state 'Needs a new supervisor'), choose a faculty member who agreed, Reassign",
+      "role": "staff (the fixture staff account)",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
+      "expected_behavior": "O-302 is out of discovery with a plain reason until reassigned; afterwards the new supervisor manages it (then Expired, renewable). Same id, matches kept. F-ALEX's R1 projects P-101 and P-107 are handled the same way."
+    },
+    {
+      "requirement_or_scenario": "F-12",
+      "entry_point": "All lifecycle and recovery routes",
+      "method_or_action": "Inspect",
       "role": "n/a (code review)",
       "setup": "none",
-      "expected_behavior": "external_opportunities has source_id; Mitacs is one entry. test/external-opportunities.test.js adds a second source with no model change."
+      "expected_behavior": "No route hard-deletes a record with historical meaning: projects close/withdraw/archive, matches withdraw, people depart. Exception: the R4 evaluation reset on /sync.html (staff, test mode only), listed in the launch-readiness note."
     },
     {
-      "requirement_or_scenario": "R4-02",
-      "entry_point": "/projects.html (Type: External opportunities) and GET /api/external-opportunities",
-      "method_or_action": "Browse; filter with q, area, facultyId",
+      "requirement_or_scenario": "F-13",
+      "entry_point": "/sync.html: 'Simulated failure: source unreachable' or 'response cannot be parsed'; POST /api/external-sync/run",
+      "method_or_action": "Run a failing sync",
+      "role": "staff (the fixture staff account)",
+      "setup": "Feed v1 run first",
+      "expected_behavior": "Run recorded as failed with its reason; every external record keeps its last-known content; students see 'may be out of date'; the rest of the site is unaffected."
+    },
+    {
+      "requirement_or_scenario": "F-14",
+      "entry_point": "/operations.html 'Evaluation: simulate a notification failure', then /partner.html, then Retry on /operations.html",
+      "method_or_action": "Turn the simulation on, submit a proposal, browse /submissions.html, turn it off, Retry",
+      "role": "staff + public + verified faculty",
+      "setup": "Test mode",
+      "expected_behavior": "The proposal is saved (201) and listed on Industry opportunities; Operations shows the failure with a readable reason; Retry notifies subscribers once."
+    },
+    {
+      "requirement_or_scenario": "F-15",
+      "entry_point": "Sign-in email, external feed, notifications",
+      "method_or_action": "Make each fail",
+      "role": "any",
+      "setup": "none",
+      "expected_behavior": "Discovery, matching and lifecycle keep working; no optional integration (we have no calendar integration) is needed for them."
+    },
+    {
+      "requirement_or_scenario": "F-16",
+      "entry_point": "Every page",
+      "method_or_action": "Meet a failure (email unavailable, sync failed, bad request, database down)",
+      "role": "any",
+      "setup": "none",
+      "expected_behavior": "Plain messages with a way forward (try again, browse instead, retry); never a stack trace or blank page (test/integration-failures.test.js)."
+    },
+    {
+      "requirement_or_scenario": "F-17",
+      "entry_point": "src/scale.js; npm run scale:evidence; npm run dev:local -- --scale",
+      "method_or_action": "Load final_fixtures/scale_fixture.json",
+      "role": "n/a",
+      "setup": "In memory (not loaded into the live database)",
+      "expected_behavior": "240 people and 160 opportunities created through the app's HTTP routes as each person, external records through the ordinary sync; each opportunity in the fixture's state on the evaluation date. Evidence: final_evidence/scale_evidence.json."
+    },
+    {
+      "requirement_or_scenario": "F-18",
+      "entry_point": "GET /api/discovery (used by /projects.html and the home page), limit (default 20, max 50) and offset",
+      "method_or_action": "Load the first page with ~20 listed and with the full scale set",
       "role": "public",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "External opportunities appear in the same Projects list and filters as faculty and industry projects."
+      "setup": "scale evidence",
+      "expected_behavior": "The first load is 20 records whatever the total (about 23 KB vs 26 KB in final_evidence/scale_evidence.json); 'Show more' fetches the next page."
     },
     {
-      "requirement_or_scenario": "R4-03",
-      "entry_point": "/projects.html?type=external",
-      "method_or_action": "Look at each card",
-      "role": "public",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "Each card starts with the badge 'External · Owned by Mitacs, not Algoma University.'"
+      "requirement_or_scenario": "F-19",
+      "entry_point": "/admin.html, /lifecycle.html, /submissions.html, /operations.html",
+      "method_or_action": "Open as staff at scale; use Search and Show more",
+      "role": "staff (the fixture staff account)",
+      "setup": "npm run dev:local -- --scale",
+      "expected_behavior": "Each queue shows 20 at a time (limit/offset; q search on users and opportunities), never every record."
     },
     {
-      "requirement_or_scenario": "R4-04",
-      "entry_point": "/external.html?id={id}; GET /api/external-opportunities/{id}",
-      "method_or_action": "Open any external opportunity",
-      "role": "public",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "Plain-language owner and source, the Mitacs reference, and a link to authoritative_url (Original record)."
+      "requirement_or_scenario": "F-20",
+      "entry_point": "Student discovery to contact; faculty intake to match; staff verification, reassignment and operations",
+      "method_or_action": "Complete with keyboard only",
+      "role": "student / verified faculty / staff",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
+      "expected_behavior": "Native links, buttons and labelled form controls with visible focus; focus moves to what changed after saves and 'Show more'."
     },
     {
-      "requirement_or_scenario": "R4-05",
-      "entry_point": "/external.html?id={id}",
-      "method_or_action": "Press 'View / apply through Mitacs'",
-      "role": "public",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "Opens the provider's page in a new tab. Nothing on the platform collects application documents."
+      "requirement_or_scenario": "F-21",
+      "entry_point": "Discovery, profile, match confirmation, external handoff at 390px",
+      "method_or_action": "Use on a phone-width viewport",
+      "role": "all roles",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
+      "expected_behavior": "No horizontal scrolling or desktop-only controls; menus become a drawer. 58 page views checked with axe-core: final_evidence/browser_pass.json."
     },
     {
-      "requirement_or_scenario": "R4-06",
-      "entry_point": "/external.html?id={id}",
+      "requirement_or_scenario": "F-22",
+      "entry_point": "Student and faculty pages",
       "method_or_action": "Read the wording",
-      "role": "public",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "States that Mitacs decides who can apply and is selected, and that Algoma does not decide or check eligibility."
+      "role": "student / faculty",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
+      "expected_behavior": "Plain labels ('Needs a new supervisor', 'Offering 2', 'Partly confirmed'); state codes, table names and sync terms stay on the staff sync page."
     },
     {
-      "requirement_or_scenario": "R4-07 (chosen Challenge)",
-      "entry_point": "/external.html?id={MX-1005 id}",
-      "method_or_action": "Open MX-1005 (Accelerate internship — accessibility evaluation)",
-      "role": "public, then any role",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "Description shown as plain text including the literal <script> text; no alert; still labelled 'Owned by Mitacs'; link points at https://mitacs.example/opportunities/MX-1005; no user's role, match or outcome changes."
+      "requirement_or_scenario": "F-23",
+      "entry_point": "/operations.html (staff) and /sync.html",
+      "method_or_action": "Open",
+      "role": "staff (the fixture staff account)",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
+      "expected_behavior": "Database and sync health, stale external data, failed notifications with retry, opportunities needing a supervisor or a deadline, and who changed what."
     },
     {
-      "requirement_or_scenario": "R4-08",
-      "entry_point": "/sync.html (Run details) and GET /api/external-sync/runs/{runId}",
-      "method_or_action": "Run v2 after v1",
-      "role": "staff (fixture-test-staff@algomau.ca)",
-      "setup": "Reset, then run v1.",
-      "expected_behavior": "MX-1005 new; MX-1001, MX-1004 unchanged; MX-1002 changed (title, description, areas, closes); MX-1003 not seen."
+      "requirement_or_scenario": "F-24",
+      "entry_point": "/operations.html, /sync.html, server logs",
+      "method_or_action": "Open as staff; try as others",
+      "role": "staff; others get 401/403",
+      "setup": "none",
+      "expected_behavior": "Operators only. No sign-in codes, session tokens or partner contact details in any diagnostic response or log line (test/operations.test.js)."
     },
     {
-      "requirement_or_scenario": "R4-09",
-      "entry_point": "/sync.html",
-      "method_or_action": "Run v2 a second time",
-      "role": "staff (fixture-test-staff@algomau.ca)",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "Still 5 stored copies; MX-1001, MX-1002, MX-1004, MX-1005 unchanged; MX-1003 'Still not seen', not newly not seen."
+      "requirement_or_scenario": "F-25",
+      "entry_point": "R1 to R4 core journeys",
+      "method_or_action": "Follow final_evidence/regression_checklist.md",
+      "role": "all roles",
+      "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
+      "expected_behavior": "Discovery and filters, consent visibility, intake and the publication gate, willingness and engagement, subscriptions, two-sided matching, lifecycle and expiry, outcomes and showcase, external sync and handoff all still work."
     },
     {
-      "requirement_or_scenario": "R4-10",
-      "entry_point": "/external.html?id={MX-1003 id}",
-      "method_or_action": "Open MX-1003 after v2",
-      "role": "public",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "Page still opens with last-known content and the notice 'No longer listed by Mitacs (since ...)'; it leaves the browse list; distinct from 'Withdrawn by Mitacs'."
-    },
-    {
-      "requirement_or_scenario": "R4-11",
-      "entry_point": "/sync.html",
-      "method_or_action": "Choose 'Simulated failure: source unreachable' or 'Simulated failure: response cannot be parsed', then Run sync now",
-      "role": "staff (fixture-test-staff@algomau.ca)",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "Run recorded as failed with its reason; 'Nothing was changed'; every opportunity keeps its content and state; last successful sync time unchanged."
-    },
-    {
-      "requirement_or_scenario": "R4-12",
-      "entry_point": "/sync.html (Run details: Malformed records)",
-      "method_or_action": "Run v2",
-      "role": "staff (fixture-test-staff@algomau.ca)",
-      "setup": "Reset, then run v1.",
-      "expected_behavior": "Record 5 reported: empty external_id; empty title; empty authoritative_url; unparseable closes date. The other four records are processed."
-    },
-    {
-      "requirement_or_scenario": "R4-13",
-      "entry_point": "/external.html?id={id} and the Projects list",
-      "method_or_action": "View after a successful sync, then after a simulated failure",
-      "role": "public / student / faculty",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "Shows 'Last successful update from Mitacs: <time>'. After a failed sync (or data over 8 days old) shows 'This information may be out of date' with the reason."
-    },
-    {
-      "requirement_or_scenario": "R4-14",
-      "entry_point": "/sync.html; GET /api/external-sync/health",
-      "method_or_action": "Open the page",
-      "role": "staff (fixture-test-staff@algomau.ca)",
-      "setup": "any",
-      "expected_behavior": "Healthy/unhealthy summary, last successful run, last failed run with reason, counts by classification, recent runs. Students and faculty get 403; visitors 401."
-    },
-    {
-      "requirement_or_scenario": "R4-15",
-      "entry_point": "/external.html?id={MX-1002 id}",
-      "method_or_action": "Before v2: as faculty offer support with a note and save readiness guidance; as a student record 'I applied through the provider'. Then run v2.",
-      "role": "verified faculty (fixture-f-alex@algomau.ca, public profile); student (fixture-test-student@algomau.ca, or fixture-s02@algomau.ca for confirmed outcomes); staff (fixture-test-staff@algomau.ca)",
-      "setup": "Reset, then run v1.",
-      "expected_behavior": "After v2, MX-1002 shows the new title and the same faculty support, note, guidance, and the student's own record and its history."
-    },
-    {
-      "requirement_or_scenario": "R4-16",
-      "entry_point": "PUT /api/external-opportunities/{id}/guidance with title/authoritativeUrl in the body; PUT /api/external-opportunities/{id}",
-      "method_or_action": "Try to edit source fields",
-      "role": "verified faculty (fixture-f-alex@algomau.ca, public profile) or staff (fixture-test-staff@algomau.ca)",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "No route edits source fields (404); extra fields are ignored. Local commentary is the faculty note and guidance note, shown labelled as local."
-    },
-    {
-      "requirement_or_scenario": "R4-17",
-      "entry_point": "/external.html?id={MX-1002 id} ('Changes from the source', and the warning above the faculty support form); /external.html (Your external opportunities)",
-      "method_or_action": "As the interested faculty member after v2",
-      "role": "verified faculty (fixture-f-alex@algomau.ca, public profile)",
-      "setup": "Offer support on MX-1002 after v1, then run v2.",
-      "expected_behavior": "'Mitacs changed this after you offered support: ... title, description, areas, closing date changed', with previous title and closing date."
-    },
-    {
-      "requirement_or_scenario": "R4-18",
-      "entry_point": "/external.html?id={id}: 'I'm willing to support students pursuing this'; PUT/DELETE /api/external-opportunities/{id}/interest",
-      "method_or_action": "Press the button (optional note)",
-      "role": "verified faculty (fixture-f-alex@algomau.ca, public profile)",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "The faculty member is listed under 'Algoma faculty support' with a link to their profile. Visitors see only faculty who chose public display."
-    },
-    {
-      "requirement_or_scenario": "R4-19",
-      "entry_point": "/external.html?id={id}",
-      "method_or_action": "Read the faculty support section",
-      "role": "public",
-      "setup": "Faculty support recorded.",
-      "expected_behavior": "Says it is local support from Algoma, not selection, approval or endorsement by Mitacs."
-    },
-    {
-      "requirement_or_scenario": "R4-20 (not chosen)",
-      "entry_point": "n/a",
-      "method_or_action": "Not chosen; reviewers do not test it",
+      "requirement_or_scenario": "F-26",
+      "entry_point": "project2/release_submission.md (Launch readiness)",
+      "method_or_action": "Read",
       "role": "n/a",
-      "setup": "n/a",
-      "expected_behavior": "Not assessed."
+      "setup": "none",
+      "expected_behavior": "Known limitations, operational assumptions and remaining risks, stated plainly."
     },
     {
-      "requirement_or_scenario": "R4-21, R4-22",
-      "entry_point": "/external.html?id={MX-1002 id} (Readiness guidance)",
-      "method_or_action": "As faculty or staff tick 'Suggest completing substantial project work first' and save; view as a student",
-      "role": "verified faculty (fixture-f-alex@algomau.ca, public profile); student (fixture-test-student@algomau.ca, or fixture-s02@algomau.ca for confirmed outcomes)",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "Section titled 'a suggestion, not a requirement' saying exactly what it is based on; no score or ranking."
-    },
-    {
-      "requirement_or_scenario": "R4-23",
-      "entry_point": "/external.html?id={MX-1002 id}",
-      "method_or_action": "As a student with no confirmed outcome (fixture-test-student or fixture-s01)",
-      "role": "student (fixture-test-student@algomau.ca, or fixture-s02@algomau.ca for confirmed outcomes)",
-      "setup": "Guidance set as above.",
-      "expected_behavior": "'We don't see a confirmed project outcome for you ... You can still apply through Mitacs'; the apply link and the page stay fully available."
-    },
-    {
-      "requirement_or_scenario": "R4-24",
-      "entry_point": "/external.html?id={MX-1002 id}",
-      "method_or_action": "As fixture-s02@algomau.ca",
-      "role": "student fixture-s02@algomau.ca",
-      "setup": "Guidance set as above; R3 fixture loaded.",
-      "expected_behavior": "Lists S02's confirmed R3 outcomes (R-501, R-503). S01's unconfirmed R-502 is not counted until F-ALEX confirms it."
-    },
-    {
-      "requirement_or_scenario": "R4-25",
-      "entry_point": "/external.html?id={id}",
-      "method_or_action": "Compare with the simulated clock (6 November 2026)",
-      "role": "public",
-      "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
-      "expected_behavior": "External opportunities show the provider's closing date and are never Expired by Algoma deadlines; a passed provider date is labelled, not hidden."
-    },
-    {
-      "requirement_or_scenario": "R4-26",
-      "entry_point": "POST /api/external-sync/run, GET /api/external-sync/health, PUT /api/external-opportunities/{id}/interest, PUT .../guidance",
-      "method_or_action": "Call as a visitor, student, faculty or staff, changing ids or body fields",
-      "role": "each role",
-      "setup": "any",
-      "expected_behavior": "Visitors 401; students and faculty 403 on sync and health; students and staff 403 on interest; students 403 on guidance; body fields naming another user are ignored."
-    },
-    {
-      "requirement_or_scenario": "R4-27",
-      "entry_point": "R1 to R3 routes in earlier_releases (unchanged)",
-      "method_or_action": "Repeat the R3 walkthrough",
-      "role": "as in R3",
-      "setup": "Fixture seeded (R1 to R3).",
-      "expected_behavior": "All R1 to R3 behaviour unchanged; the 270 earlier tests still pass."
-    },
-    {
-      "requirement_or_scenario": "R4-28",
-      "entry_point": "Tag R4-submission",
-      "method_or_action": "git show R4-submission",
+      "requirement_or_scenario": "F-27",
+      "entry_point": "Tag FINAL-submission",
+      "method_or_action": "git show FINAL-submission",
       "role": "n/a",
-      "setup": "n/a",
-      "expected_behavior": "Tag points at the assessed commit recorded in release_submission.md."
+      "setup": "none",
+      "expected_behavior": "The deployed commit is tagged FINAL-submission."
     }
   ],
-  "fixture_setup": "R1 to R3 fixtures are loaded by `npm run seed:fixture` as before. The R4 feeds are in project2/r4_fixtures and are served by the demonstration provider in src/external/sources.js; nothing is imported directly. As staff at /sync.html: (1) evaluation reset of the demonstration source (test mode only), (2) run 'Feed v1 (last week)', (3) run 'Feed v2 (this week)'. Compare Run details with expected_sync_results.json.",
-  "test_access": "Synthetic fixture accounts (no inbox) sign in through test mode: enter the address on the home page, then read the code at /operator.html with the operator access code shared privately through the approved course channel. No passwords or tokens are in this file.",
-  "sync": {
-    "trigger": {
-      "page_route": "/sync.html",
-      "endpoint": "POST /api/external-sync/run",
-      "role": "staff",
-      "request_body": {
-        "sourceId": "mitacs-demo",
-        "feed": "v1 | v2 | unreachable | unparseable"
-      },
-      "response": "200 with { runId, status: 'succeeded', counts, items, malformed } or { runId, status: 'failed', failureReason }"
+  "recovery_actions": {
+    "RC-01": {
+      "record": "O-303 (Accessible museum guide)",
+      "fix": "Staff: Terms and deadlines > Centre deadline",
+      "api": "PUT /api/lifecycle/project/{id}/centre-deadline"
     },
-    "simulate_failure": "feed = unreachable (the provider times out) or unparseable (truncated JSON)",
-    "health": {
-      "page_route": "/sync.html",
-      "endpoint": "GET /api/external-sync/health",
-      "role": "staff"
+    "RC-02": {
+      "record": "O-305 (Campus wayfinding study)",
+      "fix": "Owner or staff: Terms and deadlines > Reopen with a new deadline",
+      "api": "POST /api/lifecycle/project/{id}/state { action: 'reopen', deadline }"
     },
-    "run_detail": {
-      "endpoint": "GET /api/external-sync/runs/{runId}",
-      "role": "staff"
+    "RC-03": {
+      "record": "M-404",
+      "fix": "S02 on Matches: Undo my confirmation; or F-JORDAN: Undo S02's confirmation",
+      "api": "POST /api/matches/{id}/undo-confirmation [{ studentEmail }]"
     },
-    "evaluation_reset": {
-      "endpoint": "POST /api/external-sync/reset",
-      "body": {
-        "sourceId": "mitacs-demo",
-        "confirm": true
-      },
-      "role": "staff, test mode only"
+    "RC-04": {
+      "record": "O-302 (Anomaly review dashboard)",
+      "fix": "Any verified faculty: Industry opportunities > engagement",
+      "api": "PUT /api/partner-submissions/{id}/engagement { state: 'not_contacted' }"
     },
-    "classifications": [
-      "new",
-      "unchanged",
-      "changed",
-      "reappeared",
-      "withdrawn",
-      "not_seen",
-      "still_not_seen",
-      "malformed (reported and skipped)"
+    "RC-05": {
+      "record": "R-501",
+      "fix": "F-JORDAN on Your outcomes: take the confirmation back",
+      "api": "POST /api/outcomes/{id}/unconfirm"
+    },
+    "also": {
+      "unpublish_project": "Owner on Your projects: Move back to draft (POST /api/projects/{id}/unpublish)",
+      "record_departure": "Staff on Faculty verification: Record as left Algoma / graduated / Undo (POST /api/admin/users/{id}/departure { departure: 'left' | 'graduated' | null })"
+    },
+    "history": "Each fix keeps the record's id; see Terms and deadlines history and Operations > Who changed what."
+  },
+  "staff_reassignment": {
+    "who": "staff only",
+    "page": "/lifecycle.html: the opportunity shows 'Needs a new supervisor'; open 'Change term, deadline or state', choose New supervisor, tick 'They have agreed to take it on', Reassign",
+    "api": "POST /api/lifecycle/{kind}/{id}/reassign { facultyUserId, agreed: true }",
+    "eligible": "verified faculty still at Algoma with a profile and a public-display choice (the faculty directory lists them)",
+    "effect": "project: new owner; industry opportunity: added as a willing supervisor (the departed supervisor's row is kept). Same id, runs, matches and outcomes. Recorded in run history and the change log.",
+    "refused": "403 for non-staff; 409 if someone managing it is still at Algoma; 400 without agreement or for someone who left",
+    "fixture_cases": [
+      "O-302",
+      "P-101",
+      "P-107"
     ]
   },
-  "external_opportunities": {
-    "list_endpoint": "GET /api/external-opportunities",
-    "list_results_path": "opportunities",
-    "detail_endpoint": "GET /api/external-opportunities/{id}",
-    "page_route": "/external.html?id={id}",
-    "browse_route": "/projects.html?type=external",
-    "query_parameters": {
-      "text": "q",
-      "research_area": "area",
-      "faculty": "facultyId",
-      "note": "Same as /api/projects; level and term leave none."
+  "operator_observability": {
+    "page": "/operations.html (staff; 'Operations' in the Staff menu)",
+    "sections": {
+      "at_a_glance": "GET /api/health, GET /api/external-sync/health, GET /api/operations/notifications, GET /api/operations/lifecycle",
+      "external_sync": "health summary, last success, last failure and reason, records held; details and runs on /sync.html",
+      "notifications": "GET /api/operations/notifications?status=failed (paged); POST /api/operations/notifications/{submissionId}/retry; PUT /api/operations/settings/simulate-notification-failure { enabled } (test mode)",
+      "lifecycle_problems": "GET /api/operations/lifecycle: needs a new supervisor, open with no deadline, counts of people who left or graduated",
+      "who_changed_what": "GET /api/operations/history?subjectType=&subjectId=&limit=&before="
     },
-    "fields": {
-      "id": "id",
-      "owner": "source.ownerName",
-      "source_record_id": "source.externalId",
-      "authoritative_link": "authoritativeUrl",
-      "source_state": "sourceState.value (listed | not_seen | withdrawn)",
-      "freshness": "freshness.lastSuccessfulSyncAt, freshness.stale",
-      "faculty_interest": "interestedFaculty",
-      "readiness": "readiness"
-    },
-    "faculty_interest_action": {
-      "endpoint": "PUT /api/external-opportunities/{id}/interest (body { note? }); DELETE to withdraw",
-      "role": "verified faculty with a profile and the public-display choice made"
-    },
-    "readiness_guidance_action": {
-      "endpoint": "PUT /api/external-opportunities/{id}/guidance (body { suggestPriorOutcome, note })",
-      "role": "verified faculty or staff"
-    },
-    "student_record_action": {
-      "endpoint": "PUT /api/external-opportunities/{id}/my-status (body { status })",
-      "role": "student (not faculty or staff)"
-    },
-    "mine": {
-      "endpoint": "GET /api/external-opportunities/mine",
-      "page_route": "/external.html",
-      "role": "signed in"
-    }
+    "access": "401 to visitors, 403 to students and faculty",
+    "never_contains": "sign-in codes, session tokens, partner contact details"
   },
+  "discovery": {
+    "endpoint": "GET /api/discovery",
+    "query": "q, area, level, term, facultyId, type (faculty | industry | external), limit (default 20, max 50), offset (the previous page's next)",
+    "response": "{ items: [{ kind, record }], total, counts: { faculty, industry, external }, offset, limit, next, filters: { faculty, industry, external } }",
+    "paged_lists": "GET /api/faculty, /api/admin/users (q), /api/lifecycle (q), /api/partner-submissions take limit and offset; without them they return everything as in earlier releases"
+  },
+  "fixture_setup": "Migration 009_final_hardening.sql applied, then `npm run seed:fixture` (or seed:fixture:sql pasted into the Supabase SQL Editor): R1, R2 and R3 fixtures, then the Final layer from project2/final_fixtures/ (stale_people.json and the recovery cases in their wrong states). Reseeding restores the starting states. CLOCK_DATE=2026-11-06. External data: as staff at /sync.html run 'Feed v1 (last week)' (and 'Feed v2 (this week)' for R4). The scale fixture is loaded only in memory: `npm run scale:evidence` or `npm run dev:local -- --scale`.",
+  "test_access": "Synthetic fixture accounts (no inbox) sign in through test mode at /signin.html, reading the code at /operator.html with the operator access code. The account for each role (student S01, graduated student S02, verified faculty F-JORDAN and F-PRIYA, departed faculty F-ALEX, staff/operator) and the access code are given in Moodle under Reviewer test access, through the approved private course channel. No passwords, codes or tokens are in this file.",
   "earlier_releases": {
     "project": "Project 2 - Opportunity Registry and Pathway Platform",
     "base_url": "https://algoma-opportunity-registry-r1-backend.onrender.com",
@@ -575,6 +589,308 @@
         "confirmed_but_private": "R-503"
       },
       "record_lookup": "Fixture ids are not API ids. Faculty opportunities are /api/projects records with the fixture title; industry ones are /api/opportunities records with the fixture title (the R2 submission of that title). Students are fixture-<id>@algomau.ca, e.g. fixture-s01@algomau.ca."
+    },
+    "r4": {
+      "chosen_challenge": "R4-07 — External content is untrusted",
+      "checks": [
+        {
+          "requirement_or_scenario": "R4-01",
+          "entry_point": "src/external/sources.js (SOURCES); migration 008 external_sources",
+          "method_or_action": "Inspect: a source is a row plus an adapter entry",
+          "role": "n/a (code review)",
+          "setup": "none",
+          "expected_behavior": "external_opportunities has source_id; Mitacs is one entry. test/external-opportunities.test.js adds a second source with no model change."
+        },
+        {
+          "requirement_or_scenario": "R4-02",
+          "entry_point": "/projects.html (Type: External opportunities) and GET /api/external-opportunities",
+          "method_or_action": "Browse; filter with q, area, facultyId",
+          "role": "public",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "External opportunities appear in the same Projects list and filters as faculty and industry projects."
+        },
+        {
+          "requirement_or_scenario": "R4-03",
+          "entry_point": "/projects.html?type=external",
+          "method_or_action": "Look at each card",
+          "role": "public",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "Each card starts with the badge 'External · Owned by Mitacs, not Algoma University.'"
+        },
+        {
+          "requirement_or_scenario": "R4-04",
+          "entry_point": "/external.html?id={id}; GET /api/external-opportunities/{id}",
+          "method_or_action": "Open any external opportunity",
+          "role": "public",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "Plain-language owner and source, the Mitacs reference, and a link to authoritative_url (Original record)."
+        },
+        {
+          "requirement_or_scenario": "R4-05",
+          "entry_point": "/external.html?id={id}",
+          "method_or_action": "Press 'View / apply through Mitacs'",
+          "role": "public",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "Opens the provider's page in a new tab. Nothing on the platform collects application documents."
+        },
+        {
+          "requirement_or_scenario": "R4-06",
+          "entry_point": "/external.html?id={id}",
+          "method_or_action": "Read the wording",
+          "role": "public",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "States that Mitacs decides who can apply and is selected, and that Algoma does not decide or check eligibility."
+        },
+        {
+          "requirement_or_scenario": "R4-07 (chosen Challenge)",
+          "entry_point": "/external.html?id={MX-1005 id}",
+          "method_or_action": "Open MX-1005 (Accelerate internship — accessibility evaluation)",
+          "role": "public, then any role",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "Description shown as plain text including the literal <script> text; no alert; still labelled 'Owned by Mitacs'; link points at https://mitacs.example/opportunities/MX-1005; no user's role, match or outcome changes."
+        },
+        {
+          "requirement_or_scenario": "R4-08",
+          "entry_point": "/sync.html (Run details) and GET /api/external-sync/runs/{runId}",
+          "method_or_action": "Run v2 after v1",
+          "role": "staff (the fixture staff account)",
+          "setup": "Reset, then run v1.",
+          "expected_behavior": "MX-1005 new; MX-1001, MX-1004 unchanged; MX-1002 changed (title, description, areas, closes); MX-1003 not seen."
+        },
+        {
+          "requirement_or_scenario": "R4-09",
+          "entry_point": "/sync.html",
+          "method_or_action": "Run v2 a second time",
+          "role": "staff (the fixture staff account)",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "Still 5 stored copies; MX-1001, MX-1002, MX-1004, MX-1005 unchanged; MX-1003 'Still not seen', not newly not seen."
+        },
+        {
+          "requirement_or_scenario": "R4-10",
+          "entry_point": "/external.html?id={MX-1003 id}",
+          "method_or_action": "Open MX-1003 after v2",
+          "role": "public",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "Page still opens with last-known content and the notice 'No longer listed by Mitacs (since ...)'; it leaves the browse list; distinct from 'Withdrawn by Mitacs'."
+        },
+        {
+          "requirement_or_scenario": "R4-11",
+          "entry_point": "/sync.html",
+          "method_or_action": "Choose 'Simulated failure: source unreachable' or 'Simulated failure: response cannot be parsed', then Run sync now",
+          "role": "staff (the fixture staff account)",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "Run recorded as failed with its reason; 'Nothing was changed'; every opportunity keeps its content and state; last successful sync time unchanged."
+        },
+        {
+          "requirement_or_scenario": "R4-12",
+          "entry_point": "/sync.html (Run details: Malformed records)",
+          "method_or_action": "Run v2",
+          "role": "staff (the fixture staff account)",
+          "setup": "Reset, then run v1.",
+          "expected_behavior": "Record 5 reported: empty external_id; empty title; empty authoritative_url; unparseable closes date. The other four records are processed."
+        },
+        {
+          "requirement_or_scenario": "R4-13",
+          "entry_point": "/external.html?id={id} and the Projects list",
+          "method_or_action": "View after a successful sync, then after a simulated failure",
+          "role": "public / student / faculty",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "Shows 'Last successful update from Mitacs: <time>'. After a failed sync (or data over 8 days old) shows 'This information may be out of date' with the reason."
+        },
+        {
+          "requirement_or_scenario": "R4-14",
+          "entry_point": "/sync.html; GET /api/external-sync/health",
+          "method_or_action": "Open the page",
+          "role": "staff (the fixture staff account)",
+          "setup": "any",
+          "expected_behavior": "Healthy/unhealthy summary, last successful run, last failed run with reason, counts by classification, recent runs. Students and faculty get 403; visitors 401."
+        },
+        {
+          "requirement_or_scenario": "R4-15",
+          "entry_point": "/external.html?id={MX-1002 id}",
+          "method_or_action": "Before v2: as faculty offer support with a note and save readiness guidance; as a student record 'I applied through the provider'. Then run v2.",
+          "role": "verified faculty (fixture-f-alex@algomau.ca, public profile); student (fixture-test-student@algomau.ca, or fixture-s02@algomau.ca for confirmed outcomes); staff (the fixture staff account)",
+          "setup": "Reset, then run v1.",
+          "expected_behavior": "After v2, MX-1002 shows the new title and the same faculty support, note, guidance, and the student's own record and its history."
+        },
+        {
+          "requirement_or_scenario": "R4-16",
+          "entry_point": "PUT /api/external-opportunities/{id}/guidance with title/authoritativeUrl in the body; PUT /api/external-opportunities/{id}",
+          "method_or_action": "Try to edit source fields",
+          "role": "verified faculty (fixture-f-alex@algomau.ca, public profile) or staff (the fixture staff account)",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "No route edits source fields (404); extra fields are ignored. Local commentary is the faculty note and guidance note, shown labelled as local."
+        },
+        {
+          "requirement_or_scenario": "R4-17",
+          "entry_point": "/external.html?id={MX-1002 id} ('Changes from the source', and the warning above the faculty support form); /external.html (Your external opportunities)",
+          "method_or_action": "As the interested faculty member after v2",
+          "role": "verified faculty (fixture-f-alex@algomau.ca, public profile)",
+          "setup": "Offer support on MX-1002 after v1, then run v2.",
+          "expected_behavior": "'Mitacs changed this after you offered support: ... title, description, areas, closing date changed', with previous title and closing date."
+        },
+        {
+          "requirement_or_scenario": "R4-18",
+          "entry_point": "/external.html?id={id}: 'I'm willing to support students pursuing this'; PUT/DELETE /api/external-opportunities/{id}/interest",
+          "method_or_action": "Press the button (optional note)",
+          "role": "verified faculty (fixture-f-alex@algomau.ca, public profile)",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "The faculty member is listed under 'Algoma faculty support' with a link to their profile. Visitors see only faculty who chose public display."
+        },
+        {
+          "requirement_or_scenario": "R4-19",
+          "entry_point": "/external.html?id={id}",
+          "method_or_action": "Read the faculty support section",
+          "role": "public",
+          "setup": "Faculty support recorded.",
+          "expected_behavior": "Says it is local support from Algoma, not selection, approval or endorsement by Mitacs."
+        },
+        {
+          "requirement_or_scenario": "R4-20 (not chosen)",
+          "entry_point": "n/a",
+          "method_or_action": "Not chosen; reviewers do not test it",
+          "role": "n/a",
+          "setup": "n/a",
+          "expected_behavior": "Not assessed."
+        },
+        {
+          "requirement_or_scenario": "R4-21, R4-22",
+          "entry_point": "/external.html?id={MX-1002 id} (Readiness guidance)",
+          "method_or_action": "As faculty or staff tick 'Suggest completing substantial project work first' and save; view as a student",
+          "role": "verified faculty (fixture-f-alex@algomau.ca, public profile); student (fixture-test-student@algomau.ca, or fixture-s02@algomau.ca for confirmed outcomes)",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "Section titled 'a suggestion, not a requirement' saying exactly what it is based on; no score or ranking."
+        },
+        {
+          "requirement_or_scenario": "R4-23",
+          "entry_point": "/external.html?id={MX-1002 id}",
+          "method_or_action": "As a student with no confirmed outcome (fixture-test-student or fixture-s01)",
+          "role": "student (fixture-test-student@algomau.ca, or fixture-s02@algomau.ca for confirmed outcomes)",
+          "setup": "Guidance set as above.",
+          "expected_behavior": "'We don't see a confirmed project outcome for you ... You can still apply through Mitacs'; the apply link and the page stay fully available."
+        },
+        {
+          "requirement_or_scenario": "R4-24",
+          "entry_point": "/external.html?id={MX-1002 id}",
+          "method_or_action": "As fixture-s02@algomau.ca",
+          "role": "student fixture-s02@algomau.ca",
+          "setup": "Guidance set as above; R3 fixture loaded.",
+          "expected_behavior": "Lists S02's confirmed R3 outcomes (R-501, R-503). S01's unconfirmed R-502 is not counted until F-ALEX confirms it."
+        },
+        {
+          "requirement_or_scenario": "R4-25",
+          "entry_point": "/external.html?id={id}",
+          "method_or_action": "Compare with the simulated clock (6 November 2026)",
+          "role": "public",
+          "setup": "As staff at /sync.html: reset the demonstration source (test mode), run 'Feed v1 (last week)', then 'Feed v2 (this week)'.",
+          "expected_behavior": "External opportunities show the provider's closing date and are never Expired by Algoma deadlines; a passed provider date is labelled, not hidden."
+        },
+        {
+          "requirement_or_scenario": "R4-26",
+          "entry_point": "POST /api/external-sync/run, GET /api/external-sync/health, PUT /api/external-opportunities/{id}/interest, PUT .../guidance",
+          "method_or_action": "Call as a visitor, student, faculty or staff, changing ids or body fields",
+          "role": "each role",
+          "setup": "any",
+          "expected_behavior": "Visitors 401; students and faculty 403 on sync and health; students and staff 403 on interest; students 403 on guidance; body fields naming another user are ignored."
+        },
+        {
+          "requirement_or_scenario": "R4-27",
+          "entry_point": "R1 to R3 routes in earlier_releases (unchanged)",
+          "method_or_action": "Repeat the R3 walkthrough",
+          "role": "as in R3",
+          "setup": "Fixture seeded (R1 to R3).",
+          "expected_behavior": "All R1 to R3 behaviour unchanged; the 270 earlier tests still pass."
+        },
+        {
+          "requirement_or_scenario": "R4-28",
+          "entry_point": "Tag R4-submission",
+          "method_or_action": "git show R4-submission",
+          "role": "n/a",
+          "setup": "n/a",
+          "expected_behavior": "Tag points at the assessed commit recorded in release_submission.md."
+        }
+      ],
+      "fixture_setup": "R1 to R3 fixtures are loaded by `npm run seed:fixture` as before. The R4 feeds are in project2/r4_fixtures and are served by the demonstration provider in src/external/sources.js; nothing is imported directly. As staff at /sync.html: (1) evaluation reset of the demonstration source (test mode only), (2) run 'Feed v1 (last week)', (3) run 'Feed v2 (this week)'. Compare Run details with expected_sync_results.json.",
+      "sync": {
+        "trigger": {
+          "page_route": "/sync.html",
+          "endpoint": "POST /api/external-sync/run",
+          "role": "staff",
+          "request_body": {
+            "sourceId": "mitacs-demo",
+            "feed": "v1 | v2 | unreachable | unparseable"
+          },
+          "response": "200 with { runId, status: 'succeeded', counts, items, malformed } or { runId, status: 'failed', failureReason }"
+        },
+        "simulate_failure": "feed = unreachable (the provider times out) or unparseable (truncated JSON)",
+        "health": {
+          "page_route": "/sync.html",
+          "endpoint": "GET /api/external-sync/health",
+          "role": "staff"
+        },
+        "run_detail": {
+          "endpoint": "GET /api/external-sync/runs/{runId}",
+          "role": "staff"
+        },
+        "evaluation_reset": {
+          "endpoint": "POST /api/external-sync/reset",
+          "body": {
+            "sourceId": "mitacs-demo",
+            "confirm": true
+          },
+          "role": "staff, test mode only"
+        },
+        "classifications": [
+          "new",
+          "unchanged",
+          "changed",
+          "reappeared",
+          "withdrawn",
+          "not_seen",
+          "still_not_seen",
+          "malformed (reported and skipped)"
+        ]
+      },
+      "external_opportunities": {
+        "list_endpoint": "GET /api/external-opportunities",
+        "list_results_path": "opportunities",
+        "detail_endpoint": "GET /api/external-opportunities/{id}",
+        "page_route": "/external.html?id={id}",
+        "browse_route": "/projects.html?type=external",
+        "query_parameters": {
+          "text": "q",
+          "research_area": "area",
+          "faculty": "facultyId",
+          "note": "Same as /api/projects; level and term leave none."
+        },
+        "fields": {
+          "id": "id",
+          "owner": "source.ownerName",
+          "source_record_id": "source.externalId",
+          "authoritative_link": "authoritativeUrl",
+          "source_state": "sourceState.value (listed | not_seen | withdrawn)",
+          "freshness": "freshness.lastSuccessfulSyncAt, freshness.stale",
+          "faculty_interest": "interestedFaculty",
+          "readiness": "readiness"
+        },
+        "faculty_interest_action": {
+          "endpoint": "PUT /api/external-opportunities/{id}/interest (body { note? }); DELETE to withdraw",
+          "role": "verified faculty with a profile and the public-display choice made"
+        },
+        "readiness_guidance_action": {
+          "endpoint": "PUT /api/external-opportunities/{id}/guidance (body { suggestPriorOutcome, note })",
+          "role": "verified faculty or staff"
+        },
+        "student_record_action": {
+          "endpoint": "PUT /api/external-opportunities/{id}/my-status (body { status })",
+          "role": "student (not faculty or staff)"
+        },
+        "mine": {
+          "endpoint": "GET /api/external-opportunities/mine",
+          "page_route": "/external.html",
+          "role": "signed in"
+        }
+      }
     }
   }
 }

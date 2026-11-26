@@ -66,6 +66,7 @@ file is how the codebase works and the rules for changing it.
 | Release files, assessed version tag | R3-24 | Done: `release_submission.md`, `evaluation_adapter.json`, tag `R3-submission` |
 | External opportunities, sync, local support, readiness | R4-01 to R4-27 | Done (see "External opportunities" below) |
 | Release files, assessed version tag | R4-28 | `release_submission.md`, `evaluation_adapter.json`, tag `R4-submission` |
+| Production reality and recovery | F-01 to F-27 | Jacob (see "Final Release" below); tag `FINAL-submission` |
 
 ## Layout (`project2/backend/`)
 
