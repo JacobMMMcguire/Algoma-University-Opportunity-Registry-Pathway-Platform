@@ -76,6 +76,7 @@ const NAV_LINKS = [
   { href: "projects.html", label: "Discover projects", group: "Explore", description: "Faculty, industry and external opportunities" },
   { href: "faculty.html", label: "Faculty directory", group: "Explore", description: "Research interests and how to get in touch" },
   { href: "showcase.html", label: "Completed work", group: "Explore", description: "Projects students finished, confirmed by faculty" },
+  { href: "index.html?tour=start", label: "Take the tour", group: "Explore", description: "A guided walk through the whole platform" },
   { href: "my-projects.html", label: "Your projects", group: "Your work", show: (s) => s.user?.isVerifiedFaculty },
   { href: "submissions.html", label: "Industry opportunities", group: "Your work", show: (s) => s.user?.isVerifiedFaculty || s.user?.isStaff },
   { href: "lifecycle.html", label: "Terms and deadlines", group: "Your work", show: (s) => s.user?.isVerifiedFaculty || s.user?.isStaff },
@@ -214,9 +215,19 @@ function setDrawer(open, { returnFocus = false } = {}) {
   else if (returnFocus) toggle.focus();
 }
 
+// The session renderNav last drew, so tour.js needn't ask the server again.
+let LAST_SESSION = null;
+
+// The guided tour (tour.js) runs on every page with the site navigation. Loaded once per page.
+function loadTour() {
+  if (document.getElementById("tour-script")) return;
+  document.body.append(h("script", { id: "tour-script", src: "tour.js" }));
+}
+
 function renderNav(session) {
   const header = document.querySelector("body > header");
   if (!header) return;
+  LAST_SESSION = session;
   const current = currentPage();
   const signedIn = Boolean(session.authenticated);
   const groups = visibleNavGroups(session);
@@ -304,6 +315,7 @@ function renderNav(session) {
     header.after(sidebar, backdrop);
   }
   renderClockNote(session);
+  loadTour();
 }
 
 // Clicking anywhere outside an open dropdown closes it.

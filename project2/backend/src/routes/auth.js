@@ -176,11 +176,10 @@ function createAuthRouter({ db, config, auth, sendSignInEmail }) {
   router.get("/me", async (req, res, next) => {
     try {
       const user = await auth.getSessionUser(req);
-      res.json(
-        user
-          ? { authenticated: true, testMode: config.testMode, clock: describeClock(config), user: toPublicUser(user) }
-          : { authenticated: false, testMode: config.testMode, clock: describeClock(config) },
-      );
+      const base = { testMode: config.testMode, clock: describeClock(config) };
+      // Only a local presentation build (routes/demo.js) says this, so the tour can switch roles.
+      if (config.demoTour === true && config.testMode) base.demoTour = true;
+      res.json(user ? { authenticated: true, ...base, user: toPublicUser(user) } : { authenticated: false, ...base });
     } catch (error) {
       next(error);
     }
