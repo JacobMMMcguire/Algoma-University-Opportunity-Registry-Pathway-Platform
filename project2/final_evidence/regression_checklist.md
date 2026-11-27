@@ -2,7 +2,7 @@
 
 Run on the launch candidate (`final-development` = `r1-development`), 2026-11-26.
 
-- **Automated:** `npm test` in `project2/backend`: 375 tests, all passing. The files named below
+- **Automated:** `npm test` in `project2/backend`: 382 tests, all passing. The files named below
   are the checks for each journey.
 - **Browser:** each journey's pages at 390px in headless Chrome with axe-core
   (`final_evidence/browser_pass.json`: 58 page views, no overflow, violations or errors).
@@ -27,7 +27,7 @@ Run on the launch candidate (`final-development` = `r1-development`), 2026-11-26
 | 13 | R1 to R3 fixtures together, and reseeding | R3-23 | `regression.test.js` (R1 to R3), `final-regression.test.js` (Final layer) | Live after seeding | Pass |
 | 14 | External sync: v1, v2, classifications, malformed record, failure | R4-08 to R4-14, F-13 | `external-sync.test.js`, `integration-failures.test.js` | `/sync.html` as staff | Pass |
 | 15 | External handoff, ownership, untrusted content, local support and readiness | R4-02 to R4-07, R4-15 to R4-26 | `external-opportunities.test.js` | `/external.html?id=`, "View / apply through Mitacs" at 390px | Pass |
-| 16 | Authorization across every route (no regression from new routes) | R1-16, R2-24, R3-21, F-01 to F-03 | `authorization-sweep.test.js` (all 76 routes) | Private routes 401 to visitors on the live site | Pass |
+| 16 | Authorization across every route (no regression from new routes) | R1-16, R2-24, R3-21, F-01 to F-03 | `authorization-sweep.test.js` (all 77 routes) | Private routes 401 to visitors on the live site | Pass |
 
 ## Intended changes to earlier results
 

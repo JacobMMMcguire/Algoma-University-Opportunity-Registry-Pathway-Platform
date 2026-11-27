@@ -6,8 +6,8 @@ Project Option: Project 2 (Opportunity Registry and Pathway Platform)
 Deployment: https://algoma-opportunity-registry-r1-backend.onrender.com
 Repository: https://github.com/JacobMMMcguire/Algoma-University-Opportunity-Registry-Pathway-Platform
 Release tag: FINAL-submission
-Commit: d000415f3564cc1652298a6784585b58e0157d56 (`git rev-parse FINAL-submission^{commit}`;
-deployed to `r1-development` on 2026-11-26)
+Commit: the commit the tag points to (`git rev-parse FINAL-submission^{commit}`), recorded in the
+docs commit after tagging.
 Adapter: project2/evaluation_adapter.json (`release: "FINAL"`: one check per F-requirement, plus
 `recovery_actions`, `staff_reassignment`, `operator_observability` and `discovery`; the R1 to R4
 maps are kept under `earlier_releases`)
@@ -21,6 +21,9 @@ Test notes:
   `/operator.html` with the operator access code.
 - The free instance can take about a minute to wake.
 - Releases 1 to 4 are at tags `R1-submission` to `R4-submission`.
+- A guided tour is offered once on your first visit ("Not now" or Esc closes it; "Take the tour"
+  in the menu reopens it). It walks through the visitor, student, faculty and staff journeys. For
+  a role you aren't signed in as, it offers to describe it or to sign in.
 
 ## Test accounts
 
@@ -107,14 +110,20 @@ and the operator access code are in Moodle under Reviewer test access**, never i
   3. Turn the simulation off and press Retry. Subscribers are notified once.
 - **Regression checklist (F-25):** `final_evidence/regression_checklist.md`, 16 R1 to R4
   journeys, all passing.
-- **Automated tests:** 375 `node:test` tests in `project2/backend`, all passing.
-  - `test/authorization-sweep.test.js` tries all 76 API routes as six kinds of wrong user and
+- **Automated tests:** 382 `node:test` tests in `project2/backend`, all passing.
+  - `test/authorization-sweep.test.js` tries all 77 API routes as six kinds of wrong user and
     checks nothing changes (F-01 to F-05).
+  - The 77th route is the guided tour's local-presentation role switch
+    (`POST /api/demo/sign-in-as`). It exists only on `npm run dev:local`: the sweep and
+    `test/demo-tour.test.js` check that it answers 404 to everyone in production configuration,
+    and that no environment variable can turn it on.
 - **Phone width and accessibility (F-20, F-21):** 58 page views across seven roles at 390px in
   headless Chrome with axe-core, with no overflow, violations or errors
   (`final_evidence/browser_pass.json`).
-- **Live checks (2026-11-26, after the Final seed and a v1 sync):** 23 read-only, signed-out
-  checks against the launch candidate, all passing. No recovery case was touched.
+- **Live checks (2026-11-26, after the Final seed and a v1 sync, on the build before the tour):**
+  23 read-only, signed-out checks against the launch candidate, all passing. No recovery case
+  was touched. They are re-run on the deployed build with the tour and recorded in the docs
+  commit after tagging.
   - F-ALEX is out of the directory, and his page is kept, marked "No longer at Algoma
     University", with no contact. F-PRIYA is listed with no contact; F-JORDAN offers contact.
   - None of F-ALEX's projects are in discovery; P-101's link shows "Needs a new supervisor".
@@ -154,6 +163,9 @@ assumptions and risks are known:
 - **Accessibility was checked by axe-core** at 390px and with native, labelled controls. It was
   not tested with screen-reader users.
 - **The partner form has no rate limit or CAPTCHA.**
+- **The guided tour** remembers that it was offered in the browser's own storage, so it is
+  offered again in a new browser or after clearing site data. On the live site it never changes
+  who you are signed in as; its automatic role switch exists only on a local build.
 
 ## Operational note (Final Release only)
 

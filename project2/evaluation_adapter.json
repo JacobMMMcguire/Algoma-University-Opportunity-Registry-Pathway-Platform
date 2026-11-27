@@ -8,7 +8,7 @@
       "method_or_action": "Send the request for a record you don't own or take part in, changing the id, the body or the URL",
       "role": "a signed-in user who is not the owner (e.g. F-JORDAN on F-PRIYA's O-303)",
       "setup": "Fixtures loaded with `npm run seed:fixture` (R1 to R3, then the Final layer from final_fixtures/): F-ALEX recorded as having left, F-PRIYA not accepting inquiries, S02 graduated, and each recovery case in its wrong starting state. Clock CLOCK_DATE=2026-11-06.",
-      "expected_behavior": "404 (or 403 for the wrong role) and nothing changes. Ownership is in the SQL; names or ids in the body only ever affect the caller. Swept for all 76 routes in test/authorization-sweep.test.js."
+      "expected_behavior": "404 (or 403 for the wrong role) and nothing changes. Ownership is in the SQL; names or ids in the body only ever affect the caller. Swept for all 77 routes in test/authorization-sweep.test.js."
     },
     {
       "requirement_or_scenario": "F-02",

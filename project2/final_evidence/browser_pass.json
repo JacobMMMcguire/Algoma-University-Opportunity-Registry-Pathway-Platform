@@ -1,8 +1,14 @@
 {
-  "date": "2026-11-26",
-  "what": "Every page as a visitor, a student, a graduated student, two faculty members (one not accepting inquiries), a faculty member who has left, and staff, at 390 x 844 (phone width) in headless Chrome, on `npm run dev:local -- --scale` (R1 to Final fixtures plus the scale fixture). Each page's 'Show more' was pressed and every <details> opened before checking.",
+  "date": "2026-11-27",
+  "what": "Every page as a visitor, a student, a graduated student, two faculty members (one not accepting inquiries), a faculty member who has left, and staff, at 390 x 844 (phone width) in headless Chrome, on `npm run dev:local -- --scale` with the tour's local role switch off (`DEMO_TOUR=false`, as on Render) (R1 to Final fixtures plus the scale fixture). Each page's 'Show more' was pressed and every <details> opened before checking.",
   "checks": "axe-core 4.10.2 (WCAG 2.0/2.1 A and AA, plus best practice); horizontal overflow (document scrollWidth vs clientWidth); page errors, console errors and server 5xx responses.",
   "pageViews": 58,
   "firstRun": "Two moderate axe findings from the redesign: the simulated-date notice sat outside every landmark (region, on every page), and the home page's Open now box was an <aside> inside <main> (landmark-complementary-is-top-level). Both fixed.",
-  "result": { "overflow": 0, "axeViolations": 0, "pageErrors": 0, "serverErrors": 0 }
+  "result": {
+    "overflow": 0,
+    "axeViolations": 0,
+    "pageErrors": 0,
+    "serverErrors": 0
+  },
+  "tour": "Re-run after adding the guided tour: its offer card was open on each role's first page view. The whole tour was also driven button by button at 1280px and 390px, with real sign-ins for the faculty and staff chapters and in the local demo mode: every step reached its target, with no axe violations, overflow or errors."
 }

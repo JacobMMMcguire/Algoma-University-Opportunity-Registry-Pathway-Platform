@@ -740,13 +740,12 @@ the live database on 2026-11-26, followed by the Final seed. The fixtures are in
   only), and `GET /history?subjectType=&subjectId=` (the attribution log). Lists take `limit`
   (default 20, max 50) and `before` (the previous page's `next`).
 
-## Guided tour (branch `demo-tour`; planned for the Final before the freeze)
+## Guided tour (part of the Final)
 
-Built 2026-11-26 from `FINAL-submission` (d000415). The team decided to ship it in the Final, so the
-presentation shows the Final build. Plan: merge the teammate's aesthetic changes into `demo-tour`,
-then `demo-tour` into `final-development`, re-run the tests and the 390px pass, deploy, and move
-`FINAL-submission` to the new deployed commit (allowed: nothing has been submitted yet). Until
-then the current tag stays where it is as a fallback.
+Built 2026-11-26 on branch `demo-tour` and merged into `final-development` on 2026-11-27, before
+the freeze and before anything was submitted, so the presentation shows the Final build.
+`FINAL-submission` was first placed on d000415 (without the tour) and moved to the deployed
+commit that includes it.
 
 - **One tour, four chapters:** visitor, student, faculty, staff. Offered once per `TOUR_VERSION` and
   person (browser storage); "Take the tour" in the menu restarts it. The current step is kept in
