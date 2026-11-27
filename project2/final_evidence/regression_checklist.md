@@ -6,8 +6,8 @@ Run on the launch candidate (`final-development` = `r1-development`), 2026-11-26
   are the checks for each journey.
 - **Browser:** each journey's pages at 390px in headless Chrome with axe-core
   (`final_evidence/browser_pass.json`: 58 page views, no overflow, violations or errors).
-- **Live:** 23 read-only checks on the deployed site after the Final seed and a v1 sync,
-  2026-11-26, all passing (listed under "Live checks" in `release_submission.md`). They cover
+- **Live:** 30 read-only checks on the deployed, tagged site after the Final seed and a v1 sync,
+  2026-11-27, all passing (listed under "Live checks" in `release_submission.md`). They cover
   journeys 3, 5, 12, 13, 15 and 16 from the signed-out side.
 
 | # | Journey (F-25) | Release | Automated check | Browser / live check | Result |

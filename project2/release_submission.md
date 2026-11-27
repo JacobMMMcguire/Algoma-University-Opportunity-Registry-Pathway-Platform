@@ -6,8 +6,8 @@ Project Option: Project 2 (Opportunity Registry and Pathway Platform)
 Deployment: https://algoma-opportunity-registry-r1-backend.onrender.com
 Repository: https://github.com/JacobMMMcguire/Algoma-University-Opportunity-Registry-Pathway-Platform
 Release tag: FINAL-submission
-Commit: the commit the tag points to (`git rev-parse FINAL-submission^{commit}`), recorded in the
-docs commit after tagging.
+Commit: 1b62e427ecaf59bfff3970750469db0f6d4f8967 (`git rev-parse FINAL-submission^{commit}`;
+deployed to `r1-development` on 2026-11-27)
 Adapter: project2/evaluation_adapter.json (`release: "FINAL"`: one check per F-requirement, plus
 `recovery_actions`, `staff_reassignment`, `operator_observability` and `discovery`; the R1 to R4
 maps are kept under `earlier_releases`)
@@ -120,10 +120,9 @@ and the operator access code are in Moodle under Reviewer test access**, never i
 - **Phone width and accessibility (F-20, F-21):** 58 page views across seven roles at 390px in
   headless Chrome with axe-core, with no overflow, violations or errors
   (`final_evidence/browser_pass.json`).
-- **Live checks (2026-11-26, after the Final seed and a v1 sync, on the build before the tour):**
-  23 read-only, signed-out checks against the launch candidate, all passing. No recovery case
-  was touched. They are re-run on the deployed build with the tour and recorded in the docs
-  commit after tagging.
+- **Live checks (2026-11-27, on the tagged build, after the Final seed and a v1 sync):** 30
+  read-only, signed-out checks against the launch candidate, all passing. No recovery case was
+  touched. The 23 seed checks first passed on 2026-11-26 and still pass after the tour's deploy:
   - F-ALEX is out of the directory, and his page is kept, marked "No longer at Algoma
     University", with no contact. F-PRIYA is listed with no contact; F-JORDAN offers contact.
   - None of F-ALEX's projects are in discovery; P-101's link shows "Needs a new supervisor".
@@ -131,6 +130,10 @@ and the operator access code are in Moodle under Reviewer test access**, never i
   - External data is listed and fresh; discovery returns at most 20 at a time.
   - Operations, history, admin, matches, lifecycle and sync health return 401 to visitors.
   - The clock reads 6 November 2026.
+  - The tour is served and loaded by every page. The demo role switch answers 404 for every role,
+    and `/api/auth/me` doesn't offer it.
+  - Signed out, the whole tour was clicked through on the live site at 390px (the other roles'
+    chapters read on the card): 27 cards, no axe violations, overflow or errors.
 
 ### Launch readiness (F-26)
 
